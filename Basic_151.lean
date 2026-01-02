@@ -1690,8 +1690,20 @@ example (f : α → β) (g : β → α) :
 --   rw [hg x, hh x]
 example (f : α → β) (g h : β → α) :
     Surjective f → LeftInverse g f → LeftInverse h f → g = h := by
-  -- TODO
-  sorry
+
+  dsimp [Surjective, LeftInverse]
+  intro a b c
+  funext d
+  have e : ∃ x, f x = d := by
+    apply a
+  obtain ⟨e1, e2⟩ := e
+  rw [←e2]
+  have i : g (f e1) = e1 := by
+    apply b
+  have j : h (f e1) = e1 := by
+    apply c
+  rw [i]
+  rw [j]
 
 --------------------------------------------------------------------------------
 -- 演習問題 195：全単射 ↔ 両側逆の存在（Choiceあり・古典）★★★★★
