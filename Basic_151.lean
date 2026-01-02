@@ -1717,8 +1717,50 @@ example (f : α → β) (g h : β → α) :
 --   両側逆があれば Injective/Surjective は直観主義で出る
 example (f : α → β) :
     Bijective f ↔ ∃ g : β → α, LeftInverse g f ∧ RightInverse g f := by
-  -- TODO
-  sorry
+
+  dsimp [Bijective, LeftInverse, RightInverse, Injective, Surjective]
+
+  refine ⟨?one, ?two⟩
+
+  -- one
+  intro ⟨injective, surjective⟩
+
+  refine ⟨?g, ?hLeft, ?hRight⟩
+
+  -- g
+  intro c
+  exact Classical.choose (surjective c)
+
+  -- hLeft
+  intro d
+  apply injective
+  exact Classical.choose_spec (surjective (f d))
+
+  -- hRight
+  intro e
+  exact Classical.choose_spec (surjective e)
+
+  -- two
+  intro ⟨g, hleft, hright⟩
+  refine ⟨?r1,?r2⟩
+
+  -- r1: Injective f
+  intro c d e
+  have h : g (f c) = g (f d) := by
+    rw [e]
+  have i : g (f c) = c := by
+    apply hleft
+  have j : g (f d) = d := by
+    apply hleft
+  rw [←i, ←j]
+  exact h
+
+  -- r2: Surjective f
+  intro c
+  exists (g c)
+  have h : f (g c) = c := by
+    apply hright
+  exact h
 
 --------------------------------------------------------------------------------
 -- 演習問題 196：RightInverse を「関数の等式」に言い換える ★★★★
@@ -1730,8 +1772,22 @@ example (f : α → β) :
 --       dsimp [myComp] at this; simpa using this
 example (f : α → β) (g : β → α) :
     RightInverse g f ↔ myComp f g = (fun y : β => y) := by
-  -- TODO
-  sorry
+
+  dsimp [RightInverse]
+
+  refine ⟨?one, ?two⟩
+  -- one
+  intro a
+  funext b
+  dsimp [myComp]
+  exact a b
+
+  -- two
+  intro a b
+  have h : (myComp f g) b = f (g b) := by
+    dsimp [myComp]
+  rw [←h]
+  rw [a]
 
 --------------------------------------------------------------------------------
 -- 演習問題 197：LeftInverse を「関数の等式」に言い換える ★★★★
@@ -1740,8 +1796,22 @@ example (f : α → β) (g : β → α) :
 -- ヒント：196の LeftInverse 版（funext と dsimp）
 example (f : α → β) (g : β → α) :
     LeftInverse g f ↔ myComp g f = (fun x : α => x) := by
-  -- TODO
-  sorry
+
+  dsimp [LeftInverse]
+
+  refine ⟨?one, ?two⟩
+  -- one
+  intro a
+  funext b
+  dsimp [myComp]
+  exact a b
+
+  -- two
+  intro a b
+  have h : (myComp g f) b = g (f b) := by
+    dsimp [myComp]
+  rw [←h]
+  rw [a]
 
 --------------------------------------------------------------------------------
 -- 演習問題 198：Prod への写像が単射になる条件 ★★★★☆
@@ -1760,8 +1830,19 @@ def mapProd (f : α → β) (g : γ → δ) : (α × γ) → (β × δ) :=
 --   cases p; cases q; cases ...; cases ...; rfl
 example (f : α → β) (g : γ → δ) :
     Injective f → Injective g → Injective (mapProd (α:=α) (β:=β) (γ:=γ) (δ:=δ) f g) := by
-  -- TODO
-  sorry
+
+  dsimp [Injective, mapProd]
+  intro a b c d e
+  injection e with h1 h2
+
+  apply Prod.ext
+  -- fst
+  apply a
+  exact h1
+
+  -- snd
+  apply b
+  exact h2
 
 --------------------------------------------------------------------------------
 -- 演習問題 199：Sum への写像が単射になる条件 ★★★★☆
@@ -1780,8 +1861,35 @@ def mapSum (f : α → γ) (g : β → δ) : Sum α β → Sum γ δ
 --   · inl/inr or inr/inl：cases hst で潰れる
 example (f : α → γ) (g : β → δ) :
     Injective f → Injective g → Injective (mapSum (α:=α) (β:=β) (γ:=γ) (δ:=δ) f g) := by
-  -- TODO
-  sorry
+  dsimp [Injective, mapSum]
+  intro h i j k l
+
+  cases j with
+  | inl jl =>
+    cases k with
+    | inl kl =>
+      dsimp at l
+      apply congrArg Sum.inl
+      apply h
+      apply Sum.inl.inj
+      exact l
+
+    | inr kr =>
+      dsimp at l
+      injection l
+
+  | inr jr =>
+    cases k with
+    | inl kl =>
+      dsimp at l
+      injection l
+
+    | inr kr =>
+      dsimp at l
+      apply congrArg Sum.inr
+      apply i
+      apply Sum.inr.inj
+      exact l
 
 --------------------------------------------------------------------------------
 -- 演習問題 200：合成から「元の単射」「先の全射」が引き出せる ★★★★☆
@@ -1795,7 +1903,22 @@ example (f : α → γ) (g : β → δ) :
 example (f : α → β) (g : β → γ) :
     (Injective (myComp g f) → Injective f) ∧
     (Surjective (myComp g f) → Surjective g) := by
-  -- TODO
-  sorry
+  dsimp [Injective, Surjective, myComp]
 
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro a b c d
+  have e : g (f b) = g (f c) → b = c := by
+    apply a
+  apply e
+  rw [d]
+
+  -- hRight
+  intro a b
+  have c : ∃ x, g (f x) = b := by
+    apply a
+  obtain ⟨c1, c2⟩ := c
+  exists (f c1)
+  
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
