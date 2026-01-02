@@ -1457,12 +1457,12 @@ variable {α β γ : Type}
 --
 -- ヒント：funext x; rfl
 example (f : α → β) : myComp (fun y : β => y) f = f := by
-  -- TODO
-  sorry
+  funext a
+  dsimp [myComp]
 
 example (g : β → γ) : myComp g (fun x : β => x) = g := by
-  -- TODO
-  sorry
+  funext a
+  dsimp [myComp]
 
 --------------------------------------------------------------------------------
 -- 演習問題 187：単射の合成（直観主義OK）★★★☆
@@ -1475,12 +1475,19 @@ example (g : β → γ) : myComp g (fun x : β => x) = g := by
 --   exact h
 example (f : α → β) (g : β → γ) :
     Injective f → Injective g → Injective (myComp g f) := by
-  -- TODO
-  sorry
+  dsimp [Injective, myComp]
+  intro a b c d e
+  have h : f c = f d → c = d := by
+    apply a
+  have i : g (f c) = g (f d) → f c = f d := by
+    apply b
+  apply h
+  apply i
+  exact e
 
 --------------------------------------------------------------------------------
 -- 演習問題 188：全射の合成（直観主義OK）★★★☆
--- Surjective f と Surjective g なら Surjective (g∘f)
+-- Surjective f と Surjective g なら Surjective (myComp g f)
 --
 -- ヒント：
 --   intro z
@@ -1490,8 +1497,17 @@ example (f : α → β) (g : β → γ) :
 --   dsimp [myComp]; rw [hx]; exact hy
 example (f : α → β) (g : β → γ) :
     Surjective f → Surjective g → Surjective (myComp g f) := by
-  -- TODO
-  sorry
+  dsimp [Surjective, myComp]
+  intro a b c
+  have d : ∃ x, g x = c := by
+    apply b
+  obtain ⟨d1, d2⟩ := d
+  have e : ∃ x, f x = d1 := by
+    apply a
+  obtain ⟨e1, e2⟩ := e
+  exists e1
+  rw [e2]
+  exact d2
 
 --------------------------------------------------------------------------------
 -- 演習問題 189：全単射なら「両側逆」が取れる（Choiceあり・古典）★★★★★
@@ -1510,10 +1526,34 @@ example (f : α → β) (g : β → γ) :
 --     -- 右逆を (f x) に適用
 --     exact hright (f x)
 --   exact ⟨g, hleft, hright⟩
+
+set_option pp.proofs true      -- 証明部分の「...」を展開する
+set_option pp.deepTerms true   -- 深い階層の「...」も展開する
+
 example (f : α → β) :
     Bijective f → ∃ g : β → α, LeftInverse g f ∧ RightInverse g f := by
-  -- TODO
-  sorry
+
+  dsimp [Bijective, LeftInverse, RightInverse, Injective, Surjective]
+
+  intro ⟨injective, surjective⟩
+
+  classical
+
+  refine ⟨?g, ?hLeft, ?hRight⟩
+
+  -- g
+  intro b
+  exact Classical.choose (surjective b)
+
+  -- hLeft
+  intro c
+  apply injective
+  let i := Classical.choose_spec (surjective (f c))
+  rw [i]
+
+  -- hRight
+  intro d
+  exact Classical.choose_spec (surjective d)
 
 --------------------------------------------------------------------------------
 -- 演習問題 190：右逆の一意性（Injective があると一意）★★★★☆
@@ -1528,8 +1568,222 @@ example (f : α → β) :
 --     _ = f (h y) := (hrh y).symm
 example (f : α → β) (g h : β → α) :
     Injective f → RightInverse g f → RightInverse h f → g = h := by
+  dsimp [Injective, RightInverse]
+  intro a b c
+  funext d
+  have e : f (g d) = d := by
+    apply b
+  have i : f (h d) = d := by
+    apply c
+  have j :  f (g d) = f (h d) → g d  = h d := by
+    apply a
+  apply j
+  rw [e]
+  rw [i]
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- 演習問題 191〜200（Nat・Listなし / import Mathlibなし）
+-- 観点：関数・合成・単射/全射・左逆/右逆・一意性・構造（Prod/Sum）
+--------------------------------------------------------------------------------
+
+variable {α β γ δ : Type}
+
+--------------------------------------------------------------------------------
+-- 演習問題 191：左逆があると g は全射 ★★★☆
+-- LeftInverse g f → Surjective g
+--
+-- ヒント：
+--   intro hleft x
+--   refine ⟨f x, ?_⟩
+--   exact hleft x
+example (f : α → β) (g : β → α) :
+    LeftInverse g f → Surjective g := by
+  dsimp [LeftInverse, Surjective]
+  intro a b
+  exists (f b)
+  exact a b
+
+--------------------------------------------------------------------------------
+-- 演習問題 192：右逆があると g は単射 ★★★☆
+-- RightInverse g f → Injective g
+--
+-- ヒント：
+--   intro hright y1 y2 hgy
+--   -- f (g y1) = f (g y2) を作って、hright で y1=y2 に戻す
+example (f : α → β) (g : β → α) :
+    RightInverse g f → Injective g := by
+  dsimp [RightInverse, Injective]
+  intro a b c d
+  have h: f (g b) = b := by
+    apply a
+  have i: f (g c) = c := by
+    apply a
+  rw [←h]
+  rw [←i]
+  rw [d]
+
+--------------------------------------------------------------------------------
+-- 演習問題 193：両側逆なら f も g も全単射 ★★★★☆
+-- LeftInverse g f → RightInverse g f → Bijective f ∧ Bijective g
+--
+-- ヒント：
+--   - f の単射：LeftInverse から（演習177の形）
+--   - f の全射：RightInverse から（演習178の形）
+--   - g の全射：演習191
+--   - g の単射：演習192
+example (f : α → β) (g : β → α) :
+    LeftInverse g f → RightInverse g f → Bijective f ∧ Bijective g := by
+
+  dsimp [LeftInverse, RightInverse, Bijective, Injective, Surjective]
+  intro a b
+  refine ⟨?r1,?r2,?r3⟩
+
+  -- r1: f の単射
+  refine ⟨?s1,?s2⟩
+
+  -- s1
+  intro c d e
+
+  have h : g (f c) = c := by
+    apply a
+
+  have i : g (f d) = d := by
+    apply a
+
+  rw [←h]
+  rw [←i]
+  rw [e]
+
+  -- s2
+  intro c
+  exists (g c)
+  have h : f (g c) = c := by
+    apply b
+  rw [h]
+
+  -- r2: g の単射
+  intro c d e
+  have h : f (g c) = c := by
+    apply b
+  have i : f (g d) = d := by
+    apply b
+  rw [←h]
+  rw [←i]
+  rw [e]
+
+  -- r3: g の全射
+  intro c
+  exists (f c)
+  have h : g (f c) = c := by
+    apply a
+  rw [h]
+
+--------------------------------------------------------------------------------
+-- 演習問題 194：全射なら「左逆」は一意 ★★★★
+-- Surjective f → LeftInverse g f → LeftInverse h f → g = h
+--
+-- ヒント：
+--   funext y
+--   obtain ⟨x, hx⟩ := hsurj y
+--   rw [← hx]
+--   rw [hg x, hh x]
+example (f : α → β) (g h : β → α) :
+    Surjective f → LeftInverse g f → LeftInverse h f → g = h := by
   -- TODO
   sorry
 
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- 演習問題 195：全単射 ↔ 両側逆の存在（Choiceあり・古典）★★★★★
+-- Bijective f ↔ ∃ g, LeftInverse g f ∧ RightInverse g f
+--
+-- ヒント（→）：
+--   classical
+--   Surjective から Classical.choose で g を作る（演習189と同型）
+--
+-- ヒント（←）：
+--   両側逆があれば Injective/Surjective は直観主義で出る
+example (f : α → β) :
+    Bijective f ↔ ∃ g : β → α, LeftInverse g f ∧ RightInverse g f := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- 演習問題 196：RightInverse を「関数の等式」に言い換える ★★★★
+-- RightInverse g f ↔ myComp f g = (fun y => y)
+--
+-- ヒント：
+--   (→) funext y; dsimp [myComp]; exact h y
+--   (←) intro y; have : (myComp f g) y = (fun y => y) y := by rw [h]
+--       dsimp [myComp] at this; simpa using this
+example (f : α → β) (g : β → α) :
+    RightInverse g f ↔ myComp f g = (fun y : β => y) := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- 演習問題 197：LeftInverse を「関数の等式」に言い換える ★★★★
+-- LeftInverse g f ↔ myComp g f = (fun x => x)
+--
+-- ヒント：196の LeftInverse 版（funext と dsimp）
+example (f : α → β) (g : β → α) :
+    LeftInverse g f ↔ myComp g f = (fun x : α => x) := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- 演習問題 198：Prod への写像が単射になる条件 ★★★★☆
+-- f と g が単射なら、(a,c) ↦ (f a, g c) も単射
+--
+-- 新定義 mapProd（この問題内で使います）
+def mapProd (f : α → β) (g : γ → δ) : (α × γ) → (β × δ) :=
+  fun p => (f p.1, g p.2)
+
+-- ヒント：
+--   intro hf hg p q hpq
+--   have h1 : f p.1 = f q.1 := congrArg Prod.fst hpq
+--   have h2 : g p.2 = g q.2 := congrArg Prod.snd hpq
+--   have : p.1 = q.1 := hf h1
+--   have : p.2 = q.2 := hg h2
+--   cases p; cases q; cases ...; cases ...; rfl
+example (f : α → β) (g : γ → δ) :
+    Injective f → Injective g → Injective (mapProd (α:=α) (β:=β) (γ:=γ) (δ:=δ) f g) := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- 演習問題 199：Sum への写像が単射になる条件 ★★★★☆
+-- f と g が単射なら、Sum.map 的なものも単射
+--
+-- 新定義 mapSum（この問題内で使います）
+def mapSum (f : α → γ) (g : β → δ) : Sum α β → Sum γ δ
+  | Sum.inl a => Sum.inl (f a)
+  | Sum.inr b => Sum.inr (g b)
+
+-- ヒント：
+--   cases s <;> cases t
+--   · inl/inl：hst から (f a = f a') を取り、hf で a=a' を作る
+--     （Sum.inl.injEq が使える環境なら (Sum.inl.injEq).1 hst）
+--   · inr/inr：同様
+--   · inl/inr or inr/inl：cases hst で潰れる
+example (f : α → γ) (g : β → δ) :
+    Injective f → Injective g → Injective (mapSum (α:=α) (β:=β) (γ:=γ) (δ:=δ) f g) := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- 演習問題 200：合成から「元の単射」「先の全射」が引き出せる ★★★★☆
+-- (g∘f) が単射なら f が単射
+-- (g∘f) が全射なら g が全射
+--
+-- ヒント：
+--   constructor
+--   · intro hinj x y hxy; apply hinj; dsimp [myComp]; rw [hxy]
+--   · intro hsurj z; obtain ⟨x, hx⟩ := hsurj z; exact ⟨f x, hx⟩
+example (f : α → β) (g : β → γ) :
+    (Injective (myComp g f) → Injective f) ∧
+    (Surjective (myComp g f) → Surjective g) := by
+  -- TODO
+  sorry
+
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
