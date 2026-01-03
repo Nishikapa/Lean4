@@ -44,15 +44,25 @@ end Tree
 -- 演習問題 201：mirror は2回で元に戻る ★★★☆
 -- ヒント: induction t with | leaf a => ... | node l r ihL ihR => ...
 example (t : Tree α) : Tree.mirror (Tree.mirror t) = t := by
-  -- TODO
-  sorry
+  induction t with
+  | leaf a =>
+    dsimp [Tree.mirror]
+  | node l r ihL ihR =>
+    dsimp [Tree.mirror]
+    rw [ihL]
+    rw [ihR]
 
 --------------------------------------------------------------------------------
 -- 演習問題 202：map id = id ★★★☆
 -- ヒント: induction t <;> dsimp [Tree.map]
 example (t : Tree α) : Tree.map (fun x => x) t = t := by
-  -- TODO
-  sorry
+  induction t with
+  | leaf a =>
+    dsimp [Tree.map]
+  | node l r ihL ihR =>
+    dsimp [Tree.map]
+    rw [ihL]
+    rw [ihR]
 
 --------------------------------------------------------------------------------
 -- 演習問題 203：map の合成則 ★★★★
@@ -60,8 +70,13 @@ example (t : Tree α) : Tree.map (fun x => x) t = t := by
 -- ヒント: induction t <;> dsimp [Tree.map] <;> rw [*]
 example (f : α → β) (g : β → γ) (t : Tree α) :
     Tree.map g (Tree.map f t) = Tree.map (fun x => g (f x)) t := by
-  -- TODO
-  sorry
+  induction t with
+  | leaf a =>
+    dsimp [Tree.map]
+  | node l r ihL ihR =>
+    dsimp [Tree.map]
+    rw [ihL]
+    rw [ihR]
 
 --------------------------------------------------------------------------------
 -- 演習問題 204：mirror と map の可換 ★★★★
@@ -69,8 +84,13 @@ example (f : α → β) (g : β → γ) (t : Tree α) :
 -- ヒント: induction t <;> dsimp [Tree.map, Tree.mirror] <;> rw [*]
 example (f : α → β) (t : Tree α) :
     Tree.mirror (Tree.map f t) = Tree.map f (Tree.mirror t) := by
-  -- TODO
-  sorry
+  induction t with
+  | leaf a =>
+    dsimp [Tree.map, Tree.mirror]
+  | node l r ihL ihR =>
+    dsimp [Tree.map, Tree.mirror]
+    rw [ihL]
+    rw [ihR]
 
 --------------------------------------------------------------------------------
 -- 演習問題 205：all と map（全称の押し込み）★★★★
