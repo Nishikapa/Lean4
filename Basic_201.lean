@@ -98,8 +98,40 @@ example (f : α → β) (t : Tree α) :
 -- ヒント: induction t <;> dsimp [Tree.all, Tree.map] <;> constructor <;> intro h
 example (P : β → Prop) (f : α → β) (t : Tree α) :
     Tree.all P (Tree.map f t) ↔ Tree.all (fun a => P (f a)) t := by
-  -- TODO
-  sorry
+  induction t with
+  | leaf a =>
+    dsimp [Tree.all, Tree.map]
+    rfl
+  | node l r ihL ihR =>
+    dsimp [Tree.all, Tree.map]
+    refine ⟨?hLeft,?hRight⟩
+
+    -- hLeft
+    intro a
+    obtain ⟨al, ar⟩ := a
+    refine ⟨?hLeft2,?hRight2⟩
+
+    -- hLeft2
+    rw [←ihL]
+    exact al
+
+    -- hRight2
+    rw [←ihR]
+    exact ar
+
+    -- hRight
+    intro a
+    obtain ⟨al, ar⟩ := a
+
+    refine ⟨?hLeft3,?hRight3⟩
+
+    -- hLeft3
+    rw [ihL]
+    exact al
+
+    -- hRight3
+    rw [ihR]
+    exact ar
 
 --------------------------------------------------------------------------------
 -- 演習問題 206：all と mirror（左右を入れ替えても all は同じ）★★★☆
@@ -107,8 +139,40 @@ example (P : β → Prop) (f : α → β) (t : Tree α) :
 -- ヒント: induction t <;> dsimp [Tree.all, Tree.mirror] <;> constructor <;> intro h
 example (P : α → Prop) (t : Tree α) :
     Tree.all P (Tree.mirror t) ↔ Tree.all P t := by
-  -- TODO
-  sorry
+  induction t with
+  | leaf a =>
+    dsimp [Tree.all, Tree.mirror]
+    rfl
+
+  | node l r ihL ihR =>
+    dsimp [Tree.all, Tree.mirror]
+    refine ⟨?hLeft,?hRight⟩
+
+    -- hLeft
+    intro a
+    obtain ⟨ar, al⟩ := a
+    refine ⟨?hLeft2,?hRight2⟩
+
+    -- hLeft2
+    rw [←ihL]
+    exact al
+
+    -- hRight2
+    rw [←ihR]
+    exact ar
+
+    -- hRight
+    intro a
+    obtain ⟨al, ar⟩ := a
+    refine ⟨?hLeft3,?hRight3⟩
+
+    -- hLeft3
+    rw [ihR]
+    exact ar
+
+    -- hRight3
+    rw [ihL]
+    exact al
 
 --------------------------------------------------------------------------------
 -- 演習問題 207：fold と map（葉の関数が合成される）★★★★☆
@@ -117,8 +181,13 @@ example (P : α → Prop) (t : Tree α) :
 example (f : α → β) (leafF : β → γ) (nodeF : γ → γ → γ) (t : Tree α) :
     Tree.fold leafF nodeF (Tree.map f t)
       = Tree.fold (fun a => leafF (f a)) nodeF t := by
-  -- TODO
-  sorry
+  induction t with
+  | leaf a =>
+    dsimp [Tree.fold, Tree.map]
+  | node l r ihL ihR =>
+    dsimp [Tree.fold, Tree.map]
+    rw [←ihL]
+    rw [←ihR]
 
 --------------------------------------------------------------------------------
 -- 演習問題 208：fold と mirror（nodeF を左右反転すると一致）★★★★☆
@@ -127,8 +196,13 @@ example (f : α → β) (leafF : β → γ) (nodeF : γ → γ → γ) (t : Tree
 example (leafF : α → β) (nodeF : β → β → β) (t : Tree α) :
     Tree.fold leafF nodeF (Tree.mirror t)
       = Tree.fold leafF (fun x y => nodeF y x) t := by
-  -- TODO
-  sorry
+  induction t with
+  | leaf a =>
+    dsimp [Tree.fold, Tree.mirror]
+  | node l r ihL ihR =>
+    dsimp [Tree.fold, Tree.mirror]
+    rw [←ihR]
+    rw [←ihL]
 
 --------------------------------------------------------------------------------
 -- 演習問題 209：nodeF が可換なら fold は mirror で不変 ★★★★★
@@ -137,8 +211,15 @@ example (leafF : α → β) (nodeF : β → β → β) (t : Tree α) :
 example (leafF : α → β) (nodeF : β → β → β) (t : Tree α) :
     (∀ x y, nodeF x y = nodeF y x) →
     Tree.fold leafF nodeF (Tree.mirror t) = Tree.fold leafF nodeF t := by
-  -- TODO
-  sorry
+  intro a
+  induction t with
+  | leaf a' =>
+    dsimp [Tree.fold, Tree.mirror]
+  | node l r ihL ihR =>
+    dsimp [Tree.fold, Tree.mirror]
+    rw [←ihR]
+    rw [←ihL]
+    apply a
 
 --------------------------------------------------------------------------------
 -- 演習問題 210：Tree版ド・モルガン（any の否定）★★★★☆
@@ -148,8 +229,51 @@ example (leafF : α → β) (nodeF : β → β → β) (t : Tree α) :
 --   - node: ¬(A ∨ B) ↔ (¬A ∧ ¬B) を手で作る
 example (P : α → Prop) (t : Tree α) :
     ¬ Tree.any P t ↔ Tree.all (fun a => ¬ P a) t := by
-  -- TODO
-  sorry
+  induction t with
+  | leaf a =>
+    dsimp [Tree.any, Tree.all]
+    rfl
+  | node l r ihL ihR =>
+    dsimp [Tree.any, Tree.all]
+    refine ⟨?hLeft,?hRight⟩
+
+    -- hLeft
+    intro a
+    constructor
+
+    -- left
+    rw [←ihL]
+    intro hL
+    apply a
+    left
+    exact hL
+
+    -- right
+    rw [←ihR]
+    intro hR
+    apply a
+    right
+    exact hR
+
+    -- hRight
+    intro a b
+    obtain ⟨al, ar⟩ := a
+
+    have c  : ¬Tree.any P l := by
+      rw [ihL]
+      exact al
+
+    have d  : ¬Tree.any P r := by
+      rw [ihR]
+      exact ar
+
+    cases b with
+    | inl hL =>
+      apply c
+      exact hL
+    | inr hR =>
+      apply d
+      exact hR
 
 --------------------------------------------------------------------------------
 -- Unit / Empty：データ型の“万能性”（cases / funext）
@@ -163,8 +287,25 @@ example :
   ∃ fromVal : β → (Unit → β),
     (∀ h : Unit → β, fromVal (toVal h) = h) ∧
     (∀ b : β, toVal (fromVal b) = b) := by
-  -- TODO
-  sorry
+
+  refine ⟨?toVal, ?fromVal, ?x, ?y⟩
+
+  -- toVal
+  intro a
+  exact a ()
+
+  -- fromVal
+  intro b c
+  exact b
+
+  -- x
+  intro c
+  funext d
+  dsimp
+
+  -- y
+  intro b
+  dsimp
 
 --------------------------------------------------------------------------------
 -- 演習問題 212：Prod の右単位元（α×Unit は α と同じ）★★★☆
@@ -173,8 +314,24 @@ example :
   ∃ fromVal : α → (α × Unit),
     (∀ p : α × Unit, fromVal (toVal p) = p) ∧
     (∀ a : α, toVal (fromVal a) = a) := by
-  -- TODO
-  sorry
+
+  refine ⟨?toVal, ?fromVal, ?x, ?y⟩
+
+  -- toVal
+  intro a
+  exact a.1
+
+  -- fromVal
+  intro a
+  exact (a, ())
+
+  -- x
+  intro c
+  dsimp
+
+  -- y
+  intro a
+  dsimp
 
 --------------------------------------------------------------------------------
 -- 演習問題 213：Prod の左単位元（Unit×α は α と同じ）★★★☆
@@ -183,15 +340,31 @@ example :
   ∃ fromVal : α → (Unit × α),
     (∀ p : Unit × α, fromVal (toVal p) = p) ∧
     (∀ a : α, toVal (fromVal a) = a) := by
-  -- TODO
-  sorry
+
+  refine ⟨?toVal, ?fromVal, ?x, ?y⟩
+
+  -- toVal
+  intro a
+  exact a.2
+
+  -- fromVal
+  intro a
+  exact ((), a)
+
+  -- x
+  intro c
+  dsimp
+
+  -- y
+  intro a
+  dsimp
 
 --------------------------------------------------------------------------------
 -- 演習問題 214：Empty からの関数は一意 ★★★☆
 -- ヒント: funext e; cases e
 example (f g : Empty → α) : f = g := by
-  -- TODO
-  sorry
+  funext e
+  nomatch e
 
 --------------------------------------------------------------------------------
 -- 演習問題 215：Sum Empty α は α と同じ ★★★★
@@ -203,8 +376,32 @@ example :
   ∃ fromVal : α → Sum Empty α,
     (∀ s : Sum Empty α, fromVal (toVal s) = s) ∧
     (∀ a : α, toVal (fromVal a) = a) := by
-  -- TODO
-  sorry
+
+  refine ⟨?toVal, ?fromVal, ?x, ?y⟩
+
+  -- toVal
+  intro s
+  cases s with
+  | inl e =>
+    nomatch e
+  | inr a =>
+    exact a
+
+  -- fromVal
+  intro a
+  exact Sum.inr a
+
+  -- x
+  intro s
+  cases s with
+  | inl e =>
+    nomatch e
+  | inr a =>
+    dsimp
+
+  -- y
+  intro a
+  dsimp
 
 --------------------------------------------------------------------------------
 -- Sigma（依存ペア）：Nonempty / ∃ / 依存カリー化
