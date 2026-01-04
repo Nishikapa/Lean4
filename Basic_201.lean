@@ -460,8 +460,40 @@ example (P Q : α → Type) :
       Sum (Sigma P) (Sigma Q) → (Sigma (fun x : α => Sum (P x) (Q x))),
     (∀ s, fromSum (toSum s) = s) ∧
     (∀ t, toSum (fromSum t) = t) := by
-  -- TODO
-  sorry
+  refine ⟨?toSum, ?fromSum, ?x, ?y⟩
+  -- toSum
+  intro a
+  cases a.2 with
+  | inl b =>
+    exact Sum.inl ⟨a.1, b⟩
+  | inr c =>
+    exact Sum.inr ⟨a.1, c⟩
+
+  -- fromSum
+  intro d
+  cases d with
+  | inl e =>
+    exact ⟨e.1, Sum.inl e.2⟩
+  | inr f =>
+    exact ⟨f.1, Sum.inr f.2⟩
+
+  -- x
+  intro g
+  obtain ⟨g1, g2⟩ := g
+  cases g2 with
+  | inl h =>
+    dsimp
+
+  | inr i =>
+    dsimp
+
+  -- y
+  intro j
+  cases j with
+  | inl k =>
+    dsimp
+  | inr l =>
+    dsimp
 
 --------------------------------------------------------------------------------
 -- 演習問題 219：依存関数の funext（dependent funext）★★★★
@@ -469,8 +501,9 @@ example (P Q : α → Type) :
 -- ヒント: intro h; funext x; exact h x
 example {B : α → Type} (f g : (x : α) → B x) :
     (∀ x, f x = g x) → f = g := by
-  -- TODO
-  sorry
+  intro a
+  funext b
+  apply a
 
 --------------------------------------------------------------------------------
 -- 演習問題 220：Sigma からの関数は「依存カリー化」できる ★★★★★
@@ -480,5 +513,26 @@ example {B : α → Type} :
   ∃ fromDep : (∀ x : α, B x → γ) → ((Sigma B) → γ),
     (∀ h, fromDep (toDep h) = h) ∧
     (∀ k, toDep (fromDep k) = k) := by
-  -- TODO
-  sorry
+
+  refine ⟨?toDep, ?fromDep, ?x, ?y⟩
+
+  -- toDep
+  intro a b c
+  apply a
+  exact ⟨b, c⟩
+
+  -- fromDep
+  intro d e
+  apply d
+  exact e.2
+
+  -- x
+  intro f
+  funext g
+  dsimp
+
+  -- y
+  intro h
+  funext i
+  funext j
+  dsimp
