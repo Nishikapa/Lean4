@@ -407,4 +407,205 @@ example (QK M : Rel α β) (KV : Rel β γ) :
   -- y
   exact c4
 
+
+-- ☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆
+--------------------------------------------------------------------------------
+-- 演習問題 321〜340（Tensor Logic 続き：関係の代数 / テンソル積 / グラフ関係）
+-- ※ import Mathlib なし
+-- ※ 301〜320 の namespace TL の定義がある前提（追記用）
+--------------------------------------------------------------------------------
+variable {α β γ δ ε ζ : Type}
+--------------------------------------------------------------------------------
+-- 追加定義（便利ツール）
+--------------------------------------------------------------------------------
+
+def relZero (α β : Type) : Rel α β := fun _ _ => False
+
+def relDom (R : Rel α β) : α → Prop := fun a => ∃ b, R a b
+def relCod (R : Rel α β) : β → Prop := fun b => ∃ a, R a b
+
+def relGuardL (A : α → Prop) (R : Rel α β) : Rel α β := fun a b => A a ∧ R a b
+def relGuardR (B : β → Prop) (R : Rel α β) : Rel α β := fun a b => R a b ∧ B b
+
+def funComp (g : β → γ) (f : α → β) : α → γ := fun x => g (f x)
+def relOfFun (f : α → β) : Rel α β := fun a b => f a = b
+
+--------------------------------------------------------------------------------
+-- relAdd / relMul の「格子」性
+--------------------------------------------------------------------------------
+
+-- 321：relAdd は可換（点ごと ↔）
+-- ヒント：constructor; intro h; cases h with | inl => ... | inr => ...
+example (R S : Rel α β) :
+    ∀ a b, relAdd R S a b ↔ relAdd S R a b := by
+  -- TODO
+  sorry
+
+-- 322：relAdd は結合的（点ごと ↔）
+-- ヒント：cases で Or を2回さばく
+example (R S T : Rel α β) :
+    ∀ a b, relAdd (relAdd R S) T a b ↔ relAdd R (relAdd S T) a b := by
+  -- TODO
+  sorry
+
+-- 323：relAdd は冪等（R+R ↔ R）
+example (R : Rel α β) :
+    ∀ a b, relAdd R R a b ↔ R a b := by
+  -- TODO
+  sorry
+
+-- 324：relMul は可換（点ごと ↔）
+-- ヒント：⟨h1,h2⟩ を ⟨h2,h1⟩ に入れ替える
+example (R S : Rel α β) :
+    ∀ a b, relMul R S a b ↔ relMul S R a b := by
+  -- TODO
+  sorry
+
+-- 325：relMul は結合的（点ごと ↔）
+example (R S T : Rel α β) :
+    ∀ a b, relMul (relMul R S) T a b ↔ relMul R (relMul S T) a b := by
+  -- TODO
+  sorry
+
+-- 326：relMul は冪等（R∧R ↔ R）
+example (R : Rel α β) :
+    ∀ a b, relMul R R a b ↔ R a b := by
+  -- TODO
+  sorry
+
+-- 327：吸収律  R ∧ (R ∨ S) ↔ R
+-- ヒント：cases で (R a b ∨ S a b) を分岐
+example (R S : Rel α β) :
+    ∀ a b, relMul R (relAdd R S) a b ↔ R a b := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- 0（False関係）と合成
+--------------------------------------------------------------------------------
+
+-- 328：0 + R ↔ R
+example (R : Rel α β) :
+    ∀ a b, relAdd (relZero α β) R a b ↔ R a b := by
+  -- TODO
+  sorry
+
+-- 329：0 ; R は常に False
+-- 型に注意：0 : Rel α β, R : Rel β γ
+example (R : Rel β γ) :
+    ∀ a c, relComp (relZero α β) R a c ↔ False := by
+  -- TODO
+  sorry
+
+-- 330：R ; 0 は常に False
+example (R : Rel α β) :
+    ∀ a c, relComp R (relZero β γ) a c ↔ False := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- transpose（converse）と合成/加法
+--------------------------------------------------------------------------------
+
+-- 331：(R;S)ᵀ ↔ Sᵀ;Rᵀ（順番が逆になる）
+-- ヒント：∃ の witness をそのまま使って、And の順番を入れ替える
+example (R : Rel α β) (S : Rel β γ) :
+    ∀ c a, relTrans (relComp R S) c a ↔ relComp (relTrans S) (relTrans R) c a := by
+  -- TODO
+  sorry
+
+-- 332：(R+S)ᵀ ↔ Rᵀ + Sᵀ（点ごと ↔）
+example (R S : Rel α β) :
+    ∀ b a, relTrans (relAdd R S) b a ↔ relAdd (relTrans R) (relTrans S) b a := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- domain/codomain（関係の「定義域」「値域」）
+--------------------------------------------------------------------------------
+
+-- 333：dom(R;S) ⊆ dom(R)
+-- ヒント：obtain ⟨b, hb⟩ := ...
+example (R : Rel α β) (S : Rel β γ) :
+    ∀ a, relDom (relComp R S) a → relDom R a := by
+  -- TODO
+  sorry
+
+-- 334：cod(R;S) ⊆ cod(S)
+-- ヒント：∃a, ∃b, ... から ∃b, ... を作る
+example (R : Rel α β) (S : Rel β γ) :
+    ∀ c, relCod (relComp R S) c → relCod S c := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- ガード（∧で条件を付ける）を ∃ の外に出す
+--------------------------------------------------------------------------------
+
+-- 335：左ガードは合成の外へ出せる
+-- relComp ((A∧R)) S ↔ A ∧ relComp R S
+example (A : α → Prop) (R : Rel α β) (S : Rel β γ) :
+    ∀ a c, relComp (relGuardL A R) S a c ↔ A a ∧ relComp R S a c := by
+  -- TODO
+  sorry
+
+-- 336：右ガードも合成の外へ出せる
+-- relComp R (S∧B) ↔ (relComp R S) ∧ B
+example (B : γ → Prop) (R : Rel α β) (S : Rel β γ) :
+    ∀ a c, relComp R (relGuardR B S) a c ↔ relComp R S a c ∧ B c := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- 関数を「関係（グラフ）」として扱う
+--------------------------------------------------------------------------------
+
+-- 337：グラフの合成は関数合成に一致
+-- relOfFun f ; relOfFun g ↔ relOfFun (g∘f)
+example (f : α → β) (g : β → γ) :
+    ∀ a c, relComp (relOfFun f) (relOfFun g) a c ↔ relOfFun (funComp g f) a c := by
+  -- TODO
+  sorry
+
+-- 338：恒等関数のグラフ ↔ relId
+example :
+    ∀ a b : α, relOfFun (fun x : α => x) a b ↔ relId α a b := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- tensor（⊗）と合成：interchange law（モノイダル圏っぽい核心）
+--------------------------------------------------------------------------------
+
+-- 339：テンソルと合成の入れ替え（interchange）
+-- (R1⊗S1);(R2⊗S2) ↔ (R1;R2)⊗(S1;S2)
+-- ヒント：
+--   左：witness は (b,e) : (β×ε)
+--   右：witness は b と e に分解できる
+example (R1 : Rel α β) (R2 : Rel β γ) (S1 : Rel δ ε) (S2 : Rel ε ζ) :
+    ∀ p q,
+      relComp (relTensor R1 S1) (relTensor R2 S2) p q
+        ↔ relTensor (relComp R1 R2) (relComp S1 S2) p q := by
+  -- TODO
+  sorry
+
+-- 340：tensor は relAdd に分配（左側）
+-- (R+S)⊗T ↔ (R⊗T) + (S⊗T)
+-- ヒント：((A∨B)∧C) ↔ ((A∧C)∨(B∧C)) を cases で作る
+example (R S : Rel α β) (T : Rel γ δ) :
+    ∀ p q,
+      relTensor (relAdd R S) T p q ↔
+        relAdd (relTensor R T) (relTensor S T) p q := by
+  -- TODO
+  sorry
+
 end TL
+
+-- ☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆
+-- ☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆
+-- ☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆
+-- ☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆
+-- ☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆
+-- ☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆
+-- ☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆
+-- ☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆
