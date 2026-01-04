@@ -34,8 +34,30 @@ def relId (α : Type) : Rel α α := fun a b => a = b
 --   (←) は witness b を取り、(R ⊆ rRes S T) を b に適用して c に流す
 example (R : Rel β α) (S : Rel α γ) (T : Rel β γ) :
     RelLe (relComp R S) T ↔ RelLe R (rRes S T) := by
-  -- TODO
-  sorry
+  dsimp [RelLe, relComp, rRes]
+  dsimp [Rel] at R S T
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro a b c d e f
+  apply a
+  refine ⟨?g, ?h, ?i⟩
+
+  -- g
+  exact c
+
+  -- h
+  exact d
+
+  -- i
+  exact f
+
+  -- hRight
+  intro g h i j
+  obtain ⟨j1, j2, j3⟩ := j
+  apply g
+  apply j2
+  exact j3
 
 --------------------------------------------------------------------------------
 -- 352：左残余を定義して residuation（左側版）
@@ -48,36 +70,72 @@ def lRes (R : Rel α β) (T : Rel α γ) : Rel β γ :=
 
 example (R : Rel α β) (S : Rel β γ) (T : Rel α γ) :
     RelLe (relComp R S) T ↔ RelLe S (lRes R T) := by
-  -- TODO
-  sorry
+  dsimp [RelLe, relComp, lRes]
+  dsimp [Rel] at R S T
+  refine ⟨?hLeft, ?hRight⟩
+  intro a b c d e f
+  apply a
+  refine ⟨?g, ?h, ?i⟩
+
+  -- g
+  exact b
+
+  -- h
+  exact f
+
+  -- i
+  exact d
+
+  -- hRight
+  intro j k l m
+  obtain ⟨m1, m2, m3⟩ := m
+  apply j
+  apply m3
+  exact m2
 
 --------------------------------------------------------------------------------
 -- 353：右残余 rRes の単調性（T側は単調、S側は反単調）
 -- (a) S ⊆ S' なら  (S' ▷ T) ⊆ (S ▷ T)   （反単調）
 example (S S' : Rel α γ) (T : Rel β γ) :
     RelLe S S' → RelLe (rRes S' T) (rRes S T) := by
-  -- TODO
-  sorry
+  dsimp [RelLe, rRes]
+  dsimp [Rel] at S S' T
+  intro h a b c d e
+  apply c
+  apply h
+  exact e
 
 -- (b) T ⊆ T' なら  (S ▷ T) ⊆ (S ▷ T')   （単調）
 example (S : Rel α γ) (T T' : Rel β γ) :
     RelLe T T' → RelLe (rRes S T) (rRes S T') := by
-  -- TODO
-  sorry
+  dsimp [RelLe, rRes]
+  dsimp [Rel] at S T T'
+  intro a b c d e f
+  apply a
+  apply d
+  exact f
 
 --------------------------------------------------------------------------------
 -- 354：左残余 lRes も同様（R側は反単調、T側は単調）
 -- (a) R ⊆ R' なら  (R' ⊲ T) ⊆ (R ⊲ T)
 example (R R' : Rel α β) (T : Rel α γ) :
     RelLe R R' → RelLe (lRes R' T) (lRes R T) := by
-  -- TODO
-  sorry
+  dsimp [RelLe, lRes]
+  dsimp [Rel] at R R' T
+  intro a b c d e f
+  apply d
+  apply a
+  exact f
 
 -- (b) T ⊆ T' なら  (R ⊲ T) ⊆ (R ⊲ T')
 example (R : Rel α β) (T T' : Rel α γ) :
     RelLe T T' → RelLe (lRes R T) (lRes R T') := by
-  -- TODO
-  sorry
+  dsimp [RelLe, lRes]
+  dsimp [Rel] at R T T'
+  intro a b c d e f
+  apply a
+  apply d
+  exact f
 
 --------------------------------------------------------------------------------
 -- 355：transpose と残余の対応（式変形できるように）
@@ -86,8 +144,8 @@ example (R : Rel α β) (T T' : Rel α γ) :
 -- ヒント：funext a; funext b; rfl（dsimp すると同じ形になる）
 example (S : Rel α γ) (T : Rel β γ) :
     relTrans (rRes S T) = lRes (relTrans S) (relTrans T) := by
-  -- TODO
-  sorry
+  funext a b
+  dsimp [relTrans, rRes, lRes]
 
 --------------------------------------------------------------------------------
 -- 356：合成の domain（到達可能な入力）を“実用形”に展開
@@ -96,8 +154,42 @@ def dom (R : Rel α β) : α → Prop := fun a => ∃ b, R a b
 
 example (R : Rel α β) (S : Rel β γ) :
     ∀ a, dom (relComp R S) a ↔ ∃ b, R a b ∧ dom S b := by
-  -- TODO
-  sorry
+  dsimp [dom, relComp]
+  intro a
+  refine ⟨?hLeft, ?hRight⟩
+  -- hLeft
+  intro a
+  obtain ⟨a1, a2, ⟨a3, a4⟩⟩ := a
+  refine ⟨?c, ?d, ?e⟩
+
+  -- c
+  exact a2
+
+  -- d
+  exact a3
+
+  -- e
+  exists a1
+
+  -- hRight
+  intro f
+  obtain ⟨f1, f2, ⟨f3, f4⟩⟩ := f
+  refine ⟨?g, ?h, ?i⟩
+
+  -- g
+  exact f3
+
+  -- h
+  exact f1
+
+  -- i
+  constructor
+
+  -- i.left
+  exact f2
+
+  -- i.right
+  exact f4
 
 --------------------------------------------------------------------------------
 -- 357：合成の codomain（到達可能な出力）を“実用形”に展開
@@ -106,24 +198,89 @@ def cod (R : Rel α β) : β → Prop := fun b => ∃ a, R a b
 
 example (R : Rel α β) (S : Rel β γ) :
     ∀ c, cod (relComp R S) c ↔ ∃ b, cod R b ∧ S b c := by
-  -- TODO
-  sorry
+  dsimp [cod, relComp]
+  dsimp [Rel] at R S
+  intro a
+  refine ⟨?hLeft, ?hRight⟩
+  -- hLeft
+  intro a
+  obtain ⟨a1, a2, ⟨a3, a4⟩⟩ := a
+
+  refine ⟨?c, ⟨?d, ?e⟩, ?f⟩
+  -- c
+  exact a2
+
+  -- d
+  exact a1
+
+  -- e
+  exact a3
+
+  -- f
+  exact a4
+
+  -- hRight
+  intro g
+  obtain ⟨g1, ⟨g2, g3⟩, g4⟩ := g
+  refine ⟨?h, ?i, ?j, ?k⟩
+
+  -- h
+  exact g2
+
+  -- i
+  exact g1
+
+  -- j
+  exact g3
+
+  -- k
+  exact g4
 
 --------------------------------------------------------------------------------
 -- 358：∧（mask）を合成の左から押し込む（片方向だけ成り立つ）
 -- (R∧M);S ⊆ (R;S) ∧ (M;S)
 example (R M : Rel α β) (S : Rel β γ) :
     RelLe (relComp (relMul R M) S) (relMul (relComp R S) (relComp M S)) := by
-  -- TODO
-  sorry
+  dsimp [RelLe, relComp, relMul]
+  dsimp [Rel] at R M S
+  intro a b c
+  obtain ⟨c1, ⟨c2, c3⟩, c4⟩ := c
+  refine ⟨⟨?d, ?e, ?f⟩, ⟨?g,?h,?i⟩⟩
+  -- d
+  exact c1
+  -- e
+  exact c2
+  -- f
+  exact c4
+  -- g
+  exact c1
+  -- h
+  exact c3
+  -- i
+  exact c4
 
 --------------------------------------------------------------------------------
 -- 359：∧（mask）を合成の右から押し込む（片方向）
 -- R;(S∧T) ⊆ (R;S) ∧ (R;T)
 example (R : Rel α β) (S T : Rel β γ) :
     RelLe (relComp R (relMul S T)) (relMul (relComp R S) (relComp R T)) := by
-  -- TODO
-  sorry
+  dsimp [RelLe, relComp, relMul]
+  dsimp [Rel] at R S T
+  intro a b c
+  obtain ⟨c1, c2, ⟨c3, c4⟩⟩ := c
+  refine ⟨⟨?d, ?e, ?f⟩, ⟨?g,?h,?i⟩⟩
+  -- d
+  exact c1
+  -- e
+  exact c2
+  -- f
+  exact c3
+  -- g
+  exact c1
+  -- h
+  exact c2
+  -- i
+  exact c4
 
 --------------------------------------------------------------------------------
 -- 360：mask と add の分配（点ごとの ↔）
@@ -131,8 +288,46 @@ example (R : Rel α β) (S T : Rel β γ) :
 example (R S M : Rel α β) :
     ∀ a b,
       relMul (relAdd R S) M a b ↔ relAdd (relMul R M) (relMul S M) a b := by
-  -- TODO
-  sorry
+  dsimp [relMul, relAdd]
+  dsimp [Rel] at R S M
+  intro a b
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro c
+  obtain ⟨c1 | c2, c3⟩ := c
+
+  -- hLeft.inl
+  left
+  exact ⟨c1, c3⟩
+
+  -- hLeft.inr
+  right
+  exact ⟨c2, c3⟩
+
+  -- hRight
+  intro d
+  obtain ⟨d1, d2⟩ | ⟨d1, d2⟩ := d
+
+  -- hRight.inl
+  constructor
+
+  -- hRight.inl.left
+  left
+  exact d1
+
+  -- hRight.inl.right
+  exact d2
+
+  -- hRight.inr
+  constructor
+
+  -- hRight.inr.left
+  right
+  exact d1
+
+  -- hRight.inr.right
+  exact d2
 
 --------------------------------------------------------------------------------
 -- 361〜365：関数をグラフ関係として見たときの単射・全射
@@ -144,8 +339,19 @@ def relGraph (f : α → β) : Rel α β := fun a b => f a = b
 -- ヒント：a=a を仮定して witness を f a にする
 example (f : α → β) :
     RelLe (relId α) (relComp (relGraph f) (relTrans (relGraph f))) := by
-  -- TODO
-  sorry
+  dsimp [RelLe, relId, relComp, relGraph, relTrans]
+  intro a b c
+  refine ⟨?d, ?e, ?f⟩
+
+  -- d
+  apply f
+  exact a
+
+  -- e
+  rfl
+
+  -- f
+  rw [c]
 
 -- 362：単射 ↔ graph ; graphᵀ ⊆ id
 -- ヒント：
@@ -154,14 +360,33 @@ example (f : α → β) :
 example (f : α → β) :
     _root_.Function.Injective f ↔
       RelLe (relComp (relGraph f) (relTrans (relGraph f))) (relId α) := by
-  -- TODO
-  sorry
+  dsimp [RelLe, relComp, relGraph, relTrans, relId,Function.Injective]
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro a b c d
+  apply a
+  obtain ⟨d1, d2, d3⟩ := d
+  rw [d2, d3]
+
+  -- hRight
+  intro g h i j
+  apply g
+  exists (f h)
+  rw [j]
+  constructor
+  -- left
+  rfl
+  -- right
+  rfl
 
 -- 363：常に成り立つ：graphᵀ ; graph ⊆ id（同じ x から出たら同じ y）
 example (f : α → β) :
     RelLe (relComp (relTrans (relGraph f)) (relGraph f)) (relId β) := by
-  -- TODO
-  sorry
+  dsimp [RelLe, relComp, relTrans, relGraph, relId]
+  intro a b c
+  obtain ⟨c1, c2, c3⟩ := c
+  rw [←c2, ←c3]
 
 -- 364：全射 ↔ id ⊆ graphᵀ ; graph
 -- ヒント：
@@ -170,8 +395,23 @@ example (f : α → β) :
 example (f : α → β) :
     _root_.Function.Surjective f ↔
       RelLe (relId β) (relComp (relTrans (relGraph f)) (relGraph f)) := by
-  -- TODO
-  sorry
+  dsimp [RelLe, relComp, relTrans, relId, relGraph, Function.Surjective]
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro a c d e
+  obtain ⟨a1, a2⟩ := a c
+  refine ⟨a1, a2, ?_⟩
+  rw [←e]
+  exact a2
+
+  -- hRight
+  intro g h
+  have i : ∃ b_1, f b_1 = h ∧ f b_1 = h := by
+    apply g
+    rfl
+  obtain ⟨i1, i2, i3⟩ := i
+  exact ⟨i1, i2⟩
 
 -- 365：全単射 ↔ 「両側が id になる」（関係的な“逆行列”）
 -- ※ Function.Bijective f は Injective ∧ Surjective
@@ -184,8 +424,92 @@ example (f : α → β) :
     Bijective f ↔
       (relComp (relGraph f) (relTrans (relGraph f)) = relId α) ∧
       (relComp (relTrans (relGraph f)) (relGraph f) = relId β) := by
-  -- TODO
-  sorry
+  dsimp [Bijective, Function.Injective, Function.Surjective]
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro a
+  obtain ⟨a1, a2⟩ := a
+  constructor
+
+  -- hLeft.left
+  funext x y
+  dsimp [relComp , relGraph, relTrans, relId]
+  have h : f x = f y → x = y := by
+    apply a1
+  apply propext
+  refine ⟨?bLeft, ?bRight⟩
+
+  -- bLeft
+  intro i
+  apply h
+  obtain ⟨i1, i2, i3⟩ := i
+  rw [i2, i3]
+
+  -- bRight
+  intro j
+  exists (f x)
+  constructor
+
+  -- bRight.left
+  rfl
+
+  -- bRight.right
+  rw [j]
+
+  -- hLeft.right
+  funext x y
+  apply propext
+  dsimp [relComp , relGraph, relTrans, relId]
+  --  apply a2
+  refine ⟨?cLeft, ?cRight⟩
+
+  -- cLeft
+  intro l
+  obtain ⟨l1, l2, l3⟩ := l
+  rw [←l2, ←l3]
+
+  -- cRight
+  intro m
+  have n : ∃ a, f a = x := by
+    apply a2
+  obtain ⟨n1, n2⟩ := n
+  exists n1
+  constructor
+  -- cRight.left
+  exact n2
+  -- cRight.right
+  rw [←m]
+  exact n2
+
+  -- hRight
+  intro b
+  obtain ⟨b1, b2⟩ := b
+  refine ⟨?d, ?e⟩
+
+  -- d
+  intro g h i
+  have hb1xy := congrFun (congrFun b1 g) h
+  dsimp [relComp, relGraph, relTrans, relId] at hb1xy
+  rw [←hb1xy]
+  exists (f g)
+  constructor
+  -- d.left
+  rfl
+  -- d.right
+  rw [i]
+
+  -- e
+  intro j
+  have hb2y := congrFun (congrFun b2 j) j
+  dsimp [relComp, relGraph, relTrans, relId] at hb2y
+  have n : ∃ b, f b = j := by
+    have n1 : j = j := by rfl
+    rw [←hb2y] at n1
+    obtain ⟨n2, n3, n4⟩ := n1
+    exists n2
+  obtain ⟨n5, n6⟩ := n
+  exists n5
 
 --------------------------------------------------------------------------------
 -- 366〜370：閉包（Kleene star の入口：反復合成）
