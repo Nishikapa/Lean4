@@ -526,8 +526,47 @@ def relStar (R : Rel α α) : Rel α α :=
 -- ヒント：induction n with | zero => ... | succ n ih => ...
 example (R S : Rel α α) :
     RelLe R S → ∀ n, RelLe (relPow R n) (relPow S n) := by
-  -- TODO
-  sorry
+  intro a b c d e
+  dsimp [Rel] at R S
+  dsimp [RelLe] at a
+  induction b with
+  | zero =>
+    dsimp [relPow, relId]
+    dsimp [relPow, relId] at e
+    exact e
+  | succ n ih =>
+    dsimp [relPow]
+    dsimp [relComp]
+    cases e with
+    | intro e1 e2 =>
+      refine ⟨?f, ?g, ?h⟩
+      -- f
+      exact d
+      -- g
+      apply ih
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 -- 367：反復の連結（経路の連結）：pow m ; pow n ⊆ pow (m+n)
 -- ヒント：induction n
