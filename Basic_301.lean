@@ -438,47 +438,186 @@ def relOfFun (f : α → β) : Rel α β := fun a b => f a = b
 -- ヒント：constructor; intro h; cases h with | inl => ... | inr => ...
 example (R S : Rel α β) :
     ∀ a b, relAdd R S a b ↔ relAdd S R a b := by
-  -- TODO
-  sorry
+  intro a b
+  dsimp [relAdd]
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro c
+  obtain (h : R a b) | (h : S a b) := c
+
+  -- hLeft.inl
+  right
+  exact h
+
+  -- hLeft.inr
+  left
+  exact h
+
+  -- hRight
+  intro d
+  obtain (h : S a b) | (h : R a b) := d
+
+  -- hRight.inl
+  right
+  exact h
+
+  -- hRight.inr
+  left
+  exact h
 
 -- 322：relAdd は結合的（点ごと ↔）
 -- ヒント：cases で Or を2回さばく
 example (R S T : Rel α β) :
     ∀ a b, relAdd (relAdd R S) T a b ↔ relAdd R (relAdd S T) a b := by
-  -- TODO
-  sorry
+
+  intro a b
+  dsimp [relAdd]
+  dsimp [Rel] at R S T
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro c
+  obtain ((h: R a b) | (h : S a b)) | (h : T a b) := c
+
+  -- hLeft.inl.inl
+  left
+  exact h
+
+  -- hLeft.inl.inr
+  right
+  left
+  exact h
+
+  -- hLeft.inr
+  right
+  right
+  exact h
+
+  -- hRight
+  intro d
+  obtain (h : R a b) | ((h : S a b) | (h : T a b)) := d
+
+  -- hRight.inl
+  left
+  left
+  exact h
+
+  -- hRight.inr.inl
+  left
+  right
+  exact h
+
+  -- hRight.inr.inr
+  right
+  exact h
 
 -- 323：relAdd は冪等（R+R ↔ R）
 example (R : Rel α β) :
     ∀ a b, relAdd R R a b ↔ R a b := by
-  -- TODO
-  sorry
+  intro a b
+  dsimp [relAdd]
+  dsimp [Rel] at R
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro c
+  obtain (h : R a b) | (h : R a b) := c
+
+  -- hLeft.inl
+  exact h
+
+  -- hLeft.inr
+  exact h
+
+  -- hRight
+  intro d
+  left
+  exact d
 
 -- 324：relMul は可換（点ごと ↔）
 -- ヒント：⟨h1,h2⟩ を ⟨h2,h1⟩ に入れ替える
 example (R S : Rel α β) :
     ∀ a b, relMul R S a b ↔ relMul S R a b := by
-  -- TODO
-  sorry
+  intro a b
+  dsimp [relMul]
+  dsimp [Rel] at R S
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro c
+  obtain ⟨h1, h2⟩ := c
+  exact ⟨h2, h1⟩
+
+  -- hRight
+  intro d
+  obtain ⟨h1, h2⟩ := d
+  exact ⟨h2, h1⟩
 
 -- 325：relMul は結合的（点ごと ↔）
 example (R S T : Rel α β) :
     ∀ a b, relMul (relMul R S) T a b ↔ relMul R (relMul S T) a b := by
-  -- TODO
-  sorry
+  intro a b
+  dsimp [relMul]
+  dsimp [Rel] at R S T
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro c
+  obtain ⟨⟨c1, c2⟩, c3⟩ := c
+  exact ⟨c1, ⟨c2, c3⟩⟩
+
+  -- hRight
+  intro d
+  obtain ⟨c1, ⟨c2, c3⟩⟩ := d
+  exact ⟨⟨c1, c2⟩, c3⟩
 
 -- 326：relMul は冪等（R∧R ↔ R）
 example (R : Rel α β) :
     ∀ a b, relMul R R a b ↔ R a b := by
-  -- TODO
-  sorry
+  intro a b
+  dsimp [relMul]
+  dsimp [Rel] at R
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro c
+  obtain ⟨h1, h2⟩ := c
+  exact h1
+
+  -- hRight
+  intro d
+  exact ⟨d, d⟩
 
 -- 327：吸収律  R ∧ (R ∨ S) ↔ R
 -- ヒント：cases で (R a b ∨ S a b) を分岐
 example (R S : Rel α β) :
     ∀ a b, relMul R (relAdd R S) a b ↔ R a b := by
-  -- TODO
-  sorry
+  intro a b
+  dsimp [relMul, relAdd]
+  dsimp [Rel] at R S
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro c
+  obtain ⟨c1, c2 | c3⟩ := c
+
+  -- hLeft.inl
+  exact c1
+
+  -- hLeft.inr
+  exact c1
+
+  -- hRight
+  intro d
+  constructor
+
+  -- hRight.left
+  exact d
+
+  -- hRight.right
+  left
+  exact d
 
 --------------------------------------------------------------------------------
 -- 0（False関係）と合成
@@ -487,21 +626,60 @@ example (R S : Rel α β) :
 -- 328：0 + R ↔ R
 example (R : Rel α β) :
     ∀ a b, relAdd (relZero α β) R a b ↔ R a b := by
-  -- TODO
-  sorry
+  intro a b
+  dsimp [relAdd, relZero]
+  dsimp [Rel] at R
+  refine ⟨?hLeft, ?hRight⟩
+  -- hLeft
+  intro c
+  obtain (h : False) | (h : R a b) := c
+
+  -- hLeft.inl
+  contradiction
+
+  -- hLeft.inr
+  exact h
+
+  -- hRight
+  intro d
+  right
+  exact d
 
 -- 329：0 ; R は常に False
 -- 型に注意：0 : Rel α β, R : Rel β γ
 example (R : Rel β γ) :
     ∀ a c, relComp (relZero α β) R a c ↔ False := by
-  -- TODO
-  sorry
+  intro a b
+  dsimp [relComp, relZero]
+  dsimp [Rel] at R
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro c
+  obtain ⟨c1, c2, c3⟩ := c
+  contradiction
+
+  -- hRight
+  intro d
+  contradiction
 
 -- 330：R ; 0 は常に False
 example (R : Rel α β) :
     ∀ a c, relComp R (relZero β γ) a c ↔ False := by
-  -- TODO
-  sorry
+
+  intro a b
+  dsimp [relComp, relZero]
+  dsimp [Rel] at R
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro c
+  obtain ⟨c1, c2, c3⟩ := c
+  contradiction
+
+  -- hRight
+  intro d
+  contradiction
 
 --------------------------------------------------------------------------------
 -- transpose（converse）と合成/加法
@@ -511,14 +689,51 @@ example (R : Rel α β) :
 -- ヒント：∃ の witness をそのまま使って、And の順番を入れ替える
 example (R : Rel α β) (S : Rel β γ) :
     ∀ c a, relTrans (relComp R S) c a ↔ relComp (relTrans S) (relTrans R) c a := by
-  -- TODO
-  sorry
+  intro a b
+  dsimp [relTrans, relComp]
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro c
+  obtain ⟨c1, c2, c3⟩ := c
+  exists c1
+
+  -- hRight.left
+  intro d
+  obtain ⟨d1, d2, d3⟩ := d
+  exists d1
 
 -- 332：(R+S)ᵀ ↔ Rᵀ + Sᵀ（点ごと ↔）
 example (R S : Rel α β) :
     ∀ b a, relTrans (relAdd R S) b a ↔ relAdd (relTrans R) (relTrans S) b a := by
-  -- TODO
-  sorry
+
+  intro a b
+  dsimp [relTrans, relAdd]
+  dsimp [Rel] at R S
+  refine ⟨?hLeft, ?hRight⟩
+  -- hLeft
+  intro c
+  obtain (h : R b a) | (h : S b a) := c
+
+  -- hLeft.inl
+  left
+  exact h
+
+  -- hLeft.inr
+  right
+  exact h
+
+  -- hRight
+  intro d
+  obtain (h : R b a) | (h : S b a) := d
+
+  -- hRight.inl
+  left
+  exact h
+
+  -- hRight.inr
+  right
+  exact h
 
 --------------------------------------------------------------------------------
 -- domain/codomain（関係の「定義域」「値域」）
@@ -528,15 +743,25 @@ example (R S : Rel α β) :
 -- ヒント：obtain ⟨b, hb⟩ := ...
 example (R : Rel α β) (S : Rel β γ) :
     ∀ a, relDom (relComp R S) a → relDom R a := by
-  -- TODO
-  sorry
+
+  intro a
+  dsimp [relDom, relComp]
+  dsimp [Rel] at R S
+
+  intro c
+  obtain ⟨c1, c2, c3, c4⟩ := c
+  exists c2
 
 -- 334：cod(R;S) ⊆ cod(S)
 -- ヒント：∃a, ∃b, ... から ∃b, ... を作る
 example (R : Rel α β) (S : Rel β γ) :
     ∀ c, relCod (relComp R S) c → relCod S c := by
-  -- TODO
-  sorry
+  intro a
+  dsimp [relCod, relComp]
+  dsimp [Rel] at R S
+  intro c
+  obtain ⟨c1, c2, c3, c4⟩ := c
+  exists c2
 
 --------------------------------------------------------------------------------
 -- ガード（∧で条件を付ける）を ∃ の外に出す
@@ -546,15 +771,48 @@ example (R : Rel α β) (S : Rel β γ) :
 -- relComp ((A∧R)) S ↔ A ∧ relComp R S
 example (A : α → Prop) (R : Rel α β) (S : Rel β γ) :
     ∀ a c, relComp (relGuardL A R) S a c ↔ A a ∧ relComp R S a c := by
-  -- TODO
-  sorry
+  intro a b
+  dsimp [relComp, relGuardL]
+  dsimp [Rel] at R S
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro c
+  obtain ⟨c1, ⟨c2, c3⟩, c4⟩ := c
+  constructor
+
+  -- hLeft.left
+  exact c2
+
+  -- hLeft.right
+  exists c1
+
+  -- hRight
+  intro d
+  obtain ⟨d1, ⟨d2, d3, d4⟩⟩ := d
+  exists d2
 
 -- 336：右ガードも合成の外へ出せる
 -- relComp R (S∧B) ↔ (relComp R S) ∧ B
 example (B : γ → Prop) (R : Rel α β) (S : Rel β γ) :
     ∀ a c, relComp R (relGuardR B S) a c ↔ relComp R S a c ∧ B c := by
-  -- TODO
-  sorry
+
+  intro a b
+  dsimp [relComp, relGuardR]
+  dsimp [Rel] at R S
+  refine ⟨?hLeft, ?hRight⟩
+  -- hLeft
+  intro c
+  obtain ⟨c1, c2, ⟨c3, c4⟩⟩ := c
+  constructor
+  -- hLeft.left
+  exists c1
+  -- hLeft.right
+  exact c4
+  -- hRight
+  intro d
+  obtain ⟨⟨d1, d2, d3⟩, d4⟩ := d
+  exists d1
 
 --------------------------------------------------------------------------------
 -- 関数を「関係（グラフ）」として扱う
@@ -564,14 +822,27 @@ example (B : γ → Prop) (R : Rel α β) (S : Rel β γ) :
 -- relOfFun f ; relOfFun g ↔ relOfFun (g∘f)
 example (f : α → β) (g : β → γ) :
     ∀ a c, relComp (relOfFun f) (relOfFun g) a c ↔ relOfFun (funComp g f) a c := by
-  -- TODO
-  sorry
+  intro a b
+  dsimp [relComp, relOfFun, funComp]
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro c
+  obtain ⟨c1, c2, c3⟩ := c
+  rw [c2]
+  exact c3
+
+  -- hRight
+  intro d
+  exists (f a)
+
 
 -- 338：恒等関数のグラフ ↔ relId
 example :
     ∀ a b : α, relOfFun (fun x : α => x) a b ↔ relId α a b := by
-  -- TODO
-  sorry
+  intro a b
+  dsimp [relOfFun, relId]
+  rfl
 
 --------------------------------------------------------------------------------
 -- tensor（⊗）と合成：interchange law（モノイダル圏っぽい核心）
@@ -586,8 +857,26 @@ example (R1 : Rel α β) (R2 : Rel β γ) (S1 : Rel δ ε) (S2 : Rel ε ζ) :
     ∀ p q,
       relComp (relTensor R1 S1) (relTensor R2 S2) p q
         ↔ relTensor (relComp R1 R2) (relComp S1 S2) p q := by
-  -- TODO
-  sorry
+  intro p q
+  dsimp [relComp, relTensor]
+  dsimp [Rel] at R1 R2 S1 S2
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro a
+  obtain ⟨⟨b1,b2⟩,⟨c1,c2⟩,d,e⟩ := a
+  constructor
+
+  -- hLeft.left
+  exists b1
+
+  -- hLeft.right
+  exists b2
+
+  -- hRight
+  intro f
+  obtain ⟨⟨f1,f2,f3⟩, f4, ⟨f5, f6⟩⟩ := f
+  exists (f1, f4)
 
 -- 340：tensor は relAdd に分配（左側）
 -- (R+S)⊗T ↔ (R⊗T) + (S⊗T)
@@ -596,12 +885,163 @@ example (R S : Rel α β) (T : Rel γ δ) :
     ∀ p q,
       relTensor (relAdd R S) T p q ↔
         relAdd (relTensor R T) (relTensor S T) p q := by
+  intro a b
+  dsimp [relTensor, relAdd]
+  dsimp [Rel] at R S T
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro c
+  obtain ⟨(c1 : R a.1 b.1) | (c1 : S a.1 b.1), c2⟩ := c
+
+  -- hLeft.inl
+  left
+  constructor
+
+  -- hLeft.inl.h.left
+  exact c1
+
+  -- hLeft.inl.h.right
+  exact c2
+
+  -- hLeft.inr
+  right
+  constructor
+
+  -- hLeft.inr.h.left
+  exact c1
+
+  -- hLeft.inr.h.right
+  exact c2
+
+  -- hRight
+  intro d
+
+  obtain ⟨d1, d2⟩ | ⟨d1, d2⟩ := d
+
+  -- hRight.inl
+  constructor
+
+  -- hRight.inl.left
+  left
+  exact d1
+
+  -- hRight.inl.right
+  exact d2
+
+  -- hRight.inr
+  constructor
+
+  -- hRight.inr.left
+  right
+  exact d1
+
+  -- hRight.inr.right
+  exact d2
+
+-- ☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆
+
+--------------------------------------------------------------------------------
+-- 演習問題 341〜350（次レベル：包含(⊆)中心 / 残余(residuation)入門 / 閉包の入口）
+-- ※ import Mathlib なし
+--------------------------------------------------------------------------------
+
+variable {α β γ δ ε : Type}
+
+--------------------------------------------------------------------------------
+-- 準備：包含（RelLe）を infix にする（読みやすさ用）
+--------------------------------------------------------------------------------
+infix:50 " ⊆ " => RelLe
+
+--------------------------------------------------------------------------------
+-- 341：⊆ の反対称（点ごとの同値 → 関係の等しさ）
+-- R ⊆ S と S ⊆ R なら R = S
+--
+-- ヒント：
+--   funext a; funext b;
+--   apply propext; constructor; intro h; ...
+example (R S : Rel α β) : (R ⊆ S) → (S ⊆ R) → R = S := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- 342：relAdd は最小上界（join）その1：R ⊆ R+S
+-- ヒント：intro a b h; left; exact h
+example (R S : Rel α β) : R ⊆ relAdd R S := by
+  -- TODO
+  sorry
+
+-- 343：relAdd は最小上界（join）その2：S ⊆ R+S
+example (R S : Rel α β) : S ⊆ relAdd R S := by
+  -- TODO
+  sorry
+
+-- 344：relAdd は最小上界（join）その3：R ⊆ T と S ⊆ T なら (R+S) ⊆ T
+-- ヒント：intro a b h; cases h with | inl => ... | inr => ...
+example (R S T : Rel α β) : (R ⊆ T) → (S ⊆ T) → relAdd R S ⊆ T := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- 345：relMul は最大下界（meet）その1：(R∧S) ⊆ R
+-- 319 の一般版（型を合わせて）
+example (R S : Rel α β) : relMul R S ⊆ R := by
+  -- TODO
+  sorry
+
+-- 346：relMul は最大下界（meet）その2：T ⊆ R と T ⊆ S なら T ⊆ (R∧S)
+-- ヒント：intro a b ht; exact ⟨hTR _ _ ht, hTS _ _ ht⟩
+example (R S T : Rel α β) : (T ⊆ R) → (T ⊆ S) → T ⊆ relMul R S := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- 347：relComp の単調性（片側版）
+-- R ⊆ R' なら (R;S) ⊆ (R';S)
+-- ヒント：315 の片側（右側は同じ）
+example (R R' : Rel α β) (S : Rel β γ) :
+    (R ⊆ R') → relComp R S ⊆ relComp R' S := by
+  -- TODO
+  sorry
+
+-- 348：relComp の単調性（もう片側）
+-- S ⊆ S' なら (R;S) ⊆ (R;S')
+example (R : Rel α β) (S S' : Rel β γ) :
+    (S ⊆ S') → relComp R S ⊆ relComp R S' := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- 349：transpose は包含を反転しない（単調）
+-- R ⊆ S なら Rᵀ ⊆ Sᵀ
+--
+-- ヒント：intro b a h; exact hRS a b h
+example (R S : Rel α β) :
+    (R ⊆ S) → relTrans R ⊆ relTrans S := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- 350：残余（右残余）の導入：S ⊳ T
+-- 「b から始めて S を通った先はすべて T に入る」という関係
+--
+-- 定義：S ▷ T : Rel β α   （注意：型がひっくり返る）
+--   (S ▷ T) b a  := ∀ c, S a c → T b c
+--
+-- 目標：residuation（片方向でOK）：
+--   (R;S) ⊆ T  →  R ⊆ (S ▷ T)
+--
+-- これはテンソル論理の「含意」の超入門です。
+def rRes (S : Rel α γ) (T : Rel β γ) : Rel β α :=
+  fun b a => ∀ c, S a c → T b c
+
+example (R : Rel β α) (S : Rel α γ) (T : Rel β γ) :
+    (relComp R S ⊆ T) → (R ⊆ rRes S T) := by
   -- TODO
   sorry
 
 end TL
 
--- ☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆
 -- ☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆
 -- ☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆
 -- ☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆
