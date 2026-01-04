@@ -2,11 +2,8 @@
 -- 演習問題 301〜320（Tensor Logic / Attention 準備：Relational fragment）
 -- ※ import Mathlib なしでOK
 --------------------------------------------------------------------------------
-
 variable {α β γ δ : Type}
-
 namespace TL
-
 --------------------------------------------------------------------------------
 -- 1) 「テンソル＝関数」: funext の練習
 --------------------------------------------------------------------------------
@@ -406,7 +403,6 @@ example (QK M : Rel α β) (KV : Rel β γ) :
   exact c5
   -- y
   exact c4
-
 
 -- ☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆
 --------------------------------------------------------------------------------
@@ -961,39 +957,82 @@ infix:50 " ⊆ " => RelLe
 --   funext a; funext b;
 --   apply propext; constructor; intro h; ...
 example (R S : Rel α β) : (R ⊆ S) → (S ⊆ R) → R = S := by
-  -- TODO
-  sorry
+  intro a b
+  funext c d
+  dsimp [RelLe] at a b
+  dsimp [Rel] at R S
+  apply propext
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro h
+  apply a
+  exact h
+
+  -- hRight
+  intro h
+  apply b
+  exact h
 
 --------------------------------------------------------------------------------
 -- 342：relAdd は最小上界（join）その1：R ⊆ R+S
 -- ヒント：intro a b h; left; exact h
 example (R S : Rel α β) : R ⊆ relAdd R S := by
-  -- TODO
-  sorry
+  dsimp [RelLe, relAdd]
+  dsimp [Rel] at R S
+  intro a b c
+  left
+  exact c
 
 -- 343：relAdd は最小上界（join）その2：S ⊆ R+S
 example (R S : Rel α β) : S ⊆ relAdd R S := by
-  -- TODO
-  sorry
+  dsimp [RelLe, relAdd]
+  dsimp [Rel] at R S
+  intro a b c
+  right
+  exact c
 
 -- 344：relAdd は最小上界（join）その3：R ⊆ T と S ⊆ T なら (R+S) ⊆ T
 -- ヒント：intro a b h; cases h with | inl => ... | inr => ...
 example (R S T : Rel α β) : (R ⊆ T) → (S ⊆ T) → relAdd R S ⊆ T := by
-  -- TODO
-  sorry
+  dsimp [RelLe, relAdd]
+  dsimp [Rel] at R S T
+  intro a b c d e
+  obtain (h : R c d) | (h : S c d) := e
+
+  -- inl
+  apply a
+  exact h
+
+  -- inr
+  apply b
+  exact h
 
 --------------------------------------------------------------------------------
 -- 345：relMul は最大下界（meet）その1：(R∧S) ⊆ R
 -- 319 の一般版（型を合わせて）
 example (R S : Rel α β) : relMul R S ⊆ R := by
-  -- TODO
-  sorry
+  dsimp [RelLe, relMul]
+  dsimp [Rel] at R S
+  intro a b c
+  obtain ⟨c1, c2⟩ := c
+  exact c1
 
 -- 346：relMul は最大下界（meet）その2：T ⊆ R と T ⊆ S なら T ⊆ (R∧S)
 -- ヒント：intro a b ht; exact ⟨hTR _ _ ht, hTS _ _ ht⟩
 example (R S T : Rel α β) : (T ⊆ R) → (T ⊆ S) → T ⊆ relMul R S := by
-  -- TODO
-  sorry
+  dsimp [RelLe, relMul]
+  dsimp [Rel] at R S T
+  intro a b c d e
+  constructor
+
+  -- left
+  apply a
+  exact e
+
+  -- right
+  apply b
+  exact e
 
 --------------------------------------------------------------------------------
 -- 347：relComp の単調性（片側版）
@@ -1001,15 +1040,41 @@ example (R S T : Rel α β) : (T ⊆ R) → (T ⊆ S) → T ⊆ relMul R S := by
 -- ヒント：315 の片側（右側は同じ）
 example (R R' : Rel α β) (S : Rel β γ) :
     (R ⊆ R') → relComp R S ⊆ relComp R' S := by
-  -- TODO
-  sorry
+  dsimp [RelLe, relComp]
+  dsimp [Rel] at R R' S
+  intro a b c d
+  obtain ⟨d1, d2, d3⟩ := d
+  refine ⟨?e, ?f, ?g⟩
+
+  -- e
+  exact d1
+
+  -- f
+  apply a
+  exact d2
+
+  -- g
+  exact d3
 
 -- 348：relComp の単調性（もう片側）
 -- S ⊆ S' なら (R;S) ⊆ (R;S')
 example (R : Rel α β) (S S' : Rel β γ) :
     (S ⊆ S') → relComp R S ⊆ relComp R S' := by
-  -- TODO
-  sorry
+  dsimp [RelLe, relComp]
+  dsimp [Rel] at R S S'
+  intro a b c d
+  obtain ⟨d1, d2, d3⟩ := d
+  refine ⟨?e, ?f, ?g⟩
+
+  -- e
+  exact d1
+
+  -- f
+  exact d2
+
+  -- g
+  apply a
+  exact d3
 
 --------------------------------------------------------------------------------
 -- 349：transpose は包含を反転しない（単調）
@@ -1018,8 +1083,11 @@ example (R : Rel α β) (S S' : Rel β γ) :
 -- ヒント：intro b a h; exact hRS a b h
 example (R S : Rel α β) :
     (R ⊆ S) → relTrans R ⊆ relTrans S := by
-  -- TODO
-  sorry
+  dsimp [RelLe, relTrans]
+  dsimp [Rel] at R S
+  intro a b c d
+  apply a
+  exact d
 
 --------------------------------------------------------------------------------
 -- 350：残余（右残余）の導入：S ⊳ T
@@ -1037,8 +1105,20 @@ def rRes (S : Rel α γ) (T : Rel β γ) : Rel β α :=
 
 example (R : Rel β α) (S : Rel α γ) (T : Rel β γ) :
     (relComp R S ⊆ T) → (R ⊆ rRes S T) := by
-  -- TODO
-  sorry
+  dsimp [RelLe, relComp, rRes]
+  dsimp [Rel] at R S T
+  intro a b c d e f
+  apply a
+  refine ⟨?g, ?h, ?i⟩
+
+  -- g
+  exact c
+
+  -- h
+  exact d
+
+  -- i
+  exact f
 
 end TL
 
