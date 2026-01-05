@@ -522,60 +522,59 @@ def relPow (R : Rel α α) : Nat → Rel α α
 def relStar (R : Rel α α) : Rel α α :=
   fun a b => ∃ n, relPow R n a b
 
+-- ☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆
 -- 366：relPow は関係に関して単調（R ⊆ S なら pow R n ⊆ pow S n）
 -- ヒント：induction n with | zero => ... | succ n ih => ...
 example (R S : Rel α α) :
     RelLe R S → ∀ n, RelLe (relPow R n) (relPow S n) := by
-  intro a b c d e
+  -- intro a b c d eとはやらないのが重要
+  intro a b
   dsimp [Rel] at R S
   dsimp [RelLe] at a
+  dsimp [RelLe]
   induction b with
   | zero =>
     dsimp [relPow, relId]
-    dsimp [relPow, relId] at e
+    intro c d e
     exact e
   | succ n ih =>
-    dsimp [relPow]
-    dsimp [relComp]
-    cases e with
-    | intro e1 e2 =>
-      refine ⟨?f, ?g, ?h⟩
-      -- f
-      exact d
-      -- g
-      apply ih
+    dsimp [RelLe, relPow, relComp]
+    intro c d e
+    obtain ⟨e1, e2, e3⟩ := e
+    refine ⟨e1, ?g, ?h⟩
+    -- g
+    apply ih
+    exact e2
+    -- h
+    apply a
+    exact e3
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+-- ☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆
 -- 367：反復の連結（経路の連結）：pow m ; pow n ⊆ pow (m+n)
 -- ヒント：induction n
 --   n=0: 右単位元（308 相当）で
 --   succ: 306 で括弧を動かして ih を使う（最後に Nat.add_succ ）
 example (R : Rel α α) :
     ∀ m n, RelLe (relComp (relPow R m) (relPow R n)) (relPow R (m + n)) := by
-  -- TODO
-  sorry
+  intro a b
+  induction b with
+  | zero =>
+    dsimp [relPow, relId]
+    intro c d e
+    obtain ⟨e1, e2, e3⟩ := e
+    rw [←e3]
+    exact e2
+  | succ n ih =>
+    dsimp [RelLe]
+    intro c d e
+    dsimp [relPow, relComp] at e
+    obtain ⟨e1, e2, ⟨e3, e4, e5⟩⟩ := e
+    rw [Nat.add_succ]
+    dsimp [relPow, relComp]
+    refine ⟨e3, ?f, ?g⟩
+    apply ih
+    exists e1
+    exact e5
 
 -- 368：star は reflexive：id ⊆ star
 -- ヒント：n := 0 を witness に
