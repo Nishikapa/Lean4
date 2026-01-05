@@ -7,23 +7,57 @@ namespace TL
 
 variable {α β γ δ ε : Type}
 
+-- ■ 二項関係 (Binary Relation)
+-- 型 α の要素と 型 β の要素の間に「関係がある (Prop)」ことを表します。
+-- 集合論的には「α × β の部分集合」、グラフ理論的には「α から β への有向辺の集合」と同じです。
 def Rel (α β : Type) := α → β → Prop
 
--- 関係の合成（＝ 収縮 / 最小の Einstein summation）
+-- ■ 関係の合成 (Composition)
+-- 「a から b へ行き (R)、そこから c へ行く (S) 経路がある」こと。
+-- 行列の乗算（ブール行列の積）と同じ構造です。
+-- 記号では「R ; S」や「S ∘ R」と書かれます。
 def relComp (R : Rel α β) (S : Rel β γ) : Rel α γ :=
   fun a c => ∃ b, R a b ∧ S b c
 
-def relAdd (R S : Rel α β) : Rel α β := fun a b => R a b ∨ S a b
-def relMul (R S : Rel α β) : Rel α β := fun a b => R a b ∧ S a b
+-- ■ 関係の和 (Union / Join)
+-- 「R または S のどちらかの経路がある」こと。
+-- 集合としての「和集合 (R ∪ S)」に対応します。
+def relAdd (R S : Rel α β) : Rel α β :=
+  fun a b => R a b ∨ S a b
 
-def RelLe (R S : Rel α β) : Prop := ∀ a b, R a b → S a b
+-- ■ 関係の積 (Intersection / Meet)
+-- 「R かつ S の両方の性質を持つ経路である」こと。
+-- 集合としての「共通部分 (R ∩ S)」に対応します。
+-- ※「積 (Mul)」という名前ですが、関係代数では共通部分（mask）として機能します。
+def relMul (R S : Rel α β) : Rel α β :=
+  fun a b => R a b ∧ S a b
 
+-- ■ 包含関係 (Inclusion / Less than or Equal)
+-- 「R にある経路はすべて S にも含まれている」こと。
+-- 集合の「部分集合 (R ⊆ S)」の関係であり、論理的には「ならば (→)」を含意します。
+def RelLe (R S : Rel α β) : Prop :=
+  ∀ a b, R a b → S a b
+
+-- ■ 右残余 (Right Residual)
+-- 関係代数における「割り算」のような操作です。ガロア接続（随伴）の片割れになります。
+-- 意味：「S で a から行けるすべての先 c について、T でも b から c に行ける」ような (b, a) の関係。
+-- 直感的には「S の行き先を T がカバーしているか」という包含チェックに近い操作です。
 def rRes (S : Rel α γ) (T : Rel β γ) : Rel β α :=
   fun b a => ∀ c, S a c → T b c
 
-def relTrans (R : Rel α β) : Rel β α := fun b a => R a b
+-- ■ 転置 / 逆関係 (Transpose / Converse)
+-- 矢印の向きを逆にした関係。
+-- 「a から b への辺がある」を「b から a への辺がある」と読み替えます。
+-- 行列の「転置行列」に対応します。記号では「Rᵀ」や「R⁻¹」と書かれます。
+def relTrans (R : Rel α β) : Rel β α :=
+  fun b a => R a b
 
-def relId (α : Type) : Rel α α := fun a b => a = b
+-- ■ 恒等関係 (Identity)
+-- 「自分自身へのループ」のみを持つ関係。
+-- 行列における「単位行列（対角成分のみ1）」に対応します。
+-- 何も移動しない（No-op）操作を表します。
+def relId (α : Type) : Rel α α :=
+  fun a b => a = b
 
 --------------------------------------------------------------------------------
 -- 351：residuation（ガロア対応）完全版（右残余）
@@ -32,7 +66,7 @@ def relId (α : Type) : Rel α α := fun a b => a = b
 -- ヒント：
 --   (→) は 350 と同じ
 --   (←) は witness b を取り、(R ⊆ rRes S T) を b に適用して c に流す
-theorem theorem351 (R : Rel β α) (S : Rel α γ) (T : Rel β γ) :
+theorem ex351 (R : Rel β α) (S : Rel α γ) (T : Rel β γ) :
     RelLe (relComp R S) T ↔ RelLe R (rRes S T) := by
   dsimp [RelLe, relComp, rRes]
   dsimp [Rel] at R S T
@@ -68,7 +102,7 @@ theorem theorem351 (R : Rel β α) (S : Rel α γ) (T : Rel β γ) :
 def lRes (R : Rel α β) (T : Rel α γ) : Rel β γ :=
   fun b c => ∀ a, R a b → T a c
 
-theorem theorem352 (R : Rel α β) (S : Rel β γ) (T : Rel α γ) :
+theorem ex352 (R : Rel α β) (S : Rel β γ) (T : Rel α γ) :
     RelLe (relComp R S) T ↔ RelLe S (lRes R T) := by
   dsimp [RelLe, relComp, lRes]
   dsimp [Rel] at R S T
@@ -96,7 +130,7 @@ theorem theorem352 (R : Rel α β) (S : Rel β γ) (T : Rel α γ) :
 --------------------------------------------------------------------------------
 -- 353：右残余 rRes の単調性（T側は単調、S側は反単調）
 -- (a) S ⊆ S' なら  (S' ▷ T) ⊆ (S ▷ T)   （反単調）
-theorem theorem353_1 (S S' : Rel α γ) (T : Rel β γ) :
+theorem ex353_1 (S S' : Rel α γ) (T : Rel β γ) :
     RelLe S S' → RelLe (rRes S' T) (rRes S T) := by
   dsimp [RelLe, rRes]
   dsimp [Rel] at S S' T
@@ -106,7 +140,7 @@ theorem theorem353_1 (S S' : Rel α γ) (T : Rel β γ) :
   exact e
 
 -- (b) T ⊆ T' なら  (S ▷ T) ⊆ (S ▷ T')   （単調）
-theorem theorem353_2 (S : Rel α γ) (T T' : Rel β γ) :
+theorem ex353_2 (S : Rel α γ) (T T' : Rel β γ) :
     RelLe T T' → RelLe (rRes S T) (rRes S T') := by
   dsimp [RelLe, rRes]
   dsimp [Rel] at S T T'
@@ -118,7 +152,7 @@ theorem theorem353_2 (S : Rel α γ) (T T' : Rel β γ) :
 --------------------------------------------------------------------------------
 -- 354：左残余 lRes も同様（R側は反単調、T側は単調）
 -- (a) R ⊆ R' なら  (R' ⊲ T) ⊆ (R ⊲ T)
-theorem theorem354_1 (R R' : Rel α β) (T : Rel α γ) :
+theorem ex354_1 (R R' : Rel α β) (T : Rel α γ) :
     RelLe R R' → RelLe (lRes R' T) (lRes R T) := by
   dsimp [RelLe, lRes]
   dsimp [Rel] at R R' T
@@ -128,7 +162,7 @@ theorem theorem354_1 (R R' : Rel α β) (T : Rel α γ) :
   exact f
 
 -- (b) T ⊆ T' なら  (R ⊲ T) ⊆ (R ⊲ T')
-theorem theorem354_2 (R : Rel α β) (T T' : Rel α γ) :
+theorem ex354_2 (R : Rel α β) (T T' : Rel α γ) :
     RelLe T T' → RelLe (lRes R T) (lRes R T') := by
   dsimp [RelLe, lRes]
   dsimp [Rel] at R T T'
@@ -142,7 +176,7 @@ theorem theorem354_2 (R : Rel α β) (T T' : Rel α γ) :
 -- (S ▷ T)ᵀ = (Sᵀ ⊲ Tᵀ)
 --
 -- ヒント：funext a; funext b; rfl（dsimp すると同じ形になる）
-theorem theorem355 (S : Rel α γ) (T : Rel β γ) :
+theorem ex355 (S : Rel α γ) (T : Rel β γ) :
     relTrans (rRes S T) = lRes (relTrans S) (relTrans T) := by
   funext a b
   dsimp [relTrans, rRes, lRes]
@@ -152,7 +186,7 @@ theorem theorem355 (S : Rel α γ) (T : Rel β γ) :
 -- dom(R;S) a ↔ ∃b, R a b ∧ dom(S) b
 def dom (R : Rel α β) : α → Prop := fun a => ∃ b, R a b
 
-theorem theorem356 (R : Rel α β) (S : Rel β γ) :
+theorem ex356 (R : Rel α β) (S : Rel β γ) :
     ∀ a, dom (relComp R S) a ↔ ∃ b, R a b ∧ dom S b := by
   dsimp [dom, relComp]
   intro a
@@ -196,7 +230,7 @@ theorem theorem356 (R : Rel α β) (S : Rel β γ) :
 -- cod(R;S) c ↔ ∃b, cod(R) b ∧ S b c
 def cod (R : Rel α β) : β → Prop := fun b => ∃ a, R a b
 
-theorem theorem357 (R : Rel α β) (S : Rel β γ) :
+theorem ex357 (R : Rel α β) (S : Rel β γ) :
     ∀ c, cod (relComp R S) c ↔ ∃ b, cod R b ∧ S b c := by
   dsimp [cod, relComp]
   dsimp [Rel] at R S
@@ -239,7 +273,7 @@ theorem theorem357 (R : Rel α β) (S : Rel β γ) :
 --------------------------------------------------------------------------------
 -- 358：∧（mask）を合成の左から押し込む（片方向だけ成り立つ）
 -- (R∧M);S ⊆ (R;S) ∧ (M;S)
-theorem theorem358 (R M : Rel α β) (S : Rel β γ) :
+theorem ex358 (R M : Rel α β) (S : Rel β γ) :
     RelLe (relComp (relMul R M) S) (relMul (relComp R S) (relComp M S)) := by
   dsimp [RelLe, relComp, relMul]
   dsimp [Rel] at R M S
@@ -262,7 +296,7 @@ theorem theorem358 (R M : Rel α β) (S : Rel β γ) :
 --------------------------------------------------------------------------------
 -- 359：∧（mask）を合成の右から押し込む（片方向）
 -- R;(S∧T) ⊆ (R;S) ∧ (R;T)
-theorem theorem359 (R : Rel α β) (S T : Rel β γ) :
+theorem ex359 (R : Rel α β) (S T : Rel β γ) :
     RelLe (relComp R (relMul S T)) (relMul (relComp R S) (relComp R T)) := by
   dsimp [RelLe, relComp, relMul]
   dsimp [Rel] at R S T
@@ -285,7 +319,7 @@ theorem theorem359 (R : Rel α β) (S T : Rel β γ) :
 --------------------------------------------------------------------------------
 -- 360：mask と add の分配（点ごとの ↔）
 -- (R∨S)∧M ↔ (R∧M) ∨ (S∧M)
-theorem theorem360 (R S M : Rel α β) :
+theorem ex360 (R S M : Rel α β) :
     ∀ a b,
       relMul (relAdd R S) M a b ↔ relAdd (relMul R M) (relMul S M) a b := by
   dsimp [relMul, relAdd]
@@ -337,7 +371,7 @@ def relGraph (f : α → β) : Rel α β := fun a b => f a = b
 
 -- 361：常に成り立つ：id ⊆ graph ; graphᵀ（反射性）
 -- ヒント：a=a を仮定して witness を f a にする
-theorem theorem361 (f : α → β) :
+theorem ex361 (f : α → β) :
     RelLe (relId α) (relComp (relGraph f) (relTrans (relGraph f))) := by
   dsimp [RelLe, relId, relComp, relGraph, relTrans]
   intro a b c
@@ -357,7 +391,7 @@ theorem theorem361 (f : α → β) :
 -- ヒント：
 --   (→) ∃b, f a=b ∧ f a'=b から f a = f a' を作って injective で落とす
 --   (←) f a = f a' から witness b := f a で合成を作って ⊆id で落とす
-theorem theorem362 (f : α → β) :
+theorem ex362 (f : α → β) :
     _root_.Function.Injective f ↔
       RelLe (relComp (relGraph f) (relTrans (relGraph f))) (relId α) := by
   dsimp [RelLe, relComp, relGraph, relTrans, relId,Function.Injective]
@@ -381,7 +415,7 @@ theorem theorem362 (f : α → β) :
   rfl
 
 -- 363：常に成り立つ：graphᵀ ; graph ⊆ id（同じ x から出たら同じ y）
-theorem theorem363 (f : α → β) :
+theorem ex363 (f : α → β) :
     RelLe (relComp (relTrans (relGraph f)) (relGraph f)) (relId β) := by
   dsimp [RelLe, relComp, relTrans, relGraph, relId]
   intro a b c
@@ -392,7 +426,7 @@ theorem theorem363 (f : α → β) :
 -- ヒント：
 --   (→) y を任意に、全射で x を取って witness にする
 --   (←) id y y を ⊆ に流して witness x を回収する
-theorem theorem364 (f : α → β) :
+theorem ex364 (f : α → β) :
     _root_.Function.Surjective f ↔
       RelLe (relId β) (relComp (relTrans (relGraph f)) (relGraph f)) := by
   dsimp [RelLe, relComp, relTrans, relId, relGraph, Function.Surjective]
@@ -420,7 +454,7 @@ theorem theorem364 (f : α → β) :
 def Bijective (f : α → β) : Prop :=
   _root_.Function.Injective f ∧ _root_.Function.Surjective f
 
-theorem theorem365 (f : α → β) :
+theorem ex365 (f : α → β) :
     Bijective f ↔
       (relComp (relGraph f) (relTrans (relGraph f)) = relId α) ∧
       (relComp (relTrans (relGraph f)) (relGraph f) = relId β) := by
@@ -525,7 +559,7 @@ def relStar (R : Rel α α) : Rel α α :=
 -- ☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆
 -- 366：relPow は関係に関して単調（R ⊆ S なら pow R n ⊆ pow S n）
 -- ヒント：induction n with | zero => ... | succ n ih => ...
-theorem theorem366 (R S : Rel α α) :
+theorem ex366 (R S : Rel α α) :
   RelLe R S → ∀ n, RelLe (relPow R n) (relPow S n) := by
   -- intro a b c d eとはやらないのが重要
   intro a b
@@ -554,7 +588,7 @@ theorem theorem366 (R S : Rel α α) :
 -- ヒント：induction n
 --   n=0: 右単位元（308 相当）で
 --   succ: 306 で括弧を動かして ih を使う（最後に Nat.add_succ ）
-theorem theorem367 (R : Rel α α) :
+theorem ex367 (R : Rel α α) :
     ∀ m n, RelLe (relComp (relPow R m) (relPow R n)) (relPow R (m + n)) := by
   intro a b
   induction b with
@@ -578,7 +612,7 @@ theorem theorem367 (R : Rel α α) :
 
 -- 368：star は reflexive：id ⊆ star
 -- ヒント：n := 0 を witness に
-theorem theorem368 (R : Rel α α) : RelLe (relId α) (relStar R) := by
+theorem ex368 (R : Rel α α) : RelLe (relId α) (relStar R) := by
   dsimp [RelLe, relId, relStar, relPow]
   intro a b c
   refine ⟨?d, ?e⟩
@@ -593,7 +627,7 @@ theorem theorem368 (R : Rel α α) : RelLe (relId α) (relStar R) := by
 --   obtain ⟨m, hm⟩ := ...
 --   obtain ⟨n, hn⟩ := ...
 --   witness は m+n、367 を使う
-theorem theorem369 (R : Rel α α) :
+theorem ex369 (R : Rel α α) :
     RelLe (relComp (relStar R) (relStar R)) (relStar R) := by
   dsimp [RelLe, relComp, relStar]
   intro a b c
@@ -601,7 +635,7 @@ theorem theorem369 (R : Rel α α) :
   obtain ⟨c4, c5⟩ := c2
   obtain ⟨c6, c7⟩ := c3
   exists (c4 + c6)
-  apply theorem367 R c4 c6
+  apply ex367 R c4 c6
   dsimp [relComp]
   exists c1
 
@@ -609,16 +643,15 @@ theorem theorem369 (R : Rel α α) :
 -- ヒント：
 --   obtain ⟨n, hn⟩ := hstar
 --   exact ⟨n, (366 hRS n _ _ hn)⟩
-theorem theorem370 (R S : Rel α α) :
+theorem ex370 (R S : Rel α α) :
     RelLe R S → RelLe (relStar R) (relStar S) := by
 
   intro a b c d
   obtain ⟨d1, d2⟩ := d
   exists d1
 
-  apply theorem366 R S a d1
+  apply ex366 R S a d1
   exact d2
-
 
 --------------------------------------------------------------------------------
 -- 演習問題 371〜390（残余 / 像・逆像 / スター閉包：実践寄せ）
@@ -639,10 +672,49 @@ variable {α β γ δ : Type}
 --   目標は
 --     (∀ c, (S a c ∨ S' a c) → T b c) ↔
 --     ( (∀ c, S a c → T b c) ∧ (∀ c, S' a c → T b c) )
+--
+-- SとS'のどちらかが成り立つならば、Tが成り立つ　とこと、
+-- Sがなり立つならTが成り立つ、また、S'が成り立つならTが成り立つ、
+-- の両方が成り立つことは同値である。
 theorem ex371 (S S' : Rel α γ) (T : Rel β γ) :
     rRes (relAdd S S') T = relMul (rRes S T) (rRes S' T) := by
-  -- TODO
-  sorry
+  funext a b
+  dsimp [relMul]
+  dsimp [rRes]
+  dsimp [relAdd]
+  apply propext
+  refine ⟨?hLeft, ?hRight⟩
+  -- hLeft
+  intro c
+  refine ⟨?d, ?e⟩
+  -- d
+  intro f g
+  have h : S b f ∨ S' b f → T a f := by
+    apply c
+  apply h
+  left
+  exact g
+  -- e
+  intro f g
+  have h : S b f ∨ S' b f → T a f := by
+    apply c
+  apply h
+  right
+  exact g
+  -- hRight
+  intro d e f
+  obtain ⟨d1, d2⟩ := d
+  have g : S b e → T a e := by
+    apply d1
+  have h : S' b e → T a e := by
+    apply d2
+  cases f with
+  | inl f1 =>
+    apply g
+    exact f1
+  | inr f2 =>
+    apply h
+    exact f2
 
 --------------------------------------------------------------------------------
 -- 372：右残余は「右引数の ∧」に分配する ★★★★☆
@@ -651,23 +723,129 @@ theorem ex371 (S S' : Rel α γ) (T : Rel β γ) :
 -- ヒント： (A → (B ∧ C)) ↔ (A→B) ∧ (A→C)
 theorem ex372 (S : Rel α γ) (T T' : Rel β γ) :
     rRes S (relMul T T') = relMul (rRes S T) (rRes S T') := by
-  -- TODO
-  sorry
+  funext a b
+  dsimp [relMul, rRes]
+  apply propext
+  refine ⟨?hLeft, ?hRight⟩
+  -- hLeft
+  intro c
+  constructor
+  -- hLeft.left
+  intro d e
+  have f : S b d → T a d ∧ T' a d := by
+    apply c
+  have g: T a d ∧ T' a d := by
+    apply f
+    exact e
+  obtain ⟨g1, g2⟩ := g
+  exact g1
+  -- hLeft.right
+  intro d e
+  have f : S b d → T a d ∧ T' a d := by
+    apply c
+  have g: T a d ∧ T' a d := by
+    apply f
+    exact e
+  obtain ⟨g1, g2⟩ := g
+  exact g2
+  -- hRight
+  intro d e f
+  obtain ⟨d1, d2⟩ := d
+  have g : S b e → T a e := by
+    apply d1
+  have h : S b e → T' a e := by
+    apply d2
+  constructor
+  -- hRight.left
+  apply g
+  exact f
+  -- hRight.right
+  apply h
+  exact f
 
 --------------------------------------------------------------------------------
 -- 373：左残余も「左引数の +」を ∧ に変える ★★★★☆
 theorem ex373 (R R' : Rel α β) (T : Rel α γ) :
     lRes (relAdd R R') T = relMul (lRes R T) (lRes R' T) := by
-  -- TODO
-  sorry
+  funext a b
+  dsimp [relMul, lRes, relAdd]
+  apply propext
+  refine ⟨?hLeft, ?hRight⟩
+  -- hLeft
+  intro c
+  constructor
+  -- hLeft.left
+  intro d e
+  have f : R d a ∨ R' d a → T d b := by
+    apply c
+  apply f
+  left
+  exact e
+  -- hLeft.right
+  intro d e
+  have f : R d a ∨ R' d a → T d b := by
+    apply c
+  apply f
+  right
+  exact e
+  -- hRight
+  intro d e f
+  obtain ⟨d1, d2⟩ := d
+  have g : R e a → T e b := by
+    apply d1
+  have h : R' e a → T e b := by
+    apply d2
+  cases f with
+  | inl f1 =>
+    apply g
+    exact f1
+  | inr f2 =>
+    apply h
+    exact f2
 
 --------------------------------------------------------------------------------
 -- 374：左残余も「右引数の ∧」に分配する ★★★★☆
 theorem ex374 (R : Rel α β) (T T' : Rel α γ) :
     lRes R (relMul T T') = relMul (lRes R T) (lRes R T') := by
-  -- TODO
-  sorry
-
+  funext a b
+  dsimp [relMul, lRes]
+  apply propext
+  refine ⟨?hLeft, ?hRight⟩
+  -- hLeft
+  intro c
+  constructor
+  -- hLeft.left
+  intro d e
+  have f : R d a → T d b ∧ T' d b := by
+    apply c
+  have h : T d b ∧ T' d b := by
+    apply f
+    exact e
+  obtain ⟨h1, h2⟩ := h
+  exact h1
+  -- hLeft.right
+  intro d e
+  have f : R d a → T d b ∧ T' d b := by
+    apply c
+  have h : T d b ∧ T' d b := by
+    apply f
+    exact e
+  obtain ⟨h1, h2⟩ := h
+  exact h2
+  -- hRight
+  intro d e f
+  obtain ⟨d1, d2⟩ := d
+  have g : R e a → T e b := by
+    apply d1
+  have h : R e a → T' e b := by
+    apply d2
+  constructor
+  -- hRight.left
+  apply g
+  exact f
+  -- hRight.right
+  apply h
+  exact f
 
 --------------------------------------------------------------------------------
 -- 像/逆像（到達集合）＝ “関係を集合に作用させる”
