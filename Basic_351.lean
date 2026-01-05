@@ -579,8 +579,14 @@ example (R : Rel α α) :
 -- 368：star は reflexive：id ⊆ star
 -- ヒント：n := 0 を witness に
 example (R : Rel α α) : RelLe (relId α) (relStar R) := by
-  -- TODO
-  sorry
+  dsimp [RelLe, relId, relStar, relPow]
+  intro a b c
+  refine ⟨?d, ?e⟩
+  -- d
+  exact 0
+  -- e
+  dsimp [relPow, relId]
+  exact c
 
 -- 369：star は transitive：star ; star ⊆ star
 -- ヒント：
@@ -589,8 +595,9 @@ example (R : Rel α α) : RelLe (relId α) (relStar R) := by
 --   witness は m+n、367 を使う
 example (R : Rel α α) :
     RelLe (relComp (relStar R) (relStar R)) (relStar R) := by
-  -- TODO
-  sorry
+  dsimp [RelLe, relComp, relStar]
+  intro a b c
+  obtain ⟨c1, ⟨c2, c3⟩⟩ := c
 
 -- 370：star は単調（R ⊆ S なら star R ⊆ star S）
 -- ヒント：
