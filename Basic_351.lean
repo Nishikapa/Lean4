@@ -850,15 +850,11 @@ theorem ex374 (R : Rel α β) (T T' : Rel α γ) :
 --------------------------------------------------------------------------------
 -- 像/逆像（到達集合）＝ “関係を集合に作用させる”
 --------------------------------------------------------------------------------
-
 def Pred (X : Type) := X → Prop
-
 def relImg (R : Rel α β) (A : Pred α) : Pred β :=
   fun b => ∃ a, A a ∧ R a b
-
 def relPre (R : Rel α β) (B : Pred β) : Pred α :=
   fun a => ∃ b, R a b ∧ B b
-
 --------------------------------------------------------------------------------
 -- 375：像は合成に関して結合的（到達集合の実用形）★★★★★
 -- Img (R;S) A = Img S (Img R A)
@@ -866,16 +862,71 @@ def relPre (R : Rel α β) (B : Pred β) : Pred α :=
 -- ヒント：funext c; apply propext; constructor <;> intro h; ...
 theorem ex375 (R : Rel α β) (S : Rel β γ) (A : Pred α) :
     relImg (relComp R S) A = relImg S (relImg R A) := by
-  -- TODO
-  sorry
+
+  funext a
+  apply propext
+  dsimp [relImg]
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro c
+  obtain ⟨c1, c2, ⟨c3, ⟨c4, c5⟩⟩⟩ := c
+  refine ⟨c3, ?e⟩
+
+  -- e
+  constructor
+
+  -- e.left
+  exists c1
+
+  -- e.right
+  apply c5
+
+  -- hRight
+  intro d
+  obtain ⟨d1, ⟨⟨d2, ⟨d3, d4⟩⟩, d5⟩⟩ := d
+  exists d2
+  constructor
+  -- hRight.left
+  apply d3
+  -- hRight.right
+  dsimp [relComp]
+  exists d1
 
 --------------------------------------------------------------------------------
 -- 376：逆像も合成に関して結合的 ★★★★★
 -- Pre (R;S) C = Pre R (Pre S C)
 theorem ex376 (R : Rel α β) (S : Rel β γ) (C : Pred γ) :
     relPre (relComp R S) C = relPre R (relPre S C) := by
-  -- TODO
-  sorry
+
+  funext a
+  dsimp [relPre, relComp]
+  apply propext
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro c
+  obtain ⟨c1, ⟨⟨c2, ⟨c3, c4⟩⟩, c5⟩⟩ := c
+  exists c2
+  constructor
+
+  -- hLeft.left
+  exact c3
+
+  -- hLeft.right
+  exists c1
+
+  -- hRight
+  intro d
+  obtain ⟨d1, ⟨d2, ⟨d3, ⟨d4, d5⟩⟩⟩⟩ := d
+  exists d3
+  constructor
+
+  -- hRight.left
+  exists d1
+
+  -- hRight.right
+  exact d5
 
 --------------------------------------------------------------------------------
 -- 377：関数 f をグラフ関係にしたとき、逆像は普通の合成になる ★★★★☆
@@ -888,8 +939,18 @@ theorem ex376 (R : Rel α β) (S : Rel β γ) (C : Pred γ) :
 --   (←) witness は b := f a
 theorem ex377 (f : α → β) (B : Pred β) :
     relPre (relGraph f) B = (fun a => B (f a)) := by
-  -- TODO
-  sorry
+  funext a
+  dsimp [relPre, relGraph]
+  apply propext
+  refine ⟨?hLeft, ?hRight⟩
+  -- hLeft
+  intro c
+  obtain ⟨c1, c2, c3⟩ := c
+  rw [c2]
+  exact c3
+  -- hRight
+  intro d
+  exists (f a)
 
 --------------------------------------------------------------------------------
 -- 378：関数合成のグラフは、グラフ関係の合成に一致 ★★★★☆
@@ -898,14 +959,24 @@ theorem ex377 (f : α → β) (B : Pred β) :
 -- ヒント：funext a c; apply propext; constructor <;> intro h
 theorem ex378 (f : α → β) (g : β → γ) :
     relGraph (fun x => g (f x)) = relComp (relGraph f) (relGraph g) := by
-  -- TODO
-  sorry
+  funext a b
+  dsimp [relGraph, relComp]
+  apply propext
+  refine ⟨?hLeft, ?hRight⟩
 
+  -- hLeft
+  intro c
+  exists (f a)
+
+  -- hRight
+  intro d
+  obtain ⟨d1, d2, d3⟩ := d
+  rw [d2]
+  exact d3
 
 --------------------------------------------------------------------------------
 -- pow / star（反復合成＝到達可能性）
 --------------------------------------------------------------------------------
-
 --------------------------------------------------------------------------------
 -- 379：pow 1 は R 自身（点ごと ↔）★★★★☆
 -- relPow R (Nat.succ 0) a b ↔ R a b
@@ -915,16 +986,34 @@ theorem ex378 (f : α → β) (g : β → γ) :
 --   307/308 相当の “単位元” 展開を自前でやる感じ
 theorem ex379 (R : Rel α α) :
     ∀ a b, relPow R (Nat.succ 0) a b ↔ R a b := by
-  -- TODO
-  sorry
+  intro a b
+  dsimp [relPow, relComp, relId]
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro c
+  obtain ⟨c1, c2, c3⟩ := c
+  rw [c2]
+  exact c3
+
+  -- hRight
+  intro d
+  refine ⟨a, ?e, ?f⟩
+  -- e
+  rfl
+  -- f
+  exact d
 
 --------------------------------------------------------------------------------
 -- 380：R ⊆ star R（1ステップ到達は到達）★★★★☆
 -- ヒント：n := 1（= succ 0）を witness にして 379 を使う
 theorem ex380 (R : Rel α α) :
     RelLe R (relStar R) := by
-  -- TODO
-  sorry
+  dsimp [RelLe, relStar]
+  intro a b c
+  exists 1
+  dsimp [relPow, relComp, relId]
+  exists a
 
 --------------------------------------------------------------------------------
 -- 381：star は “合成で冪等”（star;star = star）★★★★★
@@ -933,8 +1022,30 @@ theorem ex380 (R : Rel α α) :
 --   (⊇) は star の reflexive性（368）を使って witness を b にする
 theorem ex381 (R : Rel α α) :
     relComp (relStar R) (relStar R) = relStar R := by
-  -- TODO
-  sorry
+  funext a b
+  dsimp [relComp, relStar]
+  apply propext
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro c
+  obtain ⟨c1, ⟨⟨c2, c3⟩, ⟨c4, c5⟩⟩⟩ := c
+  exists (c2 + c4)
+  apply ex367 R c2 c4
+  dsimp [relComp]
+  exists c1
+
+  -- hRight
+  intro d
+  obtain ⟨d1, d2⟩ := d
+  exists a
+  constructor
+
+  -- hRight.left
+  exists 0
+
+  -- hRight.right
+  exists d1
 
 --------------------------------------------------------------------------------
 -- 382：star は “演算として冪等”（star(star R) = star R）★★★★★
@@ -949,7 +1060,6 @@ theorem ex382 (R : Rel α α) :
     relStar (relStar R) = relStar R := by
   -- TODO
   sorry
-
 
 --------------------------------------------------------------------------------
 -- transpose と pow / star（“逆向き到達”）
