@@ -1056,10 +1056,46 @@ theorem ex381 (R : Rel α α) :
 --   2) relStar (relStar R) ⊆ relStar R は
 --      「relStar R が reflexive & transitive」であることから
 --      pow (star R) n ⊆ star R を帰納法で示して star を潰す
+theorem ex382_pre (R : Rel α α):
+  ∀ n a b, relPow (relStar R) n a b → relStar R a b := by
+  intro n
+  induction n with
+  | zero =>
+    intro a b c
+    dsimp [relPow, relId] at c
+    exists 0
+  | succ n ih =>
+    intro a b
+    dsimp [relPow, relComp]
+    intro c
+    obtain ⟨c1, c2, c3⟩ := c
+    -- theorem ex369 (R : Rel α α) : RelLe (relComp (relStar R) (relStar R)) (relStar R)
+    apply ex369
+    dsimp [relComp]
+    exists c1
+    constructor
+    -- left
+    apply ih
+    exact c2
+    -- right
+    exact c3
+
 theorem ex382 (R : Rel α α) :
     relStar (relStar R) = relStar R := by
-  -- TODO
-  sorry
+
+  funext a b
+  --dsimp [relStar]
+  apply propext
+  refine ⟨?hLeft, ?hRight⟩
+  -- hLeft
+  intro c
+  obtain ⟨c1, c2⟩ := c
+  apply ex382_pre R c1 a b c2
+  -- hRight
+  intro d
+  -- theorem ex380 (R : Rel α α) : RelLe R (relStar R)
+  apply ex380
+  exact d
 
 --------------------------------------------------------------------------------
 -- transpose と pow / star（“逆向き到達”）
@@ -1072,8 +1108,18 @@ theorem ex382 (R : Rel α α) :
 -- ヒント：funext c a; apply propext; constructor <;> intro h; ...
 theorem ex383 (R : Rel α β) (S : Rel β γ) :
     relTrans (relComp R S) = relComp (relTrans S) (relTrans R) := by
-  -- TODO
-  sorry
+  funext a b
+  dsimp [relTrans, relComp]
+  apply propext
+  refine ⟨?hLeft, ?hRight⟩
+  -- hLeft
+  intro c
+  obtain ⟨c1, c2, c3⟩ := c
+  exists c1
+  -- hRight
+  intro d
+  obtain ⟨d1, d2, d3⟩ := d
+  exists d1
 
 --------------------------------------------------------------------------------
 -- 384：transpose は pow に分配する（n回到達を逆向きに）★★★★★
@@ -1081,10 +1127,126 @@ theorem ex383 (R : Rel α β) (S : Rel β γ) :
 --
 -- ヒント：induction n with | zero => ... | succ n ih => ...
 --   succ で 383 と ih を使う
+theorem ex384_pre (R : Rel α α) (n : Nat) :
+    relComp R (relPow R n) = relComp (relPow R n) R := by
+  induction n with
+  | zero =>
+    dsimp [relPow, relId, relComp]
+    funext a b
+    apply propext
+    refine ⟨?hLeft, ?hRight⟩
+    -- hLeft
+    intro c
+    obtain ⟨c1, c2, c3⟩ := c
+    dsimp [relId] at c3
+    dsimp [relComp, relId]
+    exists a
+    constructor
+    -- hLeft.let
+    rfl
+    -- hLeft.right
+    rw [←c3]
+    exact c2
+    -- hRight
+    intro d
+    obtain ⟨d1, d2, d3⟩ := d
+    dsimp [relId] at d2
+    dsimp [relComp, relId]
+    exists b
+    constructor
+    -- hRight.left
+    rw [d2]
+    exact d3
+    -- hRight.right
+    rfl
+  | succ n ih =>
+    funext a b
+    dsimp [relPow]
+    rw [←ih]
+    dsimp [relComp]
+    apply propext
+    refine ⟨?hLeft2, ?hRight2⟩
+    -- hLeft2
+    intro c
+    obtain ⟨c1, c2, ⟨c3, c4, c5⟩⟩ := c
+    -- have h_sub : relComp R (relPow R n) c1 b := ⟨c3, c4, c5⟩
+    have h_sub : relComp R (relPow R n) c1 b := by
+      dsimp [relComp]
+      exists c3
+    rw [ih] at h_sub
+    obtain ⟨h_sub1, h_sub2, h_sub3⟩ := h_sub
+    exists h_sub1
+    constructor
+    -- hLeft2.left
+    exists c1
+    -- hLeft2.right
+    exact h_sub3
+    -- hRight2
+    intro d
+    obtain ⟨d1, ⟨d2, d3, d4⟩, d5⟩ := d
+    have h_sub : relComp (relPow R n) R d2 b := ⟨d1, d4, d5⟩
+    rw [←ih] at h_sub
+    obtain ⟨h_sub1, h_sub2, h_sub3⟩ := h_sub
+    exists d2
+    constructor
+    -- hRight2.left
+    exact d3
+    -- hRight2.right
+    exists h_sub1
+
 theorem ex384 (R : Rel α α) :
     ∀ n, relTrans (relPow R n) = relPow (relTrans R) n := by
-  -- TODO
-  sorry
+  intro n
+  induction n with
+  | zero =>
+    funext a b
+    dsimp [relTrans, relPow, relId]
+    apply propext
+    constructor
+    -- left
+    intro c
+    rw [c]
+    intro c
+    rw [c]
+  | succ n ih =>
+    funext a b
+    apply propext
+    refine ⟨?hLeft, ?hRight⟩
+    -- hLeft
+    intro c
+    obtain ⟨c1, c2, c3⟩ := c
+
+    have h_trans : relComp (relTrans R) (relPow (relTrans R) n) a b := by
+      exists c1
+      constructor
+      · exact c3 -- relTrans R a c1
+      · rw [←ih]
+        exact c2 -- relTrans (relPow R n) c1 b
+
+    -- theorem ex384_pre (R : Rel α α) (n : Nat) :
+    --     relComp R (relPow R n) = relComp (relPow R n) R := by
+    rw [ex384_pre (relTrans R) n] at h_trans
+
+    exact h_trans
+
+    -- hRight
+    dsimp [relPow]
+    intro d
+    rw [←ex384_pre (relTrans R) n] at d
+    obtain ⟨d1, ⟨d2, d3⟩⟩ := d
+    exists d1
+    constructor
+
+    -- hRight.left
+    have ih2 : relTrans (relPow R n)  d1 b = relPow (relTrans R) n d1 b := by
+      rw [ih]
+    rw [←ih2] at d3
+    dsimp [relTrans] at d3
+    exact d3
+
+    -- hRight.right
+    dsimp [relTrans] at d2
+    exact d2
 
 --------------------------------------------------------------------------------
 -- 385：transpose は star にも分配する（到達可能性の逆）★★★★★
@@ -1096,9 +1258,24 @@ theorem ex384 (R : Rel α α) :
 --       exact ⟨n, ?_⟩ で 384 を使って書き換え
 theorem ex385 (R : Rel α α) :
     relTrans (relStar R) = relStar (relTrans R) := by
-  -- TODO
-  sorry
-
+  funext a b
+  dsimp [relTrans, relStar]
+  apply propext
+  refine ⟨?hLeft, ?hRight⟩
+  -- hLeft
+  intro c
+  obtain ⟨c1, c2⟩ := c
+  exists c1
+  rw [←ex384 R c1]
+  dsimp [relTrans]
+  exact c2
+  -- hRight
+  intro d
+  obtain ⟨d1, d2⟩ := d
+  exists d1
+  rw [←ex384 R d1] at d2
+  dsimp [relTrans] at d2
+  exact d2
 
 --------------------------------------------------------------------------------
 -- star の「実用補題」（到達を1歩伸ばす）
@@ -1109,8 +1286,27 @@ theorem ex385 (R : Rel α α) :
 -- ヒント：R ⊆ star（380）と、star の推移性（369）を組み合わせる
 theorem ex386 (R : Rel α α) :
     RelLe (relComp (relStar R) R) (relStar R) := by
-  -- TODO
-  sorry
+  dsimp [RelLe, relComp, relStar]
+  intro a b c
+  obtain ⟨c1, ⟨c2, c3⟩, c4⟩ := c
+  induction c2 with
+  | zero =>
+    dsimp [relPow, relId] at c3
+    exists 1
+    dsimp [relPow, relComp, relId]
+    exists c1
+  | succ n ih =>
+    dsimp [relPow] at c3
+    obtain ⟨c5, c6, c7⟩ := c3
+    exists (n + 1 + 1)
+    -- theorem ex367 (R : Rel α α) :
+    --     ∀ m n, RelLe (relComp (relPow R m) (relPow R n)) (relPow R (m + n))
+    apply ex367 R (n + 1)
+    dsimp [relComp, relPow, relId]
+    exists b
+    constructor
+    -- left
+    -- だめだ！！
 
 --------------------------------------------------------------------------------
 -- 387：R ; star ⊆ star（最初に1歩進んでから到達しても到達）★★★★★
