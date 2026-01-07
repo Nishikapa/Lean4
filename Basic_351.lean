@@ -1435,8 +1435,321 @@ theorem ex389 (R X : Rel α α) :
 --   Transitive は 369 相当：pow の連結（367）を使う
 theorem ex390 (R : Rel α α) :
     Reflexive (relStar R) ∧ Transitive (relStar R) := by
-  -- TODO
-  sorry
+  dsimp [Reflexive]
+  dsimp [Transitive]
+  dsimp [RelLe]
+  dsimp [relComp]
+  dsimp [relStar]
+  dsimp [relId]
+  refine ⟨?hLeft, ?hRight⟩
+  -- hLeft
+  intro a b c
+  exists 0
 
+  -- hRight
+  intro a b c
+  obtain ⟨c1, ⟨c2, c3⟩⟩ := c
+  obtain ⟨c4, c5⟩ := c2
+  obtain ⟨c6, c7⟩ := c3
+  exists (c4 + c6)
+
+  -- theorem ex367 (R : Rel α α) :
+  --     ∀ m n, RelLe (relComp (relPow R m) (relPow R n)) (relPow R (m + n))
+  have test : RelLe (relComp (relPow R c4) (relPow R c6)) (relPow R (c4 + c6)) := by
+    apply ex367 R c4 c6
+
+  dsimp [RelLe, relComp, relPow] at test
+
+  apply ex367 R c4 c6
+  dsimp [relComp]
+  exists c1
+
+-- ☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆
+
+--------------------------------------------------------------------------------
+-- 演習問題 391〜400（Pred（集合）側の包含 / ∀逆像 / star を集合で使う）
+-- ※ import Mathlib なし
+-- ※ 371〜390 の前提：
+--   Rel, relComp, relAdd, relMul, RelLe, relTrans, relGraph,
+--   relPow, relStar, Pred, relImg, relPre
+--------------------------------------------------------------------------------
+
+variable {α β γ δ : Type}
+
+--------------------------------------------------------------------------------
+-- 述語（集合）側の包含
+--------------------------------------------------------------------------------
+
+def PredLe {X : Type} (A B : Pred X) : Prop := ∀ x, A x → B x
+infix:50 " ⊆ₚ " => PredLe
+
+def predAdd {X : Type} (A B : Pred X) : Pred X := fun x => A x ∨ B x
+def predMul {X : Type} (A B : Pred X) : Pred X := fun x => A x ∧ B x
+
+--------------------------------------------------------------------------------
+-- 391：PredLe の反対称（集合の外延性）
+-- A ⊆ₚ B と B ⊆ₚ A なら A = B
+--
+-- ヒント：
+--   funext x; apply propext; constructor <;> intro hx; ...
+theorem ex391 {X : Type} (A B : Pred X) :
+    (A ⊆ₚ B) → (B ⊆ₚ A) → A = B := by
+
+  dsimp [PredLe]
+  intro h1 h2
+  funext x
+  apply propext
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro c
+  apply h1
+  exact c
+
+  -- hRight
+  intro d
+  apply h2
+  exact d
+
+--------------------------------------------------------------------------------
+-- 392：∀版「逆像」（安全側の逆像）を定義してガロア対応（超重要）
+-- preAll R B a := 「a から R で行ける先は全部 B に入る」
+--
+-- 目標：
+--   Img R A ⊆ₚ B  ↔  A ⊆ₚ preAll R B
+--
+-- これは rRes の “集合版” と思ってOK（テンソル論理の含意の入口）
+def relPreAll (R : Rel α β) (B : Pred β) : Pred α :=
+  fun a => ∀ b, R a b → B b
+
+theorem ex392 (R : Rel α β) (A : Pred α) (B : Pred β) :
+    (relImg R A ⊆ₚ B) ↔ (A ⊆ₚ relPreAll R B) := by
+
+  dsimp [PredLe, relImg, relPreAll]
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro h1 a1 h2 b1 h3
+  apply h1
+  exists a1
+
+  -- hRight
+  intro h2 b1 h3
+  obtain ⟨a2, h4, h5⟩ := h3
+  have h21 : A a2 → ∀ (b : β), R a2 b → B b := by
+    apply h2
+  apply h21
+  exact h4
+  exact h5
+
+--------------------------------------------------------------------------------
+-- 393：∃版の逆像 relPre は「転置した関係の像」に一致する
+-- Pre∃(R) B = Img(Rᵀ) B
+--
+-- ヒント：
+--   funext a; apply propext; constructor <;> intro h
+--   ∃ の witness をそのまま使い、∧ の順を入れ替えるだけ
+theorem ex393 (R : Rel α β) (B : Pred β) :
+    relPre R B = relImg (relTrans R) B := by
+  funext a
+  dsimp [relPre, relImg, relTrans]
+  apply propext
+  refine ⟨?hLeft, ?hRight⟩
+  -- hLeft
+  intro h1
+  obtain ⟨b1, h2, h3⟩ := h1
+  exists b1
+  -- hRight
+  intro h4
+  obtain ⟨b2, h5, h6⟩ := h4
+  exists b2
+
+--------------------------------------------------------------------------------
+-- 394：像 relImg の単調性（関係側 + 集合側）
+-- R ⊆ S かつ A ⊆ₚ A' なら Img R A ⊆ₚ Img S A'
+--
+-- ヒント：
+--   intro b hb; obtain ⟨a, hA, hR⟩ := hb; refine ⟨a, ?_, ?_⟩
+theorem ex394 (R S : Rel α β) (A A' : Pred α) :
+    (RelLe R S) → (A ⊆ₚ A') → (relImg R A ⊆ₚ relImg S A') := by
+  dsimp [PredLe, relImg, RelLe]
+  intro h1 h2 b1 h3
+  obtain ⟨a1, h4, h5⟩ := h3
+  exists a1
+  constructor
+  -- left
+  apply h2
+  exact h4
+  -- right
+  apply h1
+  exact h5
+
+--------------------------------------------------------------------------------
+-- 395：∀逆像 relPreAll の単調性（関係側は反単調じゃなく単調、集合側も単調）
+-- R ⊆ S なら preAll S B ⊆ₚ preAll R B （※R側は「反単調」）
+-- B ⊆ₚ B' なら preAll R B ⊆ₚ preAll R B' （※B側は単調）
+--
+-- まず (a)(b) をそれぞれ証明せよ
+theorem ex395_a (R S : Rel α β) (B : Pred β) :
+    RelLe R S → (relPreAll S B ⊆ₚ relPreAll R B) := by
+  dsimp [PredLe, relPreAll, RelLe]
+  intro h1 a1 h2 b1 h3
+  apply h2
+  apply h1
+  exact h3
+
+theorem ex395_b (R : Rel α β) (B B' : Pred β) :
+    (B ⊆ₚ B') → (relPreAll R B ⊆ₚ relPreAll R B') := by
+  dsimp [PredLe, relPreAll]
+  intro h1 a1 h2 b1 h3
+  apply h1
+  apply h2
+  exact h3
+
+--------------------------------------------------------------------------------
+-- 396：graph の場合、∀逆像は「普通の合成」になる
+-- preAll (graph f) B a ↔ B (f a)
+--
+-- ヒント：dsimp [relPreAll, relGraph]; constructor
+--   (→) は b := f a を入れて使う
+--   (←) は hb : f a = b で書き換えて終わり
+theorem ex396 (f : α → β) (B : Pred β) :
+    relPreAll (relGraph f) B = (fun a => B (f a)) := by
+  funext a
+  dsimp [relPreAll, relGraph]
+  apply propext
+  refine ⟨?hLeft, ?hRight⟩
+  -- hLeft
+  intro h1
+  apply h1
+  rfl
+  -- hRight
+  intro h2 b1 h3
+  rw [←h3]
+  exact h2
+
+--------------------------------------------------------------------------------
+-- 397：Injective を「集合の ∃逆像×像」性質で特徴付ける（実践）
+-- f が単射 ↔ すべての集合 A について  Pre∃(graph f) (Img(graph f) A) ⊆ₚ A
+--
+-- ヒント（→）：
+--   a ∈ Pre∃(graph f)(Img(graph f)A) から
+--     ∃b, f a=b ∧ (∃a', A a' ∧ f a'=b)
+--   を取り、Injective で a=a' に落とす
+--
+-- ヒント（←）：
+--   A を「{x | x = a}」の singleton にして使う
+theorem ex397 (f : α → β) :
+    _root_.Function.Injective f ↔
+      (∀ A : Pred α, (relPre (relGraph f) (relImg (relGraph f) A) ⊆ₚ A)) := by
+  dsimp [Function.Injective, relPre]
+  refine ⟨?hLeft, ?hRight⟩
+  -- hLeft
+  intro h1 h2 a1 h3
+  obtain ⟨b1, h4, h5⟩ := h3
+  dsimp [relGraph] at h4
+  obtain ⟨a2, h6, h7⟩ := h5
+  dsimp [relGraph] at h7
+  have h9 : a1 = a2 := by
+    apply h1
+    rw [h4]
+    rw [h7]
+  rw [h9]
+  exact h6
+  -- hRight
+  intro h1 a1 a2 h2
+  dsimp [PredLe, relPre, relGraph, relImg, Pred] at h1
+
+  have h3 :  ∀ (x : α), (∃ b, f x = b ∧ ∃ a, (a = a2) ∧ f a = b) → (x = a2) := by
+    intro x h4
+    apply h1 (fun x => x = a2) x h4
+
+  have h4 :   (∃ b, f a1 = b ∧ ∃ a, (a = a2) ∧ f a = b) → (a1 = a2) := by
+    intro h5
+    apply h3 a1 h5
+
+  apply h4
+  exists (f a1)
+  constructor
+  -- hRight.left
+  rfl
+  -- hRight.right
+  exists a2
+  constructor
+  -- hRight.right.left
+  rfl
+  -- hRight.right.right
+  rw [h2]
+
+--------------------------------------------------------------------------------
+-- 398：Surjective を「集合の ∃逆像×像」性質で特徴付ける（実践）
+-- f が全射 ↔ すべての集合 B について  B ⊆ₚ Img(graph f) (Pre∃(graph f) B)
+--
+-- ヒント（→）：
+--   b ∈ B を取って、全射で a を取る。a が Pre に入るのは自明。
+--
+-- ヒント（←）：
+--   B を singleton {y} にして使うと、y の原像が取れる
+theorem ex398 (f : α → β) :
+    _root_.Function.Surjective f ↔
+      (∀ B : Pred β, (B ⊆ₚ relImg (relGraph f) (relPre (relGraph f) B))) := by
+  dsimp [Function.Surjective, relPre, relImg, Pred, PredLe, relGraph]
+  refine ⟨?hLeft, ?hRight⟩
+  -- hLeft
+  intro h1 h2 b1 h3
+  obtain ⟨a1, h4⟩ := h1 b1
+  exists a1
+  constructor
+  -- hLeft.left
+  exists b1
+  -- hLeft.right
+  exact h4
+  -- hRight
+  intro h1 b1
+
+  have h2 : ∀ (B : β → Prop) , B b1 → ∃ a, (∃ b, f a = b ∧ B b) ∧ f a = b1 := by
+    intro B h3
+    apply h1 B b1 h3
+
+  have h3 : ∃ a, (∃ b, f a = b ∧ b = b1) ∧ f a = b1 := by
+    apply h2 (fun b => b = b1)
+    rfl
+
+  obtain ⟨a1, ⟨b2, h4, h5⟩, h6⟩ := h3
+  exists a1
+
+--------------------------------------------------------------------------------
+-- 399：star を集合に作用させると「到達可能集合」になる（実用）
+-- A ⊆ₚ Img(star R) A   （0歩で到達できる）
+--
+-- ヒント：
+--   intro a hA
+--   refine ⟨a, hA, ?_⟩
+--   star は reflexive：n := 0
+theorem ex399 (R : Rel α α) (A : Pred α) :
+    (A ⊆ₚ relImg (relStar R) A) := by
+  dsimp [PredLe, relImg, relStar]
+  intro a1 h1
+  exists a1
+  refine ⟨h1, ?hRight⟩
+  -- hRight
+  exists 0
+
+--------------------------------------------------------------------------------
+-- 400：到達集合は 1歩伸ばしても閉じている（実用）
+-- Img R (Img(star R) A) ⊆ₚ Img(star R) A
+--
+-- ヒント：
+--   ex375（像の合成）で Img(R;star) に直してから、
+--   「R;star ⊆ star」or 「star が推移的」系の補題（387/369）を使う
+theorem ex400 (R : Rel α α) (A : Pred α) :
+    relImg R (relImg (relStar R) A) ⊆ₚ relImg (relStar R) A := by
+  dsimp [PredLe, relImg, relComp]
+  intro b1 h1
+  obtain ⟨a1, ⟨a2, h2, h3⟩, h4⟩ := h1
+  exists a2
+  refine ⟨h2, ?hRight⟩
+  apply ex386 R
+  exists a1
 
 end TL
