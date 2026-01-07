@@ -113,8 +113,26 @@ def must {α : Type} (R : Rel α α) (B : Pred α) : Pred α :=
 --------------------------------------------------------------------------------
 theorem ex401 (S : Rel α β) (U : Rel β γ) (T : Rel δ γ) :
     rRes (relComp S U) T = rRes S (rRes U T) := by
-  -- TODO
-  sorry
+  funext c1 a1
+  dsimp [rRes, relComp]
+  apply propext
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro h1 b1 h2 g1 h3
+  apply h1
+  exists b1
+
+  -- hRight
+  intro h1 g1 h2
+  obtain ⟨b1, h4, h5⟩ := h2
+  have h3 : S a1 b1 → U b1 g1 → T c1 g1 := by
+    intro b2 h6
+    apply h1 b1 h4
+    exact h6
+  apply h3
+  exact h4
+  exact h5
 
 --------------------------------------------------------------------------------
 -- 402：左残余の「カリー化」
@@ -122,8 +140,20 @@ theorem ex401 (S : Rel α β) (U : Rel β γ) (T : Rel δ γ) :
 --------------------------------------------------------------------------------
 theorem ex402 (R : Rel α β) (S : Rel β γ) (T : Rel α δ) :
     lRes (relComp R S) T = lRes S (lRes R T) := by
-  -- TODO
-  sorry
+  funext g1 c1
+  dsimp [lRes, relComp]
+  apply propext
+  refine ⟨?hLeft, ?hRight⟩
+  -- hLeft
+  intro h1 b1 h2 a1 h3
+  apply h1 a1
+  exists b1
+  -- hRight
+  intro h1 a1 h2
+  obtain ⟨b1, h4, h5⟩ := h2
+  apply h1 b1
+  exact h5
+  exact h4
 
 --------------------------------------------------------------------------------
 -- 403：∀逆像（preAll）は合成に関して “結合的”
@@ -131,8 +161,27 @@ theorem ex402 (R : Rel α β) (S : Rel β γ) (T : Rel α δ) :
 --------------------------------------------------------------------------------
 theorem ex403 (R : Rel α β) (S : Rel β γ) (C : Pred γ) :
     relPreAll (relComp R S) C = relPreAll R (relPreAll S C) := by
-  -- TODO
-  sorry
+
+  funext a1
+  dsimp [relPreAll, relComp]
+  apply propext
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro h1 b1 h2 g1 h3
+  apply h1
+  exists b1
+
+  -- hRight
+  intro h1 g1 h2
+  obtain ⟨b1, h4, h5⟩ := h2
+  have h3 : R a1 b1 → S b1 g1 → C g1 := by
+    intro b2 h6
+    apply h1 b1 h4
+    exact h6
+  apply h3
+  exact h4
+  exact h5
 
 --------------------------------------------------------------------------------
 -- 404：∀逆像は「和（∨）」を「積（∧）」に変える
@@ -140,8 +189,35 @@ theorem ex403 (R : Rel α β) (S : Rel β γ) (C : Pred γ) :
 --------------------------------------------------------------------------------
 theorem ex404 (R S : Rel α β) (C : Pred β) :
     relPreAll (relAdd R S) C = predMul (relPreAll R C) (relPreAll S C) := by
-  -- TODO
-  sorry
+  funext a1
+  dsimp [relPreAll, relAdd, predMul]
+  apply propext
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro h1
+  constructor
+
+  -- hLeft.left
+  intro b1 h2
+  apply h1
+  left
+  exact h2
+
+  -- hLeft.right
+  intro b1 h2
+  apply h1
+  right
+  exact h2
+
+  -- hRight
+  intro h1 b1 h2
+  obtain ⟨h3, h4⟩ := h1
+  obtain h5 | h6 := h2
+  apply h3
+  exact h5
+  apply h4
+  exact h6
 
 --------------------------------------------------------------------------------
 -- 405：像は「和（∨）」に分配する
@@ -149,8 +225,43 @@ theorem ex404 (R S : Rel α β) (C : Pred β) :
 --------------------------------------------------------------------------------
 theorem ex405 (R S : Rel α β) (A : Pred α) :
     relImg (relAdd R S) A = predAdd (relImg R A) (relImg S A) := by
-  -- TODO
-  sorry
+  funext b1
+  dsimp [relImg, relAdd, predAdd]
+  apply propext
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro h1
+  obtain ⟨a1, h2, h3⟩ := h1
+  obtain h4 | h5 := h3
+
+  -- hLeft.inl
+  left
+  exists a1
+
+  -- hLeft.inr
+  right
+  exists a1
+
+  -- hRight
+  intro h1
+  obtain h2 | h3 := h1
+
+  -- hRight.inl
+  obtain ⟨a1, h4, h5⟩ := h2
+  exists a1
+  constructor
+  exact h4
+  left
+  exact h5
+
+  -- hRight.inr
+  obtain ⟨a1, h4, h5⟩ := h3
+  exists a1
+  constructor
+  exact h4
+  right
+  exact h5
 
 --------------------------------------------------------------------------------
 -- 406：像は「積（∧）」に“片方向”で反映される
@@ -158,8 +269,14 @@ theorem ex405 (R S : Rel α β) (A : Pred α) :
 --------------------------------------------------------------------------------
 theorem ex406 (R S : Rel α β) (A : Pred α) :
     (relImg (relMul R S) A ⊆ₚ predMul (relImg R A) (relImg S A)) := by
-  -- TODO
-  sorry
+  dsimp [relImg, relMul, predMul, PredLe]
+  intro b1 h1
+  obtain ⟨a1, h2, ⟨h3,h4⟩⟩ := h1
+  constructor
+  -- left
+  exists a1
+  -- right
+  exists a1
 
 --------------------------------------------------------------------------------
 -- 407：ガロア対応の unit 形
@@ -167,8 +284,9 @@ theorem ex406 (R S : Rel α β) (A : Pred α) :
 --------------------------------------------------------------------------------
 theorem ex407 (R : Rel α β) (A : Pred α) :
     (A ⊆ₚ relPreAll R (relImg R A)) := by
-  -- TODO
-  sorry
+  dsimp [relImg, relPreAll, PredLe]
+  intro a1 h1 b1 h2
+  exists a1
 
 --------------------------------------------------------------------------------
 -- 408：ガロア対応の counit 形
@@ -176,24 +294,97 @@ theorem ex407 (R : Rel α β) (A : Pred α) :
 --------------------------------------------------------------------------------
 theorem ex408 (R : Rel α β) (B : Pred β) :
     (relImg R (relPreAll R B) ⊆ₚ B) := by
-  -- TODO
-  sorry
+  dsimp [relImg, relPreAll, PredLe]
+  intro b1 h1
+  obtain ⟨a1, h2, h3⟩ := h1
+  apply h2
+  exact h3
 
 --------------------------------------------------------------------------------
 -- 409：reach は単調（A ⊆ B なら reach R A ⊆ reach R B）
 --------------------------------------------------------------------------------
 theorem ex409 (R : Rel α α) (A B : Pred α) :
     (A ⊆ₚ B) → (reach R A ⊆ₚ reach R B) := by
-  -- TODO
-  sorry
+  dsimp [reach, relImg, relStar, PredLe]
+  intro h1 b1 h2
+  obtain ⟨a1, h3, ⟨n1, h4⟩⟩ := h2
+  exists a1
+  constructor
+
+  -- left
+  apply h1
+  exact h3
+
+  -- right
+  exists n1
 
 --------------------------------------------------------------------------------
 -- 410：reach は冪等（reach R (reach R A) = reach R A）
 --------------------------------------------------------------------------------
+
+theorem ex367 (R : Rel α α) :
+    ∀ m n, RelLe (relComp (relPow R m) (relPow R n)) (relPow R (m + n)) := by
+  intro a b
+  induction b with
+  | zero =>
+    dsimp [relPow, relId]
+    intro c d e
+    obtain ⟨e1, e2, e3⟩ := e
+    rw [←e3]
+    exact e2
+  | succ n ih =>
+    dsimp [RelLe]
+    intro c d e
+    dsimp [relPow, relComp] at e
+    obtain ⟨e1, e2, ⟨e3, e4, e5⟩⟩ := e
+    rw [Nat.add_succ]
+    dsimp [relPow, relComp]
+    refine ⟨e3, ?f, ?g⟩
+    apply ih
+    exists e1
+    exact e5
+
 theorem ex410 (R : Rel α α) (A : Pred α) :
     reach R (reach R A) = reach R A := by
-  -- TODO
-  sorry
+  funext b1
+  dsimp [reach, relImg, relStar]
+  apply propext
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro h1
+  obtain ⟨a1, h2, ⟨n1, h3⟩⟩ := h1
+  obtain ⟨a2, h4, ⟨n2, h5⟩⟩ := h2
+  exists a2
+  constructor
+
+  -- hLeft.left
+  exact h4
+
+  -- hLeft.right
+  exists (n2 + n1)
+  apply ex367 R n2 n1
+  dsimp [relComp]
+  exists a1
+
+  -- hRight
+  intro h1
+  obtain ⟨a1, h2, ⟨n1, h3⟩⟩ := h1
+  exists a1
+  constructor
+
+  -- hRight.left
+  exists a1
+  constructor
+
+  -- hRight.left.left
+  exact h2
+
+  -- hRight.left.right
+  exists 0
+
+  -- hRight.right
+  exists n1
 
 --------------------------------------------------------------------------------
 -- 411：不変集合 B を含むなら、到達集合もそこから出ない
@@ -201,8 +392,24 @@ theorem ex410 (R : Rel α α) (A : Pred α) :
 --------------------------------------------------------------------------------
 theorem ex411 (R : Rel α α) (A B : Pred α) :
     (A ⊆ₚ B) → Closed R B → (reach R A ⊆ₚ B) := by
-  -- TODO
+
+  dsimp [reach, relImg, relStar, Closed, PredLe]
+  intro h1 h2 a1 h3
+
+  -- ここでhave使う
+
   sorry
+  -- obtain ⟨a2, h4, ⟨n1, h5⟩⟩ := h3
+
+  -- induction n1 with
+  -- | zero =>
+  --   dsimp [relPow, relId] at h5
+  --   rw [←h5]
+  --   apply h1
+  --   exact h4
+  -- | succ n ih =>
+  --   dsimp [relPow, relComp] at h5
+  --   obtain ⟨a3, h6, h7⟩ := h5
 
 --------------------------------------------------------------------------------
 -- 412：reach R A は Closed（到達集合は一歩進んでも閉じている）
