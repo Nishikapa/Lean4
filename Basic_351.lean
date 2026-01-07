@@ -1299,22 +1299,36 @@ theorem ex386 (R : Rel α α) :
     dsimp [relPow] at c3
     obtain ⟨c5, c6, c7⟩ := c3
     exists (n + 1 + 1)
-    -- theorem ex367 (R : Rel α α) :
-    --     ∀ m n, RelLe (relComp (relPow R m) (relPow R n)) (relPow R (m + n))
-    apply ex367 R (n + 1)
-    dsimp [relComp, relPow, relId]
-    exists b
+    dsimp [relPow, relComp]
+    exists c1
     constructor
     -- left
-    -- だめだ！！
+    exists c5
+    -- right
+    exact c4
 
 --------------------------------------------------------------------------------
 -- 387：R ; star ⊆ star（最初に1歩進んでから到達しても到達）★★★★★
 theorem ex387 (R : Rel α α) :
     RelLe (relComp R (relStar R)) (relStar R) := by
-  -- TODO
-  sorry
 
+  dsimp [RelLe]
+  dsimp [relStar]
+  intro s e h1
+  have ex : relStar R = fun a b => ∃ n, relPow R n a b := by
+    rfl
+  rw [ex] at h1
+
+  obtain ⟨a1, h2, ⟨nh3, h3⟩⟩ := h1
+
+  have h_comp : relComp R (relPow R nh3) s e := by
+    dsimp [relComp]
+    exists a1
+  -- theorem ex384_pre (R : Rel α α) (n : Nat) :
+  --     relComp R (relPow R n) = relComp (relPow R n) R := by
+  rw [ex384_pre R nh3] at h_comp
+
+  exists (nh3 + 1)
 
 --------------------------------------------------------------------------------
 -- star の本質：最小の reflexive-transitive 閉包
@@ -1332,8 +1346,46 @@ def Transitive (X : Rel α α) : Prop := RelLe (relComp X X) X
 --   n で帰納法：0 は reflexive、succ は transitive を使う
 theorem ex388 (R X : Rel α α) :
     Reflexive X → Transitive X → RelLe R X → RelLe (relStar R) X := by
-  -- TODO
-  sorry
+  dsimp [Reflexive]
+  dsimp [Transitive]
+  dsimp [RelLe]
+  dsimp [relStar]
+  dsimp [relId]
+  intro h1 h2 h3
+
+  have h_step : ∀ n s e, relPow R n s e → X s e := by
+    intro n
+    induction n with
+    | zero =>
+      intro _s _e _h
+      dsimp [relPow, relId] at _h
+      rw [_h]
+      apply h1
+      rfl
+    | succ n ih =>
+      intro _s _e _h
+      dsimp [relPow, relComp] at _h
+      obtain ⟨_m, _h1, _h2⟩ := _h
+      apply h2
+      dsimp [relComp]
+      exists _m
+      constructor
+      -- left
+      exact ih _s _m _h1
+      -- right
+      apply h3
+      exact _h2
+
+  intro a1 a2 h4
+  obtain ⟨nh5, h5⟩ := h4
+
+  have h_step2: relPow R nh5 a1 a2 → X a1 a2 := by
+    intro _h
+    apply h_step nh5
+    exact _h
+
+  apply h_step2
+  exact h5
 
 --------------------------------------------------------------------------------
 -- 389：上の最小性からの即コロラリ：X が閉包なら star R ⊆ X ↔ R ⊆ X ★★★★★
@@ -1344,8 +1396,35 @@ theorem ex388 (R X : Rel α α) :
 --   (←) は 388 を使う
 theorem ex389 (R X : Rel α α) :
     Reflexive X → Transitive X → (RelLe (relStar R) X ↔ RelLe R X) := by
-  -- TODO
-  sorry
+  dsimp [Reflexive]
+  dsimp [Transitive]
+  dsimp [RelLe]
+  dsimp [relComp]
+  dsimp [relStar]
+  dsimp [relId]
+  intro h1 h2
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro h3
+  intro a1 a2
+  intro h4
+  apply h3
+
+  -- theorem ex380 (R : Rel α α) :
+  --     RelLe R (relStar R) := by
+  apply ex380 R
+  exact h4
+
+  -- hRight
+  intro h3 a1 a2 h4
+  -- theorem ex388 (R X : Rel α α) :
+  --     Reflexive X → Transitive X → RelLe R X → RelLe (relStar R) X := by
+  apply ex388 R X
+  exact h1
+  exact h2
+  exact h3
+  exact h4
 
 --------------------------------------------------------------------------------
 -- 390：実用：star R が reflexive & transitive であることを “最小性” から回収 ★★★★★
