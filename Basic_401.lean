@@ -444,33 +444,114 @@ theorem ex411 (R : Rel α α) (A B : Pred α) :
 --------------------------------------------------------------------------------
 theorem ex412 (R : Rel α α) (A : Pred α) :
     Closed R (reach R A) := by
-  -- TODO
-  sorry
+  dsimp [Closed, reach, relImg, relStar, PredLe]
+  intro a1 h1
+  obtain ⟨a2, ⟨a3, h2, ⟨n1, h3⟩⟩, h4⟩ := h1
+  exists a3
+  constructor
+  exact h2
+  exists (n1 + 1)
+  dsimp [relPow, relComp]
+  exists a2
 
 --------------------------------------------------------------------------------
 -- 413：A が Closed なら reach R A = A
 --------------------------------------------------------------------------------
 theorem ex413 (R : Rel α α) (A : Pred α) :
     Closed R A → reach R A = A := by
-  -- TODO
-  sorry
+  dsimp [reach, relImg, relStar, Closed, PredLe]
+  intro h1
+  funext a1
+  dsimp [relImg, relStar]
+  apply propext
+  refine ⟨?hLeft, ?hRight⟩
+  -- hLeft
+  intro h2
+  obtain ⟨a2, h3, ⟨n1, h4⟩⟩ := h2
+  revert a1
+  have h5 : ∀ a3, relPow R n1 a2 a3 → A a3 := by
+    induction n1 with
+    | zero =>
+      intro a3
+      dsimp [relPow, relId]
+      intro h6
+      rw [←h6]
+      exact h3
+    | succ n2 ih =>
+      intro a3 h6
+      dsimp [relPow, relComp] at h6
+      obtain ⟨a4, h7, h8⟩ := h6
+      apply h1
+      exists a4
+      constructor
+      apply ih
+      exact h7
+      exact h8
+  intro a5
+  apply h5
+  -- hRight
+  intro h2
+  exists a1
+  constructor
+  exact h2
+  exists 0
 
 --------------------------------------------------------------------------------
 -- 414：must は B に単調
 --------------------------------------------------------------------------------
 theorem ex414 (R : Rel α α) (B C : Pred α) :
     (B ⊆ₚ C) → (must R B ⊆ₚ must R C) := by
-  -- TODO
-  sorry
+  dsimp [must, relPreAll, PredLe]
+  dsimp [Rel] at R
+  dsimp [Pred] at B C
+  intro h1 a1 h2 b1 h3
+  apply h1
+  apply h2
+  exact h3
 
 --------------------------------------------------------------------------------
 -- 415：must は 1ステップ後でも保たれる（安全性の伝播）
 -- must R B ⊆ preAll R (must R B)
 --------------------------------------------------------------------------------
+
+theorem ex415_pre (R : Rel α α) :
+  ∀ m, RelLe (relComp R (relPow R m)) (relPow R (m + 1)) := by
+
+  intro n1 a1
+  induction n1 with
+  | zero =>
+    intro a3 h1
+    dsimp [relPow, relComp, relId] at *
+    obtain ⟨c, h2, h3⟩ := h1
+    exists a1
+    constructor
+    rfl
+    rw [←h3]
+    exact h2
+  | succ n ih =>
+    intro a4 h4
+    dsimp [relPow, relComp] at h4 ⊢
+    obtain ⟨a5, h5, ⟨a6, h6, h7⟩⟩ := h4
+
+    have h5 : relComp R (relPow R n) a1 a6 := by
+      exists a5
+
+    have h_comm : relPow R (n + 1) a1 a6 := by
+      apply ih
+      exact h5
+
+    exists a6
+
 theorem ex415 (R : Rel α α) (B : Pred α) :
     (must R B ⊆ₚ relPreAll R (must R B)) := by
-  -- TODO
-  sorry
+  dsimp [must, relPreAll, PredLe, relStar]
+  intro a1 h1 a2 h2 a3 h3
+  obtain ⟨n1, h4⟩ := h3
+  apply h1
+  exists (n1 + 1)
+  apply ex415_pre
+  dsimp [relComp]
+  exists a2
 
 --------------------------------------------------------------------------------
 -- 416：reach と must のガロア対応（star 版）
@@ -478,8 +559,28 @@ theorem ex415 (R : Rel α α) (B : Pred α) :
 --------------------------------------------------------------------------------
 theorem ex416 (R : Rel α α) (A B : Pred α) :
     (reach R A ⊆ₚ B) ↔ (A ⊆ₚ must R B) := by
-  -- TODO
-  sorry
+  dsimp [reach, must, relImg, relPreAll, relStar, PredLe]
+  refine ⟨?hLeft, ?hRight⟩
+  -- hLeft
+  intro h1 a1 h2 b1 h3
+  obtain ⟨n1, h4⟩ := h3
+  apply h1
+  exists a1
+  constructor
+  exact h2
+  exists n1
+  -- hRight
+  intro h1 a1 h2
+  obtain ⟨a2, h3, ⟨n1, h4⟩⟩ := h2
+  have h5 : A a2 → (∃ n, relPow R n a2 a1) → B a1 := by
+    intro h6 h7
+    obtain ⟨n2, h8⟩ := h7
+    apply h1 a2
+    exact h3
+    exists n2
+  apply h5
+  exact h3
+  exists n1
 
 --------------------------------------------------------------------------------
 -- Nat / iterate（関数反復）
@@ -495,8 +596,47 @@ def iter {α : Type} (f : α → α) : Nat → α → α
 --------------------------------------------------------------------------------
 theorem ex417 (f : α → α) :
     ∀ n a b, relPow (relGraph f) n a b ↔ iter f n a = b := by
-  -- TODO
-  sorry
+  intro n1
+  induction n1 with
+  | zero =>
+    intro a1 a2
+    dsimp [relPow, relId, iter]
+    refine ⟨?hLeft, ?hRight⟩
+    -- hLeft
+    intro h1
+    exact h1
+    -- hRight
+    intro h1
+    exact h1
+  | succ n ih =>
+    intro a1 a2
+    -- dsimp で定義を展開
+    dsimp [relPow, relComp, iter, relGraph]
+
+    -- ゴールを左右に分割
+    refine ⟨?hLeft2, ?hRight2⟩
+
+    -- 【1つ目：左側の証明】 (relPow ... → iter ... = a2)
+    case hLeft2 =>
+      intro h3
+      rcases h3 with ⟨a3, h4, h5⟩
+      rw [ih] at h4
+      rw [h4]
+      rw [h5]
+
+    -- 【2つ目：右側の証明】 (iter ... = a2 → relPow ...)
+    case hRight2 =>
+      intro h3
+      let b := iter f n a1
+
+      -- ゴールの形を ∃ に固定
+      show ∃ b, relPow (relGraph f) n a1 b ∧ f b = a2
+
+      -- 値 b と 右側の証拠 h3 を埋め込み、左側の証拠 ?_ だけを残す
+      refine ⟨b, ⟨?_, h3⟩⟩
+
+      -- 左側の証明：定義通りなので IH で完了
+      rw [ih]
 
 --------------------------------------------------------------------------------
 -- 418：graph f の star は「ある回数だけ iterate して到達」
