@@ -390,26 +390,54 @@ theorem ex410 (R : Rel α α) (A : Pred α) :
 -- 411：不変集合 B を含むなら、到達集合もそこから出ない
 -- A ⊆ B かつ Closed R B なら reach R A ⊆ B
 --------------------------------------------------------------------------------
+
+
+
+
+theorem ex411_pre (R : Rel α α) :
+  ∀ m, RelLe (relComp (relPow R m) R) (relPow R (m + 1)) := by
+  intro n
+  dsimp [RelLe]
+  intro a1 a2 h1
+  dsimp [relComp] at h1
+  dsimp [relPow, relComp]
+  exact h1
+
 theorem ex411 (R : Rel α α) (A B : Pred α) :
     (A ⊆ₚ B) → Closed R B → (reach R A ⊆ₚ B) := by
 
   dsimp [reach, relImg, relStar, Closed, PredLe]
-  intro h1 h2 a1 h3
+  dsimp [Pred] at A B
+  dsimp [Rel] at R
+  intro h1 h2
 
-  -- ここでhave使う
+  intro a1 h3
+  obtain ⟨a2, h4, ⟨n1, h5⟩⟩ := h3
+  revert a1
 
-  sorry
-  -- obtain ⟨a2, h4, ⟨n1, h5⟩⟩ := h3
+  have h6 : ∀ a3, relPow R n1 a2 a3 → B a3 := by
+    induction n1 with
+    | zero =>
+      intro a3
+      dsimp [relPow, relId]
+      intro h7
+      rw [←h7]
+      apply h1
+      exact h4
+    | succ n2 ih =>
+      intro a3 h7
+      dsimp [relPow, relComp] at h7
+      obtain ⟨a4, h8, h9⟩ := h7
+      apply h2
+      exists a4
+      constructor
+      apply ih
+      exact h8
+      exact h9
 
-  -- induction n1 with
-  -- | zero =>
-  --   dsimp [relPow, relId] at h5
-  --   rw [←h5]
-  --   apply h1
-  --   exact h4
-  -- | succ n ih =>
-  --   dsimp [relPow, relComp] at h5
-  --   obtain ⟨a3, h6, h7⟩ := h5
+  intro a5 h7
+  apply h6
+  exact h7
 
 --------------------------------------------------------------------------------
 -- 412：reach R A は Closed（到達集合は一歩進んでも閉じている）
