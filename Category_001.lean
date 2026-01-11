@@ -35,14 +35,14 @@ variable {W X Y Z : C}
 -- 右単位律：f ≫ 𝟙 = f
 -- ヒント: `simp`
 theorem ex001 (f : X ⟶ Y) : f ≫ 𝟙 Y = f := by
-  sorry
+  apply Category.comp_id
 
 -- 演習問題002
 -- 左単位律：𝟙 ≫ f = f
 -- ヒント: `simp`
 theorem ex002 (f : X ⟶ Y) : 𝟙 X ≫ f = f := by
-  sorry
-
+  apply Category.id_comp
+  
 -- 演習問題003
 -- 結合律：(f ≫ g) ≫ h = f ≫ (g ≫ h)
 -- ヒント: `simp [Category.assoc]` または `simpa using (Category.assoc f g h)`
