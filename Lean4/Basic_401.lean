@@ -643,8 +643,31 @@ theorem ex417 (f : α → α) :
 --------------------------------------------------------------------------------
 theorem ex418 (f : α → α) :
     ∀ a b, relStar (relGraph f) a b ↔ ∃ n, iter f n a = b := by
-  -- TODO
-  sorry
+
+  intro a1 a2
+  have h1 : ∀ n, relPow (relGraph f) n a1 a2 ↔ iter f n a1 = a2 := by
+    intro n1
+    apply ex417 f
+
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro h2
+  obtain ⟨n1, h3⟩ := h2
+  exists n1
+  have h2 : relPow (relGraph f) n1 a1 a2 ↔ iter f n1 a1 = a2 := by
+    apply h1 n1
+  rw [h2] at h3
+  exact h3
+
+  -- hRight
+  intro h2
+  obtain ⟨n1, h3⟩ := h2
+  exists n1
+  have h2 : relPow (relGraph f) n1 a1 a2 ↔ iter f n1 a1 = a2 := by
+    apply h1 n1
+  rw [h2]
+  exact h3
 
 --------------------------------------------------------------------------------
 -- 419：reach (graph f) A の具体形
@@ -652,8 +675,43 @@ theorem ex418 (f : α → α) :
 --------------------------------------------------------------------------------
 theorem ex419 (f : α → α) (A : Pred α) :
     ∀ b, reach (relGraph f) A b ↔ ∃ a, A a ∧ ∃ n, iter f n a = b := by
-  -- TODO
-  sorry
+
+  intro a1
+  dsimp [reach, relImg, relStar]
+
+  -- theorem ex417 (f : α → α) :
+  --     ∀ n a b, relPow (relGraph f) n a b ↔ iter f n a = b := by
+
+  refine ⟨?hLeft, ?hRight⟩
+  -- hLeft
+  intro h1
+  obtain ⟨a2, h2, ⟨n1, h3⟩⟩ := h1
+  exists a2
+  constructor
+
+  -- hLeft.left
+  exact h2
+
+  -- hLeft.right
+  exists n1
+  have h4 : relPow (relGraph f) n1 a2 a1 ↔ iter f n1 a2 = a1 := by
+    apply ex417 f
+  rw [←h4]
+  exact h3
+
+  -- hRight
+  intro h1
+  obtain ⟨a2, h2, ⟨n1, h3⟩⟩ := h1
+  exists a2
+  constructor
+  -- hRight.left
+  exact h2
+  -- hRight.right
+  exists n1
+  have h4 : relPow (relGraph f) n1 a2 a1 ↔ iter f n1 a2 = a1 := by
+    apply ex417 f
+  rw [h4]
+  exact h3
 
 --------------------------------------------------------------------------------
 -- 420：Attention（合成＋和）への接続（multi-head の像の分解）
@@ -665,7 +723,363 @@ def attnRel (QK : Rel α β) (KV : Rel β γ) : Rel α γ :=
 theorem ex420 (QK1 QK2 : Rel α β) (KV : Rel β γ) (A : Pred α) :
     relImg (attnRel (relAdd QK1 QK2) KV) A
       = predAdd (relImg (attnRel QK1 KV) A) (relImg (attnRel QK2 KV) A) := by
+  dsimp [attnRel]
+
+  have h1 : relImg (relAdd (relComp QK1 KV) (relComp QK2 KV)) A = predAdd (relImg (relComp QK1 KV) A) (relImg (relComp QK2 KV) A) := by
+    apply ex405 (relComp QK1 KV) (relComp QK2 KV) A
+
+  rw [←h1]
+
+  funext g1
+  dsimp [relImg]
+  dsimp [relAdd]
+  apply propext
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro h2
+  obtain ⟨a1, h3, h4⟩ := h2
+  dsimp [relComp] at h4
+  dsimp [relComp]
+  exists a1
+  constructor
+
+  -- hLeft.left
+  exact h3
+
+  -- hLeft.right
+  obtain ⟨b1, h5 | h6, h7⟩ := h4
+
+  -- hLeft.right.inl
+  left
+  exists b1
+
+  -- hLeft.right.inr
+  right
+  exists b1
+
+  -- hRight
+  intro h2
+  dsimp [relComp, relAdd]
+  obtain ⟨a1, h3, h4⟩ := h2
+  -- hRight
+  exists a1
+  obtain ⟨b1, ⟨h5, h6⟩⟩ | h7 := h4
+
+  -- hRight.inl
+  constructor
+
+  -- hRight.inl.left
+  exact h3
+
+  -- hRight.inl.right
+  exists b1
+
+  constructor
+
+  -- hRight.inl.right.left
+  left
+  exact h5
+
+  -- hRight.inl.right.right
+  exact h6
+
+  -- hRight.inr
+  dsimp [relComp] at h7
+  obtain ⟨b1, h8, h9⟩ := h7
+  constructor
+
+  -- hRight.inr.left
+  exact h3
+
+  -- hRight.inr.right
+  exists b1
+  constructor
+
+  -- hRight.inr.right.left
+  right
+  exact h8
+
+  -- hRight.inr.right.right
+  exact h9
+
+-- ☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆
+
+--------------------------------------------------------------------------------
+-- 421〜440：演習（残余/Pred/閉包/不動点/graph/Attention：実践寄せ）
+-- ※ Basic_401.lean の末尾に追記でOK
+-- ※ 401〜420 の定義がある前提：
+--   Rel, relComp, relAdd, relMul, relTrans, relId, RelLe (⊆),
+--   rRes, lRes,
+--   Pred, PredLe (⊆ₚ), predAdd, predMul,
+--   relImg, relPre, relPreAll,
+--   relGraph, relPow, relStar,
+--   reach, Closed, must, iter, attnRel
+--------------------------------------------------------------------------------
+
+variable {α β γ δ ε : Type}
+
+--------------------------------------------------------------------------------
+-- 421：residuation（右残余のガロア対応：超重要）
+-- (R;S) ⊆ T  ↔  R ⊆ (S ▷ T)
+--
+-- ヒント：
+--   dsimp [RelLe, relComp, rRes]
+--   (→) は「R a b と S b c から T a c」を作る形
+--   (←) は obtain ⟨b, hR, hS⟩ := ... して、hRS a b hR c hS
+--------------------------------------------------------------------------------
+theorem ex421 (R : Rel β α) (S : Rel α γ) (T : Rel β γ) :
+    (relComp R S ⊆ T) ↔ (R ⊆ rRes S T) := by
   -- TODO
   sorry
+
+--------------------------------------------------------------------------------
+-- 422：residuation（左残余のガロア対応）
+-- (R;S) ⊆ T  ↔  S ⊆ (R ⊲ T)
+--
+-- ヒント：
+--   dsimp [RelLe, relComp, lRes]
+--------------------------------------------------------------------------------
+theorem ex422 (R : Rel α β) (S : Rel β γ) (T : Rel α γ) :
+    (relComp R S ⊆ T) ↔ (S ⊆ lRes R T) := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- 423：∀逆像（preAll）は rRes の特殊例（Unit 埋め込み）
+--
+-- predAsRel B : Rel Unit β := fun _ b => B b
+-- relToPred Q : Pred α := fun a => Q () a
+--
+-- 目標：
+--   relPreAll R B = relToPred (rRes R (predAsRel B))
+--------------------------------------------------------------------------------
+def predAsRel {β : Type} (B : Pred β) : Rel Unit β := fun _ b => B b
+def relToPred {α : Type} (Q : Rel Unit α) : Pred α := fun a => Q () a
+
+theorem ex423 (R : Rel α β) (B : Pred β) :
+    relPreAll R B = relToPred (rRes R (predAsRel B)) := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- 424：像 relImg も Unit を使って「合成」で書ける
+-- Img R A b  ↔  ((predAsRel A) ; R) () b
+--
+-- ヒント：
+--   funext b; apply propext; dsimp [relImg, predAsRel, relComp]
+--------------------------------------------------------------------------------
+theorem ex424 (R : Rel α β) (A : Pred α) :
+    relImg R A = (fun b => relComp (predAsRel A) R () b) := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- 425：must は B を含む（0歩到達があるので）
+-- must R B ⊆ₚ B
+--
+-- ヒント：
+--   dsimp [must, relPreAll, relStar, PredLe]
+--   b := a, n := 0 を入れる
+--------------------------------------------------------------------------------
+theorem ex425 (R : Rel α α) (B : Pred α) :
+    must R B ⊆ₚ B := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- 426：must は Closed（安全集合は1歩で外へ出ない）
+-- Closed R (must R B)
+--
+-- ヒント：
+--   Closed は Img R X ⊆ₚ X
+--   Img R (must R B) から witness を取り、
+--   must の定義へ (n:=1) を押し込む
+--------------------------------------------------------------------------------
+theorem ex426 (R : Rel α α) (B : Pred α) :
+    Closed R (must R B) := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- 427：must は「B の中で最大の Closed 集合」
+-- X ⊆ₚ B かつ Closed R X なら X ⊆ₚ must R B
+--
+-- ヒント：
+--   dsimp [must, relPreAll, relStar, PredLe]
+--   star の証拠 ⟨n, hn⟩ に対して n で帰納法
+--   0 は X⊆B で、succ は Closed を使って1歩ずつ進める
+--------------------------------------------------------------------------------
+theorem ex427 (R : Rel α α) (B X : Pred α) :
+    (X ⊆ₚ B) → Closed R X → (X ⊆ₚ must R B) := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- 428：star の展開（片方向）
+-- star R ⊆ id + (R;star R)
+--
+-- ヒント：
+--   dsimp [RelLe, relStar, relAdd, relId, relComp]
+--   obtain ⟨n, hn⟩ := hstar
+--   cases n with
+--   | zero => left; ...（hn は id なので a=b）
+--   | succ n => right; witness を作る（最初の1歩を切り出す）
+--------------------------------------------------------------------------------
+theorem ex428 (R : Rel α α) :
+    relStar R ⊆ relAdd (relId α) (relComp R (relStar R)) := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- 429：star の展開（逆方向）
+-- id + (R;star R) ⊆ star R
+--
+-- ヒント：
+--   left: n := 0
+--   right: witness (n+1)
+--------------------------------------------------------------------------------
+theorem ex429 (R : Rel α α) :
+    relAdd (relId α) (relComp R (relStar R)) ⊆ relStar R := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- 430：star の展開を等式でまとめる
+-- star R = id + (R;star R)
+--
+-- ヒント：
+--   428/429 を両方向に使う
+--------------------------------------------------------------------------------
+theorem ex430 (R : Rel α α) :
+    relStar R = relAdd (relId α) (relComp R (relStar R)) := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- 431：must の安全性方程式（不動点/Bellman 形）
+-- must R B = B ∩ preAll R (must R B)
+--
+-- ヒント：
+--   funext a; apply propext
+--   (→) は 425 + 「R a b なら star a b（n:=1）」で流す
+--   (←) は 430 で star を (id) or (R;star) に分解すると楽
+--------------------------------------------------------------------------------
+theorem ex431 (R : Rel α α) (B : Pred α) :
+    must R B = predMul B (relPreAll R (must R B)) := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- 432：must (graph f) の具体形（反復で常に B）
+-- must (graph f) B a ↔ ∀ n, B (iter f n a)
+--
+-- ヒント：
+--   「star(graph f) a b ↔ ∃ n, iter f n a = b」（あなたの ex418）を使うと一直線
+--------------------------------------------------------------------------------
+theorem ex432 (f : α → α) (B : Pred α) :
+    ∀ a, must (relGraph f) B a ↔ ∀ n, B (iter f n a) := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- 433：Attention の右 residuation（設計に直結）
+-- (attnRel QK KV) ⊆ T  ↔  QK ⊆ (KV ▷ T)
+--
+-- ヒント：ex421 を attnRel の定義に当てるだけ
+--------------------------------------------------------------------------------
+theorem ex433 (QK : Rel α β) (KV : Rel β γ) (T : Rel α γ) :
+    (attnRel QK KV ⊆ T) ↔ (QK ⊆ rRes KV T) := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- 434：Attention の左 residuation（もう片側）
+-- (attnRel QK KV) ⊆ T  ↔  KV ⊆ (QK ⊲ T)
+--------------------------------------------------------------------------------
+theorem ex434 (QK : Rel α β) (KV : Rel β γ) (T : Rel α γ) :
+    (attnRel QK KV ⊆ T) ↔ (KV ⊆ lRes QK T) := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- 435：multi-head（KV 側の加法）で Img が分解する
+-- Img(attn QK (KV1+KV2)) A = Img(attn QK KV1) A ∪ Img(attn QK KV2) A
+--
+-- ヒント：
+--   まず relComp QK (KV1+KV2) = (QK;KV1) + (QK;KV2) を点ごとに示してから
+--   ex405（像の分配）へ
+--------------------------------------------------------------------------------
+theorem ex435 (QK : Rel α β) (KV1 KV2 : Rel β γ) (A : Pred α) :
+    relImg (attnRel QK (relAdd KV1 KV2)) A
+      = predAdd (relImg (attnRel QK KV1) A) (relImg (attnRel QK KV2) A) := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- 436：Attention の単調性（両側）
+-- QK ⊆ QK' かつ KV ⊆ KV' なら attnRel QK KV ⊆ attnRel QK' KV'
+--
+-- ヒント：
+--   dsimp [RelLe, attnRel, relComp]
+--   obtain ⟨b, hQK, hKV⟩ := h
+--------------------------------------------------------------------------------
+theorem ex436 (QK QK' : Rel α β) (KV KV' : Rel β γ) :
+    (QK ⊆ QK') → (KV ⊆ KV') → (attnRel QK KV ⊆ attnRel QK' KV') := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- 437：mask が “より強い条件” のとき吸収できる
+-- M ⊆ QK なら (QK ∧ M) = M
+--
+-- ヒント：
+--   funext a b; apply propext; constructor
+--   (→) ⟨hQK, hM⟩ から hM
+--   (←) hM から ⟨hMQK _ _ hM, hM⟩
+--------------------------------------------------------------------------------
+theorem ex437 (QK M : Rel α β) :
+    (M ⊆ QK) → relMul QK M = M := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- 438：mask を入れた attention は “mask だけ” で同じになる（437 応用）
+-- M ⊆ QK なら attnRel (QK ∧ M) KV = attnRel M KV
+--------------------------------------------------------------------------------
+theorem ex438 (QK M : Rel α β) (KV : Rel β γ) :
+    (M ⊆ QK) → attnRel (relMul QK M) KV = attnRel M KV := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- 439：must は関係に反単調（遷移が増えるほど must は厳しくなる）
+-- R ⊆ S なら must S B ⊆ₚ must R B
+--
+-- ヒント：
+--   must = preAll (star ...) B
+--   1) R ⊆ S なら star R ⊆ star S（pow の単調性を n で帰納）
+--   2) preAll は関係に反単調（あなたの ex395_a の関係版）
+--------------------------------------------------------------------------------
+theorem ex439 (R S : Rel α α) (B : Pred α) :
+    (R ⊆ S) → (must S B ⊆ₚ must R B) := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- 440：reach は関係に単調（遷移が増えるほど到達集合は増える）
+-- R ⊆ S なら reach R A ⊆ₚ reach S A
+--
+-- ヒント：
+--   reach = Img (star ...) A
+--   star の単調性（439 の途中で作る補題）を Img に流す
+--------------------------------------------------------------------------------
+theorem ex440 (R S : Rel α α) (A : Pred α) :
+    (R ⊆ S) → (reach R A ⊆ₚ reach S A) := by
+  -- TODO
+  sorry
+
+
+-- ☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆
 
 end TL
