@@ -14,21 +14,27 @@ variable {α β γ δ : Type}
 
 def Rel (α β : Type) := α → β → Prop
 
+-- RとSを合成してたどり着く
 def relComp {α β γ : Type} (R : Rel α β) (S : Rel β γ) : Rel α γ :=
   fun a c => ∃ b, R a b ∧ S b c
 
+-- RとSのどちらかでたどり着く
 def relAdd {α β : Type} (R S : Rel α β) : Rel α β :=
   fun a b => R a b ∨ S a b
 
+-- RとSの両方でたどり着く
 def relMul {α β : Type} (R S : Rel α β) : Rel α β :=
   fun a b => R a b ∧ S a b
 
+-- Rを反転
 def relTrans {α β : Type} (R : Rel α β) : Rel β α :=
   fun b a => R a b
 
+--
 def relId (α : Type) : Rel α α :=
   fun a b => a = b
 
+-- Rでたどり着くならSでもたどり着く
 def RelLe {α β : Type} (R S : Rel α β) : Prop :=
   ∀ a b, R a b → S a b
 
@@ -39,10 +45,12 @@ infix:50 " ⊆ " => RelLe
 --------------------------------------------------------------------------------
 
 -- 右残余：S ▷ T（型がひっくり返る点に注意）
+-- Sを使ってaよりcにたどり着けるなら、Tを使ってbよりcにたどり着ける
 def rRes {α β γ : Type} (S : Rel α γ) (T : Rel β γ) : Rel β α :=
   fun b a => ∀ c, S a c → T b c
 
 -- 左残余：R ⊲ T
+-- Rを使ってbにたどり着けるなら、Tを使ってaよりcにたどり着ける
 def lRes {α β γ : Type} (R : Rel α β) (T : Rel α γ) : Rel β γ :=
   fun b c => ∀ a, R a b → T a c
 
@@ -52,23 +60,30 @@ def lRes {α β γ : Type} (R : Rel α β) (T : Rel α γ) : Rel β γ :=
 
 def Pred (X : Type) := X → Prop
 
+-- Aで成り立つならBで成り立つ
+-- AはBの部分集合
 def PredLe {X : Type} (A B : Pred X) : Prop :=
   ∀ x, A x → B x
 
 infix:50 " ⊆ₚ " => PredLe
 
+-- AあるいはBで成り立つか確認
 def predAdd {X : Type} (A B : Pred X) : Pred X := fun x => A x ∨ B x
+-- A及びBで成り立つか確認
 def predMul {X : Type} (A B : Pred X) : Pred X := fun x => A x ∧ B x
 
 -- ∃-像（到達）
+-- AにはRを使ってbにたどり着けるものがある
 def relImg {α β : Type} (R : Rel α β) (A : Pred α) : Pred β :=
   fun b => ∃ a, A a ∧ R a b
 
 -- ∃-逆像
+-- BにはRを使ってたどり着けるものがある
 def relPre {α β : Type} (R : Rel α β) (B : Pred β) : Pred α :=
   fun a => ∃ b, R a b ∧ B b
 
 -- ∀-逆像（安全側）
+-- BにはRを使うと必ずたどり着ける
 def relPreAll {α β : Type} (R : Rel α β) (B : Pred β) : Pred α :=
   fun a => ∀ b, R a b → B b
 
@@ -76,6 +91,7 @@ def relPreAll {α β : Type} (R : Rel α β) (B : Pred β) : Pred α :=
 -- 3) 関数をグラフ関係として扱う
 --------------------------------------------------------------------------------
 
+-- fでaからbにたどり着く
 def relGraph {α β : Type} (f : α → β) : Rel α β :=
   fun a b => f a = b
 
@@ -83,10 +99,12 @@ def relGraph {α β : Type} (f : α → β) : Rel α β :=
 -- 4) pow / star（反復合成＝到達可能性）
 --------------------------------------------------------------------------------
 
+-- Rを指定した回数合成してたどり着く
 def relPow {α : Type} (R : Rel α α) : Nat → Rel α α
   | 0          => relId α
   | Nat.succ n => relComp (relPow R n) R
 
+-- Rを何回か合成してたどり着く
 def relStar {α : Type} (R : Rel α α) : Rel α α :=
   fun a b => ∃ n, relPow R n a b
 
@@ -94,12 +112,15 @@ def relStar {α : Type} (R : Rel α α) : Rel α α :=
 -- 5) reach / must（実務っぽく使うための道具）
 --------------------------------------------------------------------------------
 
+-- Aには指定した対象にRを何回か使ってたどり着けるものがある
 def reach {α : Type} (R : Rel α α) (A : Pred α) : Pred α :=
   relImg (relStar R) A
 
+-- BはRを何回か使っても、たどり着いた先はBの中に留まる
 def Closed {α : Type} (R : Rel α α) (B : Pred α) : Prop :=
   relImg R B ⊆ₚ B
 
+-- 指定した対象は、Rを何回か使うことでBへたどりつくことができる
 def must {α : Type} (R : Rel α α) (B : Pred α) : Pred α :=
   relPreAll (relStar R) B
 
@@ -582,6 +603,7 @@ theorem ex416 (R : Rel α α) (A B : Pred α) :
 -- Nat / iterate（関数反復）
 --------------------------------------------------------------------------------
 
+-- 指定された回数 f を反復適用する
 def iter {α : Type} (f : α → α) : Nat → α → α
   | 0          => fun x => x
   | Nat.succ n => fun x => f (iter f n x)
@@ -1162,8 +1184,34 @@ theorem ex431 (R : Rel α α) (B : Pred α) :
 --------------------------------------------------------------------------------
 theorem ex432 (f : α → α) (B : Pred α) :
     ∀ a, must (relGraph f) B a ↔ ∀ n, B (iter f n a) := by
-  -- TODO
-  sorry
+  -- 指定されたfを使ってBにたどり着けるたものの集合は、
+  -- fを何回反復適用してもBに留まるものの集合に等しい
+
+  -- theorem ex418 (f : α → α) :
+  --     ∀ a b, relStar (relGraph f) a b ↔ ∃ n, iter f n a = b := by
+
+  intro a
+  refine ⟨?hLeft, ?hRight⟩
+  -- hLeft
+  intro h1
+  dsimp [must] at h1
+  dsimp [relPreAll] at h1
+  intro n1
+  apply h1
+  rw [ex418 f a (iter f n1 a)]
+  exists n1
+  -- hRight
+  intro h2
+  dsimp [must]
+  dsimp [relPreAll]
+  intro a1
+  intro h4
+  rw [ex418 f a a1] at h4
+  obtain ⟨n1, h5⟩ := h4
+  have h6 : B (iter f n1 a) := by
+    apply h2
+  rw [←h5]
+  exact h6
 
 --------------------------------------------------------------------------------
 -- 433：Attention の右 residuation（設計に直結）
