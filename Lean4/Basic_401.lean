@@ -1032,8 +1032,39 @@ theorem ex428_pre (R : Rel α α) : relComp R (relStar R) ⊆ relStar R := by
 
 theorem ex428 (R : Rel α α) :
     relStar R ⊆ relAdd (relId α) (relComp R (relStar R)) := by
-  -- TODO
-  sorry
+
+  intro a1 a2 h1
+  obtain ⟨n1, h2⟩ := h1
+  revert a2
+  induction n1 with
+  | zero =>
+    intro a3 h3
+    left
+    dsimp [relId]
+    rw [←h3]
+  | succ n2 ih =>
+    intro a3 h3
+    right
+    obtain ⟨a4, h4, h5⟩ := h3
+    have h6 : relPow R n2 a1 a4 → a1 = a4 ∨ ∃ b, R a1 b ∧ relStar R b a4 := by
+      intro h6_1
+      apply ih
+      exact h6_1
+    have h7 : a1 = a4 ∨ ∃ b, R a1 b ∧ relStar R b a4 := by
+      apply h6
+      exact h4
+    obtain h8 | ⟨a5, h9, h10⟩ := h7
+    rw [←h8] at h5
+    exists a3
+    constructor
+    exact h5
+    exists 0
+    exists a5
+    constructor
+    exact h9
+    obtain ⟨n3, h11⟩ := h10
+    exists (n3 + 1)
+    exists a4
 
 --------------------------------------------------------------------------------
 -- 429：star の展開（逆方向）
@@ -1045,8 +1076,18 @@ theorem ex428 (R : Rel α α) :
 --------------------------------------------------------------------------------
 theorem ex429 (R : Rel α α) :
     relAdd (relId α) (relComp R (relStar R)) ⊆ relStar R := by
-  -- TODO
-  sorry
+
+  intro s e h1
+  obtain h2 | ⟨a1, h3, h4⟩ := h1
+
+  -- inl
+  exists 0
+
+  -- inr
+  obtain ⟨n1, h5⟩ := h4
+  exists (n1 + 1)
+  apply ex415_pre
+  exists a1
 
 --------------------------------------------------------------------------------
 -- 430：star の展開を等式でまとめる
@@ -1057,8 +1098,14 @@ theorem ex429 (R : Rel α α) :
 --------------------------------------------------------------------------------
 theorem ex430 (R : Rel α α) :
     relStar R = relAdd (relId α) (relComp R (relStar R)) := by
-  -- TODO
-  sorry
+
+  funext s e
+  apply propext
+  refine ⟨?hLeft, ?hRight⟩
+  -- hLeft
+  apply ex428 R
+  -- hRight
+  apply ex429 R
 
 --------------------------------------------------------------------------------
 -- 431：must の安全性方程式（不動点/Bellman 形）
@@ -1071,8 +1118,40 @@ theorem ex430 (R : Rel α α) :
 --------------------------------------------------------------------------------
 theorem ex431 (R : Rel α α) (B : Pred α) :
     must R B = predMul B (relPreAll R (must R B)) := by
-  -- TODO
-  sorry
+  funext a
+  apply propext
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro h1
+  constructor
+
+  -- hLeft.left
+  apply ex425 R B
+  exact h1
+
+  -- hLeft.right
+  intro a1 h2 a2 h3
+  obtain ⟨n1, h4⟩ := h3
+  apply h1
+  exists (n1 + 1)
+  apply ex415_pre
+  exists a1
+
+  -- hRight
+  intro h1 a3 h5
+  rw [ex430 R] at h5
+  obtain ⟨h6, h7⟩ := h1
+  obtain h8 | ⟨a4, h9, ⟨n2, h10⟩⟩ := h5
+
+  -- hRight.inl
+  rw [←h8]
+  exact h6
+
+  -- hRight.inr
+  apply h7 a4
+  exact h9
+  exists n2
 
 --------------------------------------------------------------------------------
 -- 432：must (graph f) の具体形（反復で常に B）
