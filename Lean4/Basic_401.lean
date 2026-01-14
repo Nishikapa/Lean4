@@ -390,10 +390,6 @@ theorem ex410 (R : Rel α α) (A : Pred α) :
 -- 411：不変集合 B を含むなら、到達集合もそこから出ない
 -- A ⊆ B かつ Closed R B なら reach R A ⊆ B
 --------------------------------------------------------------------------------
-
-
-
-
 theorem ex411_pre (R : Rel α α) :
   ∀ m, RelLe (relComp (relPow R m) R) (relPow R (m + 1)) := by
   intro n
@@ -830,8 +826,23 @@ variable {α β γ δ ε : Type}
 --------------------------------------------------------------------------------
 theorem ex421 (R : Rel β α) (S : Rel α γ) (T : Rel β γ) :
     (relComp R S ⊆ T) ↔ (R ⊆ rRes S T) := by
-  -- TODO
-  sorry
+
+  dsimp [RelLe]
+  dsimp [rRes]
+  dsimp [relComp]
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro h1 b1 a1 h2 c1 h3
+  apply h1
+  exists a1
+
+  -- hRight
+  intro h1 b1 a1 h2
+  obtain ⟨a2, h4, h5⟩ := h2
+  apply h1 b1 a2
+  exact h4
+  exact h5
 
 --------------------------------------------------------------------------------
 -- 422：residuation（左残余のガロア対応）
@@ -842,8 +853,23 @@ theorem ex421 (R : Rel β α) (S : Rel α γ) (T : Rel β γ) :
 --------------------------------------------------------------------------------
 theorem ex422 (R : Rel α β) (S : Rel β γ) (T : Rel α γ) :
     (relComp R S ⊆ T) ↔ (S ⊆ lRes R T) := by
-  -- TODO
-  sorry
+
+  dsimp [RelLe]
+  dsimp [lRes]
+  dsimp [relComp]
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro h1 b1 g1 h2 a1 h3
+  apply h1
+  exists b1
+
+  -- hRight
+  intro h1 b1 g1 h2
+  obtain ⟨b2, h4, h5⟩ := h2
+  apply h1 b2 g1
+  exact h5
+  exact h4
 
 --------------------------------------------------------------------------------
 -- 423：∀逆像（preAll）は rRes の特殊例（Unit 埋め込み）
@@ -859,8 +885,11 @@ def relToPred {α : Type} (Q : Rel Unit α) : Pred α := fun a => Q () a
 
 theorem ex423 (R : Rel α β) (B : Pred β) :
     relPreAll R B = relToPred (rRes R (predAsRel B)) := by
-  -- TODO
-  sorry
+  funext a1
+  dsimp [relPreAll]
+  dsimp [relToPred]
+  dsimp [rRes]
+  dsimp [predAsRel]
 
 --------------------------------------------------------------------------------
 -- 424：像 relImg も Unit を使って「合成」で書ける
@@ -871,8 +900,10 @@ theorem ex423 (R : Rel α β) (B : Pred β) :
 --------------------------------------------------------------------------------
 theorem ex424 (R : Rel α β) (A : Pred α) :
     relImg R A = (fun b => relComp (predAsRel A) R () b) := by
-  -- TODO
-  sorry
+  funext b1
+  dsimp [relImg]
+  dsimp [relComp]
+  dsimp [predAsRel]
 
 --------------------------------------------------------------------------------
 -- 425：must は B を含む（0歩到達があるので）
@@ -884,8 +915,15 @@ theorem ex424 (R : Rel α β) (A : Pred α) :
 --------------------------------------------------------------------------------
 theorem ex425 (R : Rel α α) (B : Pred α) :
     must R B ⊆ₚ B := by
-  -- TODO
-  sorry
+  dsimp [Rel] at R
+  dsimp [Pred] at B
+  dsimp [must]
+  dsimp [PredLe]
+  dsimp [relPreAll]
+  intro a1 h1
+  apply h1
+  dsimp [relStar]
+  exists 0
 
 --------------------------------------------------------------------------------
 -- 426：must は Closed（安全集合は1歩で外へ出ない）
@@ -898,8 +936,14 @@ theorem ex425 (R : Rel α α) (B : Pred α) :
 --------------------------------------------------------------------------------
 theorem ex426 (R : Rel α α) (B : Pred α) :
     Closed R (must R B) := by
-  -- TODO
-  sorry
+
+  intro a1 h1 a2 h2
+  obtain ⟨a3, h3, h4⟩ := h1
+  obtain ⟨n1, h5⟩ := h2
+  apply h3
+  exists (n1 + 1)
+  apply ex415_pre R n1
+  exists a1
 
 --------------------------------------------------------------------------------
 -- 427：must は「B の中で最大の Closed 集合」
