@@ -985,12 +985,31 @@ theorem ex427 (R : Rel α α) (B X : Pred α) :
   -- Rを適用してもXに留まるなら、 何回Rを適用してもXに留まる。
   -- XはBの部分集合なのだから、Rを何回適用してもB内に留まる
 
-  intro a b c d e f
-  dsimp [Closed] at b
-  dsimp [PredLe] at b
-  dsimp [relImg] at b
-
-  sorry
+  intro h1 h2 a1 h3 a2 h4
+  dsimp [PredLe] at h1
+  dsimp [Closed] at h2
+  dsimp [PredLe] at h2
+  dsimp [relImg] at h2
+  rw [relStar] at h4
+  obtain ⟨n1, h6⟩ := h4
+  apply h1
+  revert a2
+  induction n1 with
+  | zero =>
+    intro a3 h6
+    dsimp [relPow, relId] at h6
+    rw [←h6]
+    exact h3
+  | succ n ih =>
+    intro a3 h6
+    dsimp [relPow, relComp] at h6
+    obtain ⟨a4, h7, h8⟩ := h6
+    apply h2
+    exists a4
+    constructor
+    apply ih
+    exact h7
+    exact h8
 
 --------------------------------------------------------------------------------
 -- 428：star の展開（片方向）
@@ -1003,6 +1022,14 @@ theorem ex427 (R : Rel α α) (B X : Pred α) :
 --   | zero => left; ...（hn は id なので a=b）
 --   | succ n => right; witness を作る（最初の1歩を切り出す）
 --------------------------------------------------------------------------------
+
+theorem ex428_pre (R : Rel α α) : relComp R (relStar R) ⊆ relStar R := by
+  intro a1 b1 h1
+  obtain ⟨a2, h2, ⟨n1, h3⟩⟩ := h1
+  exists (n1 + 1)
+  apply ex415_pre
+  exists a2
+
 theorem ex428 (R : Rel α α) :
     relStar R ⊆ relAdd (relId α) (relComp R (relStar R)) := by
   -- TODO
