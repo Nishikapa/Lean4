@@ -954,9 +954,42 @@ theorem ex426 (R : Rel α α) (B : Pred α) :
 --   star の証拠 ⟨n, hn⟩ に対して n で帰納法
 --   0 は X⊆B で、succ は Closed を使って1歩ずつ進める
 --------------------------------------------------------------------------------
+theorem ex427_pre (R : Rel α α) (X : Pred α) :
+  (∀ b, (∃ a, X a ∧ R a b) → X b) ↔
+  (∀ a b, (X a ∧ R a b) → X b) := by
+
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro h1 a1 a2 h2
+  obtain ⟨h3, h4⟩ := h2
+  apply h1 a2
+  exists a1
+
+  -- hRight
+  intro h1 a1 h2
+  obtain ⟨a2, h3, h4⟩ := h2
+  apply h1 a2 a1
+  constructor
+  exact h3
+  exact h4
+
 theorem ex427 (R : Rel α α) (B X : Pred α) :
     (X ⊆ₚ B) → Closed R X → (X ⊆ₚ must R B) := by
-  -- TODO
+
+  -- XはBの部分集合
+  -- Closed R X : XについてRを適用してもその値域はXに含まれる
+  -- X内はすべてBへたどり着ける
+
+  -- 当たり前のことをいっている。
+  -- Rを適用してもXに留まるなら、 何回Rを適用してもXに留まる。
+  -- XはBの部分集合なのだから、Rを何回適用してもB内に留まる
+
+  intro a b c d e f
+  dsimp [Closed] at b
+  dsimp [PredLe] at b
+  dsimp [relImg] at b
+
   sorry
 
 --------------------------------------------------------------------------------
