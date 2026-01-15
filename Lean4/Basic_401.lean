@@ -1506,8 +1506,33 @@ theorem ex440 (R S : Rel α α) (A : Pred α) :
   -- reach は「A から到達できる点（∃で像を取る）」なので、遷移が増えるほど到達集合は広がる。
   -- したがって reach R A ⊆ reach S A（R で到達できるなら、S でも到達できる）。
 
-  -- TODO
-  sorry
+  intro h1
+  intro a1
+  intro h2
+  obtain ⟨a2, h3, ⟨n1, h4⟩⟩ := h2
+  exists a2
+  constructor
+
+  -- left
+  exact h3
+
+  --right
+  exists n1
+  revert a1 a2
+  induction n1 with
+  | zero =>
+    intro a3 h4 h5 h6
+    exact h6
+  | succ n2 ih =>
+    intro a3 a4 h5 h6
+    obtain ⟨a5, h7, h8⟩ := h6
+    exists a5
+    constructor
+    apply ih
+    exact h5
+    exact h7
+    apply h1
+    exact h8
 
 -- ☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆
 
