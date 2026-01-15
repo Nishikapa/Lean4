@@ -1443,8 +1443,8 @@ theorem ex438 (QK M : Rel α β) (KV : Rel β γ) :
   -- M ⊆ QK なら、QK と M の積（∧）は結局 M と同じ（ex437 と同じ発想）。
   -- したがって QK による「追加条件」を付けたまま attention 合成しても結果は変わらない。
   -- 直感：もともと M で許される遷移は全部 QK でも許されているので、フィルタが効かない。
-  -- TODO
-  sorry
+  intro h1
+  rw [ex437 QK M h1]
 
 --------------------------------------------------------------------------------
 -- 439：must は関係に反単調（遷移が増えるほど must は厳しくなる）
@@ -1457,8 +1457,40 @@ theorem ex438 (QK M : Rel α β) (KV : Rel β γ) :
 --------------------------------------------------------------------------------
 theorem ex439 (R S : Rel α α) (B : Pred α) :
     (R ⊆ S) → (must S B ⊆ₚ must R B) := by
-  -- TODO
-  sorry
+  -- R ⊆ S（S のほうが遷移が多い）なら、star S の到達先の集合は star R より大きい。
+  -- must は「到達しうる先が全部 B の中」という安全条件なので、
+  -- 遷移が増えるほどチェック対象が増えて条件は厳しくなる。
+  -- だから must S B ⊆ must R B（S で安全なら、より弱い R でも安全）。
+
+  intro h1
+  intro a1
+  intro h2
+  intro b1
+  have h3 : relStar S a1 b1 → B b1 := by
+    apply h2
+  intro h4
+  apply h3
+  obtain ⟨n1, h5⟩ := h4
+  exists n1
+  revert a1 b1
+  induction n1 with
+  | zero =>
+    intro a2 h5 h6 h7 h8
+    rw [h8]
+    dsimp [relPow, relId]
+  | succ n2 ih =>
+    intro a2 h5 h6 h7 h8
+    obtain ⟨a3, h9, h10⟩ := h8
+    exists a3
+    constructor
+    apply ih
+    exact h5
+    intro h12
+    apply h5
+    exact h12
+    exact h9
+    apply h1
+    exact h10
 
 --------------------------------------------------------------------------------
 -- 440：reach は関係に単調（遷移が増えるほど到達集合は増える）
@@ -1470,10 +1502,156 @@ theorem ex439 (R S : Rel α α) (B : Pred α) :
 --------------------------------------------------------------------------------
 theorem ex440 (R S : Rel α α) (A : Pred α) :
     (R ⊆ S) → (reach R A ⊆ₚ reach S A) := by
+  -- R ⊆ S（S のほうが遷移が多い）なら、star S は star R より多く到達できる。
+  -- reach は「A から到達できる点（∃で像を取る）」なので、遷移が増えるほど到達集合は広がる。
+  -- したがって reach R A ⊆ reach S A（R で到達できるなら、S でも到達できる）。
+
   -- TODO
   sorry
 
-
 -- ☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆
+
+--------------------------------------------------------------------------------
+-- 441〜450：演習（Closed の意味の整理 / reach・must の不動点 / attention 実践）
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- 441：Closed の「点ごとの形」（あなたが議論していた同値の決定版）
+-- Closed R X  ↔  ∀ a b, X a → R a b → X b
+--
+-- ヒント：
+--   dsimp [Closed, relImg, PredLe]
+--   「∃ a, X a ∧ R a b → X b」を a,b の形に直すだけ
+--------------------------------------------------------------------------------
+theorem ex441 (R : Rel α α) (X : Pred α) :
+    Closed R X ↔ (∀ a b, X a → R a b → X b) := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- 442：reach は “拡大” (extensive) ：A ⊆ₚ reach R A
+--
+-- ヒント：
+--   dsimp [PredLe, reach, relImg, relStar]
+--   witness は a 自身、n:=0（relPow 0 = relId）で到達
+--------------------------------------------------------------------------------
+theorem ex442 (R : Rel α α) (A : Pred α) :
+    A ⊆ₚ reach R A := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- 443：像は合成に関して結合（到達集合の実用形）
+-- Img (R;S) A = Img S (Img R A)
+--
+-- ヒント：
+--   funext c; apply propext; constructor <;> intro h
+--   h から witness を取り直すだけ
+--------------------------------------------------------------------------------
+theorem ex443 (R : Rel α β) (S : Rel β γ) (A : Pred α) :
+    relImg (relComp R S) A = relImg S (relImg R A) := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- 444：reach の “Bellman 形” 不動点方程式
+-- reach R A = A ∪ Img R (reach R A)
+--
+-- ヒント：
+--   reach = Img (star R) A
+--   ex430 : star R = id + (R;star R) を使って
+--   Img の分配（ex405）と Img 合成（ex443）で整理
+--------------------------------------------------------------------------------
+theorem ex444 (R : Rel α α) (A : Pred α) :
+    reach R A = predAdd A (relImg R (reach R A)) := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- 445：star の推移性（関係として）
+-- star;star ⊆ star
+--
+-- ヒント：
+--   dsimp [RelLe, relComp, relStar]
+--   obtain ⟨m, hm⟩ と obtain ⟨n, hn⟩ を取り
+--   witness を (m+n) にして ex367 を使う
+--------------------------------------------------------------------------------
+theorem ex445 (R : Rel α α) :
+    relComp (relStar R) (relStar R) ⊆ relStar R := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- 446：must の冪等性（interior operator っぽさ）
+-- must R (must R B) = must R B
+--
+-- ヒント：
+--   funext a; apply propext; constructor
+--   (→) は b:=到達先, さらに 0歩到達（n:=0）で B を出す
+--   (←) は ex445（star の推移性）で “到達の合成” を潰す
+--------------------------------------------------------------------------------
+theorem ex446 (R : Rel α α) (B : Pred α) :
+    must R (must R B) = must R B := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- 447：reach の “最小性”（A を含み 1-step で閉じる集合は reach を含む）
+-- (A ∪ Img R X) ⊆ₚ X なら reach R A ⊆ₚ X
+--
+-- ヒント：
+--   h : predAdd A (relImg R X) ⊆ₚ X から
+--     (1) A ⊆ₚ X と (2) Closed R X を作って
+--   ex411（不変集合から出ない）に流す
+--------------------------------------------------------------------------------
+theorem ex447 (R : Rel α α) (A X : Pred α) :
+    (predAdd A (relImg R X) ⊆ₚ X) → (reach R A ⊆ₚ X) := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- 448：multi-head を両側で入れたときの “4分解”（実践）
+-- QK が 2-head, KV が 2-head だと、到達集合は4つの和に分解できる
+--
+-- ヒント：
+--   まず ex435 で KV 側を分解（2つ）
+--   次に各枝で ex420 で QK 側を分解（2つ）
+--   ※括弧の形が合うように目標をこの形にしてあります（結合律不要）
+--------------------------------------------------------------------------------
+theorem ex448 (QK1 QK2 : Rel α β) (KV1 KV2 : Rel β γ) (A : Pred α) :
+    relImg (attnRel (relAdd QK1 QK2) (relAdd KV1 KV2)) A
+      =
+    predAdd
+      (predAdd (relImg (attnRel QK1 KV1) A) (relImg (attnRel QK2 KV1) A))
+      (predAdd (relImg (attnRel QK1 KV2) A) (relImg (attnRel QK2 KV2) A)) := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- 449：関数グラフの attention は “関数合成のグラフ”
+-- attnRel (graph f) (graph g) = graph (g ∘ f)
+--
+-- ヒント：
+--   funext a c; apply propext
+--   (→) witness b を取り、等式で書き換える
+--   (←) witness は b := f a
+--------------------------------------------------------------------------------
+theorem ex449 (f : α → β) (g : β → γ) :
+    attnRel (relGraph f) (relGraph g) = relGraph (fun x => g (f x)) := by
+  -- TODO
+  sorry
+
+--------------------------------------------------------------------------------
+-- 450：決定的遷移（graph f）での must：1-step で閉じていれば must = B
+-- (∀ a, B a → B (f a)) → must (graph f) B = B
+--
+-- ヒント：
+--   (→) は ex425（must ⊆ₚ B）
+--   (←) は ex432 を使って「∀n, B(iter f n a)」を n で帰納
+--------------------------------------------------------------------------------
+theorem ex450 (f : α → α) (B : Pred α) :
+    (∀ a, B a → B (f a)) → must (relGraph f) B = B := by
+  -- TODO
+  sorry
 
 end TL
