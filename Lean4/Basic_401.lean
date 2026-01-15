@@ -1221,8 +1221,31 @@ theorem ex432 (f : α → α) (B : Pred α) :
 --------------------------------------------------------------------------------
 theorem ex433 (QK : Rel α β) (KV : Rel β γ) (T : Rel α γ) :
     (attnRel QK KV ⊆ T) ↔ (QK ⊆ rRes KV T) := by
-  -- TODO
-  sorry
+  -- 「QK→KV の2段到達が常に T に含まれる」ことは、
+  -- 「QK が成り立つ各ペア (a,b) について、
+  -- b から KV で到達できる先はすべて a から T でも到達できる」ことと同値。
+
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro h1
+  intro a1
+  intro b1
+  intro h2
+  intro g1
+  intro h3
+  apply h1
+  exists b1
+
+  -- hRight
+  intro h1
+  intro a1
+  intro g1
+  intro h2
+  obtain ⟨b1, h3, h4⟩ := h2
+  apply h1 a1 b1
+  exact h3
+  exact h4
 
 --------------------------------------------------------------------------------
 -- 434：Attention の左 residuation（もう片側）
@@ -1230,8 +1253,30 @@ theorem ex433 (QK : Rel α β) (KV : Rel β γ) (T : Rel α γ) :
 --------------------------------------------------------------------------------
 theorem ex434 (QK : Rel α β) (KV : Rel β γ) (T : Rel α γ) :
     (attnRel QK KV ⊆ T) ↔ (KV ⊆ lRes QK T) := by
-  -- TODO
-  sorry
+  -- 「QK→KV の2段到達が常に T に含まれる」ことは、
+  -- 「KV が成り立つ各ペア (b,c) について、
+  -- a から QK で b に到達できる任意の a に対して、a から T で c に到達できる」ことと同値。
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro h1
+  intro b1
+  intro g1
+  intro h2
+  intro a1
+  intro h3
+  apply h1
+  exists b1
+
+  -- hRight
+  intro h1
+  intro b1
+  intro g1
+  intro h2
+  obtain ⟨a1, h3, h4⟩ := h2
+  apply h1 a1 g1
+  exact h4
+  exact h3
 
 --------------------------------------------------------------------------------
 -- 435：multi-head（KV 側の加法）で Img が分解する
@@ -1244,8 +1289,88 @@ theorem ex434 (QK : Rel α β) (KV : Rel β γ) (T : Rel α γ) :
 theorem ex435 (QK : Rel α β) (KV1 KV2 : Rel β γ) (A : Pred α) :
     relImg (attnRel QK (relAdd KV1 KV2)) A
       = predAdd (relImg (attnRel QK KV1) A) (relImg (attnRel QK KV2) A) := by
-  -- TODO
-  sorry
+  -- KV の条件を「KV1 または KV2（OR）」にすると、
+  -- A から到達できる出力集合は
+  -- 「KV1 を使って到達できる集合」∪「KV2 を使って到達できる集合」
+  -- という和（predAdd）になる。
+  funext g1
+  dsimp [relImg]
+  dsimp [attnRel]
+  dsimp [relComp]
+  dsimp [relAdd]
+  dsimp [predAdd]
+  apply propext
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro h1
+  dsimp [relImg]
+  dsimp [relComp]
+  obtain ⟨a1, h2, ⟨b1, h3, h4|h5⟩⟩ := h1
+
+  -- hLeft.inl
+  left
+  exists a1
+  constructor
+
+  -- hLeft.inl.left
+  exact h2
+
+  -- hLeft.inl.right
+  exists b1
+
+  -- hLeft.inr
+  right
+  exists a1
+  constructor
+
+  -- hLeft.inr.left
+  exact h2
+
+  -- hLeft.inr.right
+  exists b1
+
+  -- hRight
+  dsimp [relImg]
+  dsimp [relComp]
+  intro h1
+  obtain ⟨a1, h2, ⟨b1, h3, h4⟩⟩ | ⟨a2, h5, ⟨b2, h6, h7⟩⟩ := h1
+
+  -- hRight.inl
+  exists a1
+  constructor
+
+  -- hRight.inl.left
+  exact h2
+
+  -- hRight.inl.right
+  exists b1
+  constructor
+
+  -- hRight.inl.right.left
+  exact h3
+
+  -- hRight.inl.right.right
+  left
+  exact h4
+
+  -- hRight.inr
+  exists a2
+  constructor
+
+  -- hRight.inr.left
+  exact h5
+
+  -- hRight.inr.right
+  exists b2
+  constructor
+
+  -- hRight.inr.right.left
+  exact h6
+
+  -- hRight.inr.right.right
+  right
+  exact h7
 
 --------------------------------------------------------------------------------
 -- 436：Attention の単調性（両側）
@@ -1257,8 +1382,21 @@ theorem ex435 (QK : Rel α β) (KV1 KV2 : Rel β γ) (A : Pred α) :
 --------------------------------------------------------------------------------
 theorem ex436 (QK QK' : Rel α β) (KV KV' : Rel β γ) :
     (QK ⊆ QK') → (KV ⊆ KV') → (attnRel QK KV ⊆ attnRel QK' KV') := by
-  -- TODO
-  sorry
+  -- QK を「より許す関係」（QK ⊆ QK'）に広げ、KV も「より許す関係」（KV ⊆ KV'）に広げると、
+  -- 2段合成（attention の到達）でたどれるペアも広がる。
+  -- つまり、部品を強化（候補を増やす）すると、合成した結果も単調に大きくなる（包含が保たれる）。
+  intro h1 h2
+  intro s e
+  intro h3
+  obtain ⟨b1, h4, h5⟩ := h3
+  exists b1
+  constructor
+  -- left
+  apply h1
+  exact h4
+  -- right
+  apply h2
+  exact h5
 
 --------------------------------------------------------------------------------
 -- 437：mask が “より強い条件” のとき吸収できる
@@ -1271,8 +1409,30 @@ theorem ex436 (QK QK' : Rel α β) (KV KV' : Rel β γ) :
 --------------------------------------------------------------------------------
 theorem ex437 (QK M : Rel α β) :
     (M ⊆ QK) → relMul QK M = M := by
-  -- TODO
-  sorry
+  -- M ⊆ QK（M は QK の部分関係）なら、
+  -- 「QK かつ M」（relMul = ∧）は結局 M と同じになる。
+  -- 直感：M が成り立つときは自動的に QK も成り立つので、余計な条件（QK）は効かない。
+
+  intro h1
+  funext a b
+  apply propext
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro h3
+  obtain ⟨h4, h5⟩ := h3
+  exact h5
+
+  -- hRight
+  intro h3
+  constructor
+
+  -- hRight.left
+  apply h1
+  exact h3
+
+  -- hRight.right
+  exact h3
 
 --------------------------------------------------------------------------------
 -- 438：mask を入れた attention は “mask だけ” で同じになる（437 応用）
@@ -1280,6 +1440,9 @@ theorem ex437 (QK M : Rel α β) :
 --------------------------------------------------------------------------------
 theorem ex438 (QK M : Rel α β) (KV : Rel β γ) :
     (M ⊆ QK) → attnRel (relMul QK M) KV = attnRel M KV := by
+  -- M ⊆ QK なら、QK と M の積（∧）は結局 M と同じ（ex437 と同じ発想）。
+  -- したがって QK による「追加条件」を付けたまま attention 合成しても結果は変わらない。
+  -- 直感：もともと M で許される遷移は全部 QK でも許されているので、フィルタが効かない。
   -- TODO
   sorry
 
