@@ -116,7 +116,7 @@ def relStar {α : Type} (R : Rel α α) : Rel α α :=
 def reach {α : Type} (R : Rel α α) (A : Pred α) : Pred α :=
   relImg (relStar R) A
 
--- BはRを何回か使っても、たどり着いた先はBの中に留まる
+-- BはRを「1回」使っても、たどり着いた先はBの中に留まる（1ステップで閉じている）
 def Closed {α : Type} (R : Rel α α) (B : Pred α) : Prop :=
   relImg R B ⊆ₚ B
 
@@ -1550,8 +1550,28 @@ theorem ex440 (R S : Rel α α) (A : Pred α) :
 --------------------------------------------------------------------------------
 theorem ex441 (R : Rel α α) (X : Pred α) :
     Closed R X ↔ (∀ a b, X a → R a b → X b) := by
-  -- TODO
-  sorry
+  -- Closed R X は「X から R で 1 歩進んでも、必ず X の中に留まる」という条件。
+  -- 左辺の定義（Img R X ⊆ₚ X）を展開すると、「X a かつ R a b なら X b」に一致する。
+  -- つまり “1ステップ遷移での不変性” の言い換え。
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro h1
+  intro a1
+  intro a2
+  intro h2
+  intro h3
+  apply h1 a2
+  exists a1
+
+  -- hRight
+  intro h1
+  intro a1
+  intro h2
+  obtain ⟨a2, h3, h4⟩ := h2
+  apply h1 a2 a1
+  exact h3
+  exact h4
 
 --------------------------------------------------------------------------------
 -- 442：reach は “拡大” (extensive) ：A ⊆ₚ reach R A
@@ -1562,8 +1582,18 @@ theorem ex441 (R : Rel α α) (X : Pred α) :
 --------------------------------------------------------------------------------
 theorem ex442 (R : Rel α α) (A : Pred α) :
     A ⊆ₚ reach R A := by
-  -- TODO
-  sorry
+  -- reach R A は「A から star R（0回以上の反復）で到達できる点」の集合。
+  -- 0回到達（n = 0）では必ず自分自身に留まれるので、A の各要素は reach R A に含まれる。
+  -- つまり A ⊆ₚ reach R A（到達閉包は元の集合を含む）。
+  intro a1 h1
+  exists a1
+  constructor
+
+  -- left
+  exact h1
+
+  -- right
+  exists 0
 
 --------------------------------------------------------------------------------
 -- 443：像は合成に関して結合（到達集合の実用形）
@@ -1575,8 +1605,35 @@ theorem ex442 (R : Rel α α) (A : Pred α) :
 --------------------------------------------------------------------------------
 theorem ex443 (R : Rel α β) (S : Rel β γ) (A : Pred α) :
     relImg (relComp R S) A = relImg S (relImg R A) := by
-  -- TODO
-  sorry
+  -- A から (R;S) で到達するとは、「ある中間 b を経由して R で b に行き、S で目的地に行く」こと。
+  -- これはまず R で到達できる集合 relImg R A を作り、そこから S で到達するのと同じ。
+  -- つまり「像は合成に対して結合的」：Img(R;S) = Img S ∘ Img R。
+  funext g1
+  apply propext
+  dsimp [relImg, relComp]
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro h1
+  obtain ⟨a1, h2, ⟨b1, h3, h4⟩⟩ := h1
+  exists b1
+  constructor
+
+  -- hLeft.left
+  exists a1
+  exact h4
+
+  -- hRight
+  intro h1
+  obtain ⟨b1, ⟨a1, h2, h3⟩, h4⟩ := h1
+  exists a1
+  constructor
+
+  -- hRight.left
+  exact h2
+
+  -- hRight.right
+  exists b1
 
 --------------------------------------------------------------------------------
 -- 444：reach の “Bellman 形” 不動点方程式
@@ -1589,8 +1646,48 @@ theorem ex443 (R : Rel α β) (S : Rel β γ) (A : Pred α) :
 --------------------------------------------------------------------------------
 theorem ex444 (R : Rel α α) (A : Pred α) :
     reach R A = predAdd A (relImg R (reach R A)) := by
-  -- TODO
-  sorry
+  -- reach R A は「A から star R（0回以上）で到達できる点」。
+  -- star の展開（0回の id か、1歩 R のあとにさらに star）に対応して、
+  -- 到達集合は「元の A」または「reach から 1歩 R 進んだ先」の和に分解できる。
+
+  funext a1
+  apply propext
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro a2
+  obtain ⟨a3, h2, ⟨n1, h3⟩⟩ := a2
+  revert a3
+  induction n1 with
+  | zero =>
+    intro a4 h3 h4
+    left
+    rw [←h4]
+    exact h3
+  | succ n2 ih =>
+    intro a4 h3 h4
+    obtain ⟨a5, h5, h6⟩ := h4
+    right
+    exists a5
+    constructor
+    exists a4
+    constructor
+    exact h3
+    exists n2
+    exact h6
+
+  -- hRight
+  intro a2
+  obtain h3 | ⟨a3, ⟨a4, h4, ⟨n1, h5⟩⟩, h6⟩ := a2
+  exists a1
+  constructor
+  exact h3
+  exists 0
+  exists a4
+  constructor
+  exact h4
+  exists (n1 + 1)
+  exists a3
 
 --------------------------------------------------------------------------------
 -- 445：star の推移性（関係として）
@@ -1603,8 +1700,14 @@ theorem ex444 (R : Rel α α) (A : Pred α) :
 --------------------------------------------------------------------------------
 theorem ex445 (R : Rel α α) :
     relComp (relStar R) (relStar R) ⊆ relStar R := by
-  -- TODO
-  sorry
+  -- star R は「R を0回以上たどって到達できる」関係。
+  -- 0回以上たどった後に、さらに0回以上たどるのは、結局「0回以上たどる」のまま。
+  -- つまり star は合成に対して閉じており、(star R);(star R) ⊆ star R。
+  intro a1 a2 h1
+  obtain ⟨a3, ⟨m1, h2⟩, ⟨n1, h3⟩⟩ := h1
+  exists (m1 + n1)
+  apply ex367
+  exists a3
 
 --------------------------------------------------------------------------------
 -- 446：must の冪等性（interior operator っぽさ）
@@ -1617,8 +1720,29 @@ theorem ex445 (R : Rel α α) :
 --------------------------------------------------------------------------------
 theorem ex446 (R : Rel α α) (B : Pred α) :
     must R (must R B) = must R B := by
-  -- TODO
-  sorry
+  -- must R B は「R を何回たどっても到達先が常に B に入る」という安全集合。
+  -- いったん安全集合 must R B の中に入れてしまえば、そこからさらに must を掛けても条件は増えない。
+  -- つまり must は冪等：must R (must R B) = must R B。
+
+  funext a1
+  apply propext
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro h1 a2 h2
+  obtain ⟨n1, h3⟩ := h2
+  apply h1
+  exists 0
+  exists n1
+
+  -- hRight
+  intro h1 a2 h2 a3 h3
+  obtain ⟨n1, h4⟩ := h2
+  obtain ⟨n2, h5⟩ := h3
+  apply h1
+  exists (n1 + n2)
+  apply ex367
+  exists a2
 
 --------------------------------------------------------------------------------
 -- 447：reach の “最小性”（A を含み 1-step で閉じる集合は reach を含む）
@@ -1631,7 +1755,19 @@ theorem ex446 (R : Rel α α) (B : Pred α) :
 --------------------------------------------------------------------------------
 theorem ex447 (R : Rel α α) (A X : Pred α) :
     (predAdd A (relImg R X) ⊆ₚ X) → (reach R A ⊆ₚ X) := by
-  -- TODO
+  -- 仮定は「A ⊆ X かつ、X から R で 1歩進んでも X に入る（relImg R X ⊆ X）」をまとめたもの。
+  -- つまり X は A を含み、R に対して 1ステップ閉じている不変集合。
+  -- そのため A から star R で到達できる点（reach R A）はすべて X の中に収まる。
+
+  dsimp [PredLe]
+  dsimp [predAdd]
+  dsimp [relImg]
+  dsimp [reach]
+  dsimp [relImg]
+  dsimp [relStar]
+  intro h1 a1 h2
+  obtain ⟨a2, h3, ⟨n1, h4⟩⟩ := h2
+
   sorry
 
 --------------------------------------------------------------------------------
