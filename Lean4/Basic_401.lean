@@ -1856,7 +1856,44 @@ theorem ex450 (f : α → α) (B : Pred α) :
   -- 仮定「B a なら B (f a)」は、B が f による 1ステップ遷移で閉じている（不変）ことを意味する。
   -- graph f は決定的遷移なので、must (graph f) B は「反復しても常に B に留まる」集合になる（ex432）。
   -- その不変性から B の要素はすべて must に入り、逆向きは 0歩到達で自明なので、must (graph f) B = B。
-  -- TODO
-  sorry
+
+  -- def relPreAll (R : Rel α β) (B : Pred β) : Pred α :=
+  --   fun a => ∀ b, R a b → B b
+
+  -- -- 指定した対象は、Rを何回か使うことでBへたどりつくことができる
+  -- def must {α : Type} (R : Rel α α) (B : Pred α) : Pred α :=
+  --   relPreAll (relStar R) B
+
+  -- def relGraph (f : α → β) : Rel α β := fun a b => f a = b
+
+  intro h1
+  funext a1
+  apply propext
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro h2
+  apply h2
+  exists 0
+
+  -- hRight
+  intro h3
+  intro a2
+  intro h4
+  obtain ⟨n1, h5⟩ := h4
+  revert a1 a2
+  induction n1 with
+  | zero =>
+    intro a3 h6 a4 h7
+    rw [←h7]
+    exact h6
+  | succ n2 ih =>
+    intro a3 h6 a4 h7
+    obtain ⟨a5, h8, h9⟩ := h7
+    rw [←h9]
+    apply h1
+    apply ih a3
+    exact h6
+    exact h8
 
 end TL
