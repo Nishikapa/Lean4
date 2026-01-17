@@ -217,8 +217,55 @@ def predBot {X : Type} : Pred X := fun _ => False
 --------------------------------------------------------------------------------
 theorem ex458 (R : Rel α α) (A C : Pred α) :
     reach R (predAdd A C) = predAdd (reach R A) (reach R C) := by
-  -- TODO
-  sorry
+
+  funext a1
+  dsimp [reach]
+  dsimp [relImg]
+  dsimp [predAdd]
+  apply propext
+  refine ⟨?fLeft, ?fRight⟩
+
+  -- fLeft
+  intro h1
+  obtain ⟨a2, h2|h3, ⟨n1, h4⟩⟩ := h1
+
+  -- fLeft.inl
+  dsimp [relImg]
+  dsimp [relStar]
+  left
+  exists a2
+  constructor
+  exact h2
+  exists n1
+
+  -- fLeft.inr
+  dsimp [relImg]
+  dsimp [relStar]
+  right
+  exists a2
+  constructor
+  exact h3
+  exists n1
+
+  --- fRight
+  dsimp [relImg]
+  dsimp [relStar]
+  intro h5
+  obtain ⟨a3, h6, ⟨n2, h7⟩⟩ | ⟨a4, h8, ⟨n3, h9⟩⟩ := h5
+
+  -- fRight.inl
+  exists a3
+  constructor
+  left
+  exact h6
+  exists n2
+
+  -- fRight.inr
+  exists a4
+  constructor
+  right
+  exact h8
+  exists n3
 
 --------------------------------------------------------------------------------
 -- 459：must は集合の積（∧）に分配する
@@ -231,8 +278,33 @@ theorem ex458 (R : Rel α α) (A C : Pred α) :
 --------------------------------------------------------------------------------
 theorem ex459 (R : Rel α α) (B C : Pred α) :
     must R (predMul B C) = predMul (must R B) (must R C) := by
-  -- TODO
-  sorry
+
+  funext a1
+  apply propext
+  refine ⟨?fLeft, ?fRight⟩
+
+  -- fLeft
+  intro h1
+  constructor
+
+  -- fLeft.left
+  intro b1 h2
+  obtain ⟨h3, h4⟩ := h1 b1 h2
+  exact h3
+
+  -- fLeft.right
+  intro b2 h5
+  obtain ⟨h6,  h7⟩ := h1 b2 h5
+  exact h7
+
+  --- fRight
+  intro h8 b3 h9
+  obtain ⟨h10, h11⟩ := h8
+  obtain h12 := h10 b3 h9
+  obtain h13 := h11 b3 h9
+  constructor
+  exact h12
+  exact h13
 
 --------------------------------------------------------------------------------
 -- 460：reach は ⊥ を保つ（空集合からは何も到達しない）
@@ -240,8 +312,19 @@ theorem ex459 (R : Rel α α) (B C : Pred α) :
 --------------------------------------------------------------------------------
 theorem ex460 (R : Rel α α) :
     reach R (predBot : Pred α) = (predBot : Pred α) := by
-  -- TODO
-  sorry
+
+  funext a1
+  apply propext
+  refine ⟨?fLeft, ?fRight⟩
+
+  -- fLeft
+  intro h1
+  obtain ⟨a2, h2, ⟨n1, h3⟩⟩ := h1
+  exact h2
+
+  -- fRight
+  intro h4
+  contradiction
 
 --------------------------------------------------------------------------------
 -- 461：must は ⊤ を保つ（どこに行っても True）
@@ -249,8 +332,20 @@ theorem ex460 (R : Rel α α) :
 --------------------------------------------------------------------------------
 theorem ex461 (R : Rel α α) :
     must R (predTop : Pred α) = (predTop : Pred α) := by
-  -- TODO
-  sorry
+
+  funext a1
+  apply propext
+  refine ⟨?fLeft, ?fRight⟩
+
+  -- fLeft
+  intro h1
+  obtain h2 := h1 a1
+  apply h2
+  exists 0
+
+  -- fRight
+  intro h3 b1 h4
+  exact h3
 
 --------------------------------------------------------------------------------
 -- 462：Closed は積（∧）で閉じる（共通部分も Closed）
@@ -262,16 +357,41 @@ theorem ex461 (R : Rel α α) :
 --------------------------------------------------------------------------------
 theorem ex462 (R : Rel α α) (X Y : Pred α) :
     Closed R X → Closed R Y → Closed R (predMul X Y) := by
-  -- TODO
-  sorry
+
+  intro h1 h2 a1 h3
+  obtain ⟨a2, ⟨h4, h5⟩, h6⟩ := h3
+  obtain h7 := h1 a1
+  obtain h8 := h2 a1
+  constructor
+
+  -- left
+  apply h7
+  exists a2
+
+  -- hLeft
+  apply h8
+  exists a2
 
 --------------------------------------------------------------------------------
 -- 463：Closed は和（∨）で閉じる（和集合も Closed）
 --------------------------------------------------------------------------------
 theorem ex463 (R : Rel α α) (X Y : Pred α) :
     Closed R X → Closed R Y → Closed R (predAdd X Y) := by
-  -- TODO
-  sorry
+
+  intro h1 h2 a1 h3
+  obtain h4 := h1 a1
+  obtain h5 := h2 a1
+  obtain ⟨a2, h6|h7, h8⟩ := h3
+
+  -- inl
+  left
+  apply h4
+  exists a2
+
+  -- inr
+  right
+  apply h5
+  exists a2
 
 --------------------------------------------------------------------------------
 -- 464：reach は「A を含む最小の Closed 集合」（実用形）
@@ -281,8 +401,27 @@ theorem ex463 (R : Rel α α) (X Y : Pred α) :
 --------------------------------------------------------------------------------
 theorem ex464 (R : Rel α α) (A X : Pred α) :
     (A ⊆ₚ X) → Closed R X → (reach R A ⊆ₚ X) := by
-  -- TODO
-  sorry
+
+  intro h1 h2 a1 h3
+  obtain ⟨a2, h4, ⟨n1, h5⟩⟩ := h3
+  revert a1 a2
+  induction n1 with
+  | zero =>
+    intro a1 a2 h6 h7
+    apply h1
+    rw [←h7]
+    exact h6
+  | succ n1 ih =>
+    intro a3 a4 h6 h7
+    obtain ⟨a5, h8, h9⟩ := h7
+    obtain h10 := ih a5 a4
+    apply h2
+    exists a5
+    constructor
+    apply h10
+    exact h6
+    exact h8
+    exact h9
 
 --------------------------------------------------------------------------------
 -- 465：must は「B の中で最大の Closed 集合」（実用形）
@@ -292,8 +431,31 @@ theorem ex464 (R : Rel α α) (A X : Pred α) :
 --------------------------------------------------------------------------------
 theorem ex465 (R : Rel α α) (B X : Pred α) :
     (X ⊆ₚ B) → Closed R X → (X ⊆ₚ must R B) := by
-  -- TODO
-  sorry
+
+  dsimp [PredLe]
+  dsimp [Closed]
+  dsimp [must]
+  dsimp [relPreAll]
+  dsimp [relStar]
+  intro h1 h2 a1 h3 a2 h4
+  dsimp [PredLe, relImg] at h2
+  obtain ⟨n1, h5⟩ := h4
+  revert a1 a2
+  induction n1 with
+  | zero =>
+    intro a1 a2 h6 h7
+    apply h1
+    rw [←h7]
+    exact a2
+  | succ n1 ih =>
+    intro a3 h8 a4 h9
+    apply h1
+    apply h2
+    dsimp [relPow, relComp] at h9
+    obtain ⟨a5, h10, h11⟩ := h9
+
+    sorry
+
 
 --------------------------------------------------------------------------------
 -- 466：安全集合から到達しても安全（counit 的コロラリ）
