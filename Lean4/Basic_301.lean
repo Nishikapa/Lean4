@@ -1,3 +1,7 @@
+import Lean4.Basic_101
+import Lean4.Basic_151
+import Lean4.Basic_201
+
 --------------------------------------------------------------------------------
 -- 演習問題 301〜320（Tensor Logic / Attention 準備：Relational fragment）
 -- ※ import Mathlib なしでOK
@@ -77,14 +81,57 @@ example {ι κ : Type} (t u : Tensor1 ι κ) :
 -- 2) 「テンソル論理の核」: Prop値テンソル（関係）と収縮（∃, ∧）
 --------------------------------------------------------------------------------
 
+-- ■ 二項関係 (Binary Relation)
+-- 型 α の要素と 型 β の要素の間に「関係がある (Prop)」ことを表します。
+-- 集合論的には「α × β の部分集合」、グラフ理論的には「α から β への有向辺の集合」と同じです。
 def Rel (α β : Type) := α → β → Prop
 
--- 関係の合成（＝ 収縮 / 最小の Einstein summation）
+-- ■ 関係の合成 (Composition)
+-- 「a から b へ行き (R)、そこから c へ行く (S) 経路がある」こと。
+-- 行列の乗算（ブール行列の積）と同じ構造です。
+-- 記号では「R ; S」や「S ∘ R」と書かれます。
 def relComp (R : Rel α β) (S : Rel β γ) : Rel α γ :=
   fun a c => ∃ b, R a b ∧ S b c
 
-def relAdd (R S : Rel α β) : Rel α β := fun a b => R a b ∨ S a b
-def relMul (R S : Rel α β) : Rel α β := fun a b => R a b ∧ S a b
+-- ■ 関係の和 (Union / Join)
+-- 「R または S のどちらかの経路がある」こと。
+-- 集合としての「和集合 (R ∪ S)」に対応します。
+def relAdd (R S : Rel α β) : Rel α β :=
+  fun a b => R a b ∨ S a b
+
+-- ■ 関係の積 (Intersection / Meet)
+-- 「R かつ S の両方の性質を持つ経路である」こと。
+-- 集合としての「共通部分 (R ∩ S)」に対応します。
+-- ※「積 (Mul)」という名前ですが、関係代数では共通部分（mask）として機能します。
+def relMul (R S : Rel α β) : Rel α β :=
+  fun a b => R a b ∧ S a b
+
+-- ■ 包含関係 (Inclusion / Less than or Equal)
+-- 「R にある経路はすべて S にも含まれている」こと。
+-- 集合の「部分集合 (R ⊆ S)」の関係であり、論理的には「ならば (→)」を含意します。
+def RelLe (R S : Rel α β) : Prop :=
+  ∀ a b, R a b → S a b
+
+-- ■ 右残余 (Right Residual)
+-- 関係代数における「割り算」のような操作です。ガロア接続（随伴）の片割れになります。
+-- 意味：「S で a から行けるすべての先 c について、T でも b から c に行ける」ような (b, a) の関係。
+-- 直感的には「S の行き先を T がカバーしているか」という包含チェックに近い操作です。
+def rRes (S : Rel α γ) (T : Rel β γ) : Rel β α :=
+  fun b a => ∀ c, S a c → T b c
+
+-- ■ 転置 / 逆関係 (Transpose / Converse)
+-- 矢印の向きを逆にした関係。
+-- 「a から b への辺がある」を「b から a への辺がある」と読み替えます。
+-- 行列の「転置行列」に対応します。記号では「Rᵀ」や「R⁻¹」と書かれます。
+def relTrans (R : Rel α β) : Rel β α :=
+  fun b a => R a b
+
+-- ■ 恒等関係 (Identity)
+-- 「自分自身へのループ」のみを持つ関係。
+-- 行列における「単位行列（対角成分のみ1）」に対応します。
+-- 何も移動しない（No-op）操作を表します。
+def relId (α : Type) : Rel α α :=
+  fun a b => a = b
 
 -- 306：relComp の結合律（点ごとの ↔）
 -- (R;S);T ↔ R;(S;T)
@@ -109,9 +156,6 @@ example (R : Rel α β) (S : Rel β γ) (T : Rel γ δ) :
   constructor
   exists d1
   exact d5
-
--- 恒等関係（単位行列）
-def relId (α : Type) : Rel α α := fun a b => a = b
 
 -- 307：左単位元  id;R ↔ R
 example (R : Rel α β) :
@@ -163,8 +207,6 @@ example (R : Rel α β) :
   rfl
 
 -- 309：transpose（転置）を2回やると元に戻る
-def relTrans (R : Rel α β) : Rel β α := fun b a => R a b
-
 -- ヒント：funext b; funext a; rfl
 example (R : Rel α β) : relTrans (relTrans R) = R := by
   funext a b
@@ -183,8 +225,6 @@ example (R : Rel α β) (S : Rel γ δ) :
 --------------------------------------------------------------------------------
 -- 3) 推論の道具：単調性（⊆）と分配
 --------------------------------------------------------------------------------
-
-def RelLe (R S : Rel α β) : Prop := ∀ a b, R a b → S a b
 
 -- 311：左分配  (R+S);T ↔ (R;T)+(S;T)
 example (R S : Rel α β) (T : Rel β γ) :
@@ -1100,9 +1140,6 @@ example (R S : Rel α β) :
 --   (R;S) ⊆ T  →  R ⊆ (S ▷ T)
 --
 -- これはテンソル論理の「含意」の超入門です。
-def rRes (S : Rel α γ) (T : Rel β γ) : Rel β α :=
-  fun b a => ∀ c, S a c → T b c
-
 example (R : Rel β α) (S : Rel α γ) (T : Rel β γ) :
     (relComp R S ⊆ T) → (R ⊆ rRes S T) := by
   dsimp [RelLe, relComp, rRes]

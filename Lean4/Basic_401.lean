@@ -1,3 +1,9 @@
+import Lean4.Basic_101
+import Lean4.Basic_151
+import Lean4.Basic_201
+import Lean4.Basic_301
+import Lean4.Basic_351
+
 --------------------------------------------------------------------------------
 -- Basic_401.lean
 -- 演習問題 401〜420（実践寄せ：残余のカリー化 / ∀逆像の計算則 / reach・must）
@@ -7,106 +13,6 @@
 namespace TL
 
 variable {α β γ δ : Type}
-
---------------------------------------------------------------------------------
--- 0) 基本定義：Relation / 合成 / 和 / 積 / 反転 / 恒等 / 包含
---------------------------------------------------------------------------------
-
-def Rel (α β : Type) := α → β → Prop
-
--- RとSを合成してたどり着く
-def relComp {α β γ : Type} (R : Rel α β) (S : Rel β γ) : Rel α γ :=
-  fun a c => ∃ b, R a b ∧ S b c
-
--- RとSのどちらかでたどり着く
-def relAdd {α β : Type} (R S : Rel α β) : Rel α β :=
-  fun a b => R a b ∨ S a b
-
--- RとSの両方でたどり着く
-def relMul {α β : Type} (R S : Rel α β) : Rel α β :=
-  fun a b => R a b ∧ S a b
-
--- Rを反転
-def relTrans {α β : Type} (R : Rel α β) : Rel β α :=
-  fun b a => R a b
-
---
-def relId (α : Type) : Rel α α :=
-  fun a b => a = b
-
--- Rでたどり着くならSでもたどり着く
-def RelLe {α β : Type} (R S : Rel α β) : Prop :=
-  ∀ a b, R a b → S a b
-
-infix:50 " ⊆ " => RelLe
-
---------------------------------------------------------------------------------
--- 1) 残余（テンソル論理の含意の原型）
---------------------------------------------------------------------------------
-
--- 右残余：S ▷ T（型がひっくり返る点に注意）
--- Sを使ってaよりcにたどり着けるなら、Tを使ってbよりcにたどり着ける
-def rRes {α β γ : Type} (S : Rel α γ) (T : Rel β γ) : Rel β α :=
-  fun b a => ∀ c, S a c → T b c
-
--- 左残余：R ⊲ T
--- Rを使ってbにたどり着けるなら、Tを使ってaよりcにたどり着ける
-def lRes {α β γ : Type} (R : Rel α β) (T : Rel α γ) : Rel β γ :=
-  fun b c => ∀ a, R a b → T a c
-
---------------------------------------------------------------------------------
--- 2) Pred（集合）側：像 / 逆像 / ∀逆像（must の基礎）
---------------------------------------------------------------------------------
-
-def Pred (X : Type) := X → Prop
-
--- Aで成り立つならBで成り立つ
--- AはBの部分集合
-def PredLe {X : Type} (A B : Pred X) : Prop :=
-  ∀ x, A x → B x
-
-infix:50 " ⊆ₚ " => PredLe
-
--- AあるいはBで成り立つか確認
-def predAdd {X : Type} (A B : Pred X) : Pred X := fun x => A x ∨ B x
--- A及びBで成り立つか確認
-def predMul {X : Type} (A B : Pred X) : Pred X := fun x => A x ∧ B x
-
--- ∃-像（到達）
--- AにはRを使ってbにたどり着けるものがある
-def relImg {α β : Type} (R : Rel α β) (A : Pred α) : Pred β :=
-  fun b => ∃ a, A a ∧ R a b
-
--- ∃-逆像
--- BにはRを使ってたどり着けるものがある
-def relPre {α β : Type} (R : Rel α β) (B : Pred β) : Pred α :=
-  fun a => ∃ b, R a b ∧ B b
-
--- ∀-逆像（安全側）
--- BにはRを使うと必ずたどり着ける
-def relPreAll {α β : Type} (R : Rel α β) (B : Pred β) : Pred α :=
-  fun a => ∀ b, R a b → B b
-
---------------------------------------------------------------------------------
--- 3) 関数をグラフ関係として扱う
---------------------------------------------------------------------------------
-
--- fでaからbにたどり着く
-def relGraph {α β : Type} (f : α → β) : Rel α β :=
-  fun a b => f a = b
-
---------------------------------------------------------------------------------
--- 4) pow / star（反復合成＝到達可能性）
---------------------------------------------------------------------------------
-
--- Rを指定した回数合成してたどり着く
-def relPow {α : Type} (R : Rel α α) : Nat → Rel α α
-  | 0          => relId α
-  | Nat.succ n => relComp (relPow R n) R
-
--- Rを何回か合成してたどり着く
-def relStar {α : Type} (R : Rel α α) : Rel α α :=
-  fun a b => ∃ n, relPow R n a b
 
 --------------------------------------------------------------------------------
 -- 5) reach / must（実務っぽく使うための道具）
@@ -342,28 +248,6 @@ theorem ex409 (R : Rel α α) (A B : Pred α) :
 --------------------------------------------------------------------------------
 -- 410：reach は冪等（reach R (reach R A) = reach R A）
 --------------------------------------------------------------------------------
-
-theorem ex367 (R : Rel α α) :
-    ∀ m n, RelLe (relComp (relPow R m) (relPow R n)) (relPow R (m + n)) := by
-  intro a b
-  induction b with
-  | zero =>
-    dsimp [relPow, relId]
-    intro c d e
-    obtain ⟨e1, e2, e3⟩ := e
-    rw [←e3]
-    exact e2
-  | succ n ih =>
-    dsimp [RelLe]
-    intro c d e
-    dsimp [relPow, relComp] at e
-    obtain ⟨e1, e2, ⟨e3, e4, e5⟩⟩ := e
-    rw [Nat.add_succ]
-    dsimp [relPow, relComp]
-    refine ⟨e3, ?f, ?g⟩
-    apply ih
-    exists e1
-    exact e5
 
 theorem ex410 (R : Rel α α) (A : Pred α) :
     reach R (reach R A) = reach R A := by
@@ -1755,20 +1639,87 @@ theorem ex446 (R : Rel α α) (B : Pred α) :
 --------------------------------------------------------------------------------
 theorem ex447 (R : Rel α α) (A X : Pred α) :
     (predAdd A (relImg R X) ⊆ₚ X) → (reach R A ⊆ₚ X) := by
+
   -- 仮定は「A ⊆ X かつ、X から R で 1歩進んでも X に入る（relImg R X ⊆ X）」をまとめたもの。
   -- つまり X は A を含み、R に対して 1ステップ閉じている不変集合。
   -- そのため A から star R で到達できる点（reach R A）はすべて X の中に収まる。
 
-  dsimp [PredLe]
-  dsimp [predAdd]
-  dsimp [relImg]
-  dsimp [reach]
-  dsimp [relImg]
-  dsimp [relStar]
+  -- -- AあるいはBで成り立つか確認
+  -- def predAdd {X : Type} (A B : Pred X) : Pred X := fun x => A x ∨ B x
+
+  -- -- ∃-像（到達）
+  -- -- AにはRを一回使ってbにたどり着けるものがある
+  -- def relImg {α β : Type} (R : Rel α β) (A : Pred α) : Pred β :=
+  --   fun b => ∃ a, A a ∧ R a b
+
+  -- -- Aで成り立つならBで成り立つ
+  -- -- AはBの部分集合
+  -- def PredLe {X : Type} (A B : Pred X) : Prop :=
+  --   ∀ x, A x → B x
+
+  -- infix:50 " ⊆ₚ " => PredLe
+
+  -- -- Aには指定した対象にRを何回か使ってたどり着けるものがある
+  -- def reach {α : Type} (R : Rel α α) (A : Pred α) : Pred α :=
+  --   relImg (relStar R) A
+
+  -- relImg R X
+  -- Xを始点にRを使ってたどり着けるものの集合
+
+  -- predAdd A (relImg R X)
+  -- Xを始点にRを一回使ってたどり着けるか、あるいはAに含まれるものの集合
+
+  -- predAdd A (relImg R X) ⊆ₚ X
+  -- Xを始点にRを一回使ってたどり着けるか、あるいはAに含まれるものの集合が
+  -- Xの部分集合である
+
+  -- (predAdd A (relImg R X) ⊆ₚ X) →
+  -- Xを始点にRを一回使ってたどり着けるか、あるいはAに含まれるものの集合が
+  -- Xの部分集合であるならば、
+
+  -- reach R A
+  -- Aを始点にRを何回か使ってたどり着けるものの集合
+
+  -- reach R A ⊆ₚ X
+  -- Aを始点にRを何回か使ってたどり着けるものの集合はXの部分集合である
+
+  -- (predAdd A (relImg R X) ⊆ₚ X) → (reach R A ⊆ₚ X)
+  -- Xを始点にRを一回使ってたどり着けるか、あるいはAに含まれるものの集合が
+  -- Xの部分集合であるならば、
+  -- それはAを始点にRを何回か使ってたどり着けるものの集合はXの部分集合である
+
   intro h1 a1 h2
   obtain ⟨a2, h3, ⟨n1, h4⟩⟩ := h2
 
-  sorry
+  have h5 : (relImg R X) ⊆ₚ X := by
+    intro h5_a1 h5_h1
+    apply h1
+    right
+    obtain ⟨h5_a2, h5_h2, h5_h3⟩ := h5_h1
+    exists h5_a2
+
+  have h6 : A ⊆ₚ X := by
+    intro h6_a1 h6_h1
+    apply h1
+    left
+    exact h6_h1
+
+  revert a1 a2
+  induction n1 with
+  | zero =>
+    intro a3 a4 h8 h9
+    rw [←h9]
+    apply h6
+    exact h8
+  | succ n2 ih =>
+    intro a3 a4 h8 h9
+    obtain ⟨a5, h10, h11⟩ := h9
+    have h12 : X a5 := by
+      apply ih a5 a4
+      exact h8
+      exact h10
+    apply h5
+    exists a5
 
 --------------------------------------------------------------------------------
 -- 448：multi-head を両側で入れたときの “4分解”（実践）
@@ -1785,8 +1736,85 @@ theorem ex448 (QK1 QK2 : Rel α β) (KV1 KV2 : Rel β γ) (A : Pred α) :
     predAdd
       (predAdd (relImg (attnRel QK1 KV1) A) (relImg (attnRel QK2 KV1) A))
       (predAdd (relImg (attnRel QK1 KV2) A) (relImg (attnRel QK2 KV2) A)) := by
-  -- TODO
-  sorry
+  -- QK 側が 2-head（QK1/QK2）、KV 側も 2-head（KV1/KV2）だと、
+  -- 「どの head を選ぶか」が 2×2 通りに分岐する。
+  -- そのため A から到達できる出力集合は、(QK1,KV1),(QK2,KV1),(QK1,KV2),(QK2,KV2) の
+  -- 4つの attention の像の和（predAdd）に分解できる。
+
+  funext g1
+  apply propext
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- hLeft
+  intro h1
+  obtain ⟨a1, h2, ⟨b1, h3|h4, h5|h6⟩⟩ := h1
+  left
+  left
+  exists a1
+  constructor
+  exact h2
+  exists b1
+
+  right
+  left
+  exists a1
+  constructor
+  exact h2
+  exists b1
+
+  left
+  right
+  exists a1
+  constructor
+  exact h2
+  exists b1
+
+  right
+  right
+  exists a1
+  constructor
+  exact h2
+  exists b1
+
+  -- hRight
+  intro h1
+  obtain ⟨ ⟨a1, h2, ⟨b1, h3, h4⟩⟩ | ⟨a2,h5,b2,h6,h7⟩ ⟩ | ⟨a3,h8,b3,h9,h10⟩ | ⟨a4,h11,b4,h12,h13⟩ := h1
+  exists a1
+  constructor
+  exact h2
+  exists b1
+  constructor
+  left
+  exact h3
+  left
+  exact h4
+  exists a2
+  constructor
+  exact h5
+  exists b2
+  constructor
+  right
+  exact h6
+  left
+  exact h7
+  exists a3
+  constructor
+  exact h8
+  exists b3
+  constructor
+  left
+  exact h9
+  right
+  exact h10
+  exists a4
+  constructor
+  exact h11
+  exists b4
+  constructor
+  right
+  exact h12
+  right
+  exact h13
 
 --------------------------------------------------------------------------------
 -- 449：関数グラフの attention は “関数合成のグラフ”
@@ -1799,8 +1827,21 @@ theorem ex448 (QK1 QK2 : Rel α β) (KV1 KV2 : Rel β γ) (A : Pred α) :
 --------------------------------------------------------------------------------
 theorem ex449 (f : α → β) (g : β → γ) :
     attnRel (relGraph f) (relGraph g) = relGraph (fun x => g (f x)) := by
-  -- TODO
-  sorry
+  -- graph f は「a から b へ行けるのは b = f a のときだけ」という決定的な関係。
+  -- それを graph g と合成すると、a から c へ行けるのは「ある b = f a を経由して c = g b」のとき。
+  -- つまり c = g (f a) に一致し、合成は関数合成 (g ∘ f) の graph そのものになる。
+  funext a1 g1
+  dsimp [relGraph]
+  apply propext
+  refine ⟨?hLeft, ?hRight⟩
+  -- hLeft
+  intro h1
+  obtain ⟨b1, h2, h3⟩ := h1
+  rw [h2]
+  rw [h3]
+  -- hRight
+  intro h1
+  exists (f a1)
 
 --------------------------------------------------------------------------------
 -- 450：決定的遷移（graph f）での must：1-step で閉じていれば must = B
@@ -1812,6 +1853,9 @@ theorem ex449 (f : α → β) (g : β → γ) :
 --------------------------------------------------------------------------------
 theorem ex450 (f : α → α) (B : Pred α) :
     (∀ a, B a → B (f a)) → must (relGraph f) B = B := by
+  -- 仮定「B a なら B (f a)」は、B が f による 1ステップ遷移で閉じている（不変）ことを意味する。
+  -- graph f は決定的遷移なので、must (graph f) B は「反復しても常に B に留まる」集合になる（ex432）。
+  -- その不変性から B の要素はすべて must に入り、逆向きは 0歩到達で自明なので、must (graph f) B = B。
   -- TODO
   sorry
 
