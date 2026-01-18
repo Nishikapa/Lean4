@@ -1098,8 +1098,12 @@ theorem ex487 (R : Rel α α) (A : Pred α) :
 --------------------------------------------------------------------------------
 theorem ex488 (R : Rel α α) (B : Pred α) :
     must (relStar R) B = must R B := by
-  -- TODO
-  sorry
+  -- must は「0回以上の反復で到達できる先がすべて B に入る」という条件（must R B = preAll (star R) B）。
+  -- 左辺 must (star R) B は preAll (star (star R)) B だが、star は反復をもう一度かけても増えない（star ∘ star = star）。
+  -- つまり「R を何回か」たどるのと、「すでに何回か飛べる関係（star R）」をさらに何回かたどるのは同じ。
+  -- したがって must (relStar R) B = must R B。
+  dsimp [must]
+  rw [ex382 R]
 
 --------------------------------------------------------------------------------
 -- 489：reach は関係の和に対して “下から” 単調
@@ -1110,8 +1114,57 @@ theorem ex488 (R : Rel α α) (B : Pred α) :
 --------------------------------------------------------------------------------
 theorem ex489 (R S : Rel α α) (A : Pred α) :
     predAdd (reach R A) (reach S A) ⊆ₚ reach (relAdd R S) A := by
-  -- TODO
-  sorry
+  -- reach R A は「A から R を何回かたどって到達できる点」の集合。
+  -- R ⊆ (R+S), S ⊆ (R+S) なので、R で到達できる点も S で到達できる点も、
+  -- (R+S) を使えば同じ経路を辿れて到達できる。
+  -- よって reach R A ∪ reach S A ⊆ reach (R+S) A。
+
+  intro a1 hReach
+  obtain h1 | h2 := hReach
+
+  -- inl
+  obtain ⟨a2, hA1, ⟨n1, hRelPow1⟩⟩ := h1
+  exists a2
+  constructor
+  exact hA1
+  exists n1
+  revert a2 a1
+  induction n1 with
+  | zero =>
+    intro a2 a1 hA hRelPow1
+    exact hRelPow1
+  | succ n1 ih =>
+    intro a3 a1 hA hRelPow1
+    obtain ⟨a4, hRelPow2, hR⟩ := hRelPow1
+    exists a4
+    constructor
+    apply ih
+    exact hA
+    exact hRelPow2
+    left
+    exact hR
+
+  -- inr
+  obtain ⟨a2, hA1, ⟨n1, hRelPow1⟩⟩ := h2
+  exists a2
+  constructor
+  exact hA1
+  exists n1
+  revert a2 a1
+  induction n1 with
+  | zero =>
+    intro a2 a1 hA hRelPow1
+    exact hRelPow1
+  | succ n1 ih =>
+    intro a3 a1 hA hRelPow1
+    obtain ⟨a4, hRelPow2, hS⟩ := hRelPow1
+    exists a4
+    constructor
+    apply ih
+    exact hA
+    exact hRelPow2
+    right
+    exact hS
 
 --------------------------------------------------------------------------------
 -- 490：must は関係の和に対して “上から” 反単調
@@ -1122,8 +1175,23 @@ theorem ex489 (R S : Rel α α) (A : Pred α) :
 --------------------------------------------------------------------------------
 theorem ex490 (R S : Rel α α) (B : Pred α) :
     must (relAdd R S) B ⊆ₚ predMul (must R B) (must S B) := by
-  -- TODO
-  sorry
+
+  have hTemp1 : R ⊆ (relAdd R S) := by
+    intro a1 a2 hR
+    left
+    exact hR
+
+  have hTemp2 : S ⊆ (relAdd R S) := by
+    intro a1 a2 hR
+    right
+    exact hR
+
+  intro a1 hMust
+  constructor
+  apply ex474 R (relAdd R S) B hTemp1
+  exact hMust
+  apply ex474 S (relAdd R S) B hTemp2
+  exact hMust
 
 --------------------------------------------------------------------------------
 -- 491：Closed は関係の和に関して “積” に分解できる
@@ -1135,8 +1203,41 @@ theorem ex490 (R S : Rel α α) (B : Pred α) :
 --------------------------------------------------------------------------------
 theorem ex491 (R S : Rel α α) (X : Pred α) :
     Closed (relAdd R S) X ↔ (Closed R X ∧ Closed S X) := by
-  -- TODO
-  sorry
+  -- Closed (R+S) X は「X から 1歩 (R または S) で進んでも必ず X に留まる」という条件。
+  -- (R+S) で閉じているなら、特に R だけで進んでも、S だけで進んでも X に留まるので Closed R X ∧ Closed S X。
+  -- 逆に Closed R X と Closed S X が両方あれば、(R または S) のどちらで進んでも結局 X に留まる。
+
+  refine ⟨?fLeft, ?fRight⟩
+
+  -- fLeft
+  intro hClosed
+  constructor
+  intro a1 hRelImg1
+  obtain ⟨a2, hX1, hR⟩ := hRelImg1
+  apply hClosed
+  exists a2
+  constructor
+  exact hX1
+  left
+  exact hR
+  intro a3 hRelImg2
+  obtain ⟨a4, hX2, hS⟩ := hRelImg2
+  apply hClosed
+  exists a4
+  constructor
+  exact hX2
+  right
+  exact hS
+
+  -- fRight
+  intro ⟨hClosedR, hClosedS⟩
+  intro a1 hRelImg3
+  obtain ⟨a2, hX3, hRS⟩ := hRelImg3
+  obtain hR | hS := hRS
+  apply hClosedR
+  exists a2
+  apply hClosedS
+  exists a2
 
 --------------------------------------------------------------------------------
 -- 492：graph の rRes は「右合成」になる
@@ -1149,8 +1250,23 @@ theorem ex491 (R S : Rel α α) (X : Pred α) :
 --------------------------------------------------------------------------------
 theorem ex492 (f : α → γ) (T : Rel β γ) :
     rRes (relGraph f) T = (fun b a => T b (f a)) := by
-  -- TODO
-  sorry
+  -- rRes (graph f) T は「f a = c となる c について、T b c が成り立つ」ことを要求する条件。
+  -- でも graph f a c は「c = f a」そのものなので、結局 c は f a に固定される。
+  -- したがって (graph f ▷ T) b a は「T b (f a)」と同値になり、右辺の関数に一致する。
+
+  funext b1 a1
+  apply propext
+  refine ⟨?fLeft, ?fRight⟩
+
+  -- fLeft
+  intro hRres
+  apply hRres (f a1)
+  rfl
+
+  -- fRight
+  intro hT g1 h1
+  rw [←h1]
+  exact hT
 
 --------------------------------------------------------------------------------
 -- 493：mask を入れると attention の到達は減る（単調性の具体例）
@@ -1162,8 +1278,13 @@ theorem ex492 (f : α → γ) (T : Rel β γ) :
 --------------------------------------------------------------------------------
 theorem ex493 (QK : Rel α β) (M : Rel α β) (KV : Rel β γ) :
     attnRel (relMul QK M) KV ⊆ attnRel QK KV := by
-  -- TODO
-  sorry
+  -- relMul QK M は「QK かつ M」で、QK に条件（フィルタ）を追加した関係。
+  -- 条件を増やすと許される遷移は減るので、(QK ∧ M) ⊆ QK が成り立つ。
+  -- 合成（attnRel = relComp）は左側の関係に単調なので、attnRel (QK ∧ M) KV ⊆ attnRel QK KV。
+
+  intro a1 g1 hAttnRel1
+  obtain ⟨b1, ⟨hQK, hM⟩, hKV⟩ := hAttnRel1
+  exists b1
 
 --------------------------------------------------------------------------------
 -- 494：residual を使った “安全な QK” 設計（重要）
@@ -1175,8 +1296,15 @@ theorem ex493 (QK : Rel α β) (M : Rel α β) (KV : Rel β γ) :
 --------------------------------------------------------------------------------
 theorem ex494 (QK : Rel α β) (KV : Rel β γ) (T : Rel α γ) :
     attnRel (relMul QK (rRes KV T)) KV ⊆ T := by
-  -- TODO
-  sorry
+  -- rRes KV T は「この b を通して KV で行ける先は、必ず a から T でも行ける」という条件（KV ▷ T）。
+  -- つまり QK a b に加えて (KV ▷ T) b a を満たす b だけを許すと、
+  -- その b 経由で KV により到達した先 c は必ず T a c でカバーされる。
+  -- よって (QK ∧ (KV ▷ T));KV ⊆ T、すなわち attnRel (relMul QK (rRes KV T)) KV ⊆ T。
+
+  intro a1 g1 hAttnRel1
+  obtain ⟨b1, ⟨hQK, hRres⟩, hKV⟩ := hAttnRel1
+  apply hRres
+  exact hKV
 
 --------------------------------------------------------------------------------
 -- 495：must の “最大性” を residual で言い換える（Unit 埋め込み応用）
@@ -1189,8 +1317,9 @@ theorem ex494 (QK : Rel α β) (KV : Rel β γ) (T : Rel α γ) :
 --------------------------------------------------------------------------------
 theorem ex495 (R : Rel α α) (B : Pred α) :
     must R B = relToPred (rRes (relStar R) (predAsRel B)) := by
-  -- TODO
-  sorry
+
+  funext a1
+  dsimp [must, relPreAll,relStar, relToPred,rRes, predAsRel]
 
 --------------------------------------------------------------------------------
 -- 496：reach も Unit 埋め込みで合成表示できる（設計の見通し）
@@ -1202,8 +1331,9 @@ theorem ex495 (R : Rel α α) (B : Pred α) :
 --------------------------------------------------------------------------------
 theorem ex496 (R : Rel α α) (A : Pred α) :
     reach R A = (fun b => relComp (predAsRel A) (relStar R) () b) := by
-  -- TODO
-  sorry
+
+  funext a1
+  dsimp [reach, relImg, relStar, relComp, predAsRel]
 
 --------------------------------------------------------------------------------
 -- 497：到達集合 reach R A は “R で閉じている”（再掲の別ルート）
@@ -1213,8 +1343,14 @@ theorem ex496 (R : Rel α α) (A : Pred α) :
 --------------------------------------------------------------------------------
 theorem ex497 (R : Rel α α) (A : Pred α) :
     Closed R (reach R A) := by
-  -- TODO
-  sorry
+
+  intro a1 hRelImg1
+  obtain ⟨a2, ⟨a3, hA, ⟨n1, hRelPow1⟩⟩, hR⟩ := hRelImg1
+  exists a3
+  constructor
+  exact hA
+  exists (n1 + 1)
+  exists a2
 
 --------------------------------------------------------------------------------
 -- 498：安全集合 must R B も “R で閉じている”
@@ -1224,8 +1360,14 @@ theorem ex497 (R : Rel α α) (A : Pred α) :
 --------------------------------------------------------------------------------
 theorem ex498 (R : Rel α α) (B : Pred α) :
     Closed R (must R B) := by
-  -- TODO
-  sorry
+
+  intro a1 hRelImg a2 hRelStar
+  obtain ⟨n1, hRelPow⟩ := hRelStar
+  obtain ⟨a3, hMust, hR⟩ := hRelImg
+  apply hMust
+  exists (n1 + 1)
+  apply ex415_pre
+  exists a1
 
 --------------------------------------------------------------------------------
 -- 499：Closed の別表現（点ごとの形：再掲）
@@ -1235,8 +1377,20 @@ theorem ex498 (R : Rel α α) (B : Pred α) :
 --------------------------------------------------------------------------------
 theorem ex499 (R : Rel α α) (X : Pred α) :
     Closed R X ↔ (∀ a b, X a → R a b → X b) := by
-  -- TODO
-  sorry
+
+  refine ⟨?fLeft, ?fRight⟩
+
+  -- fLeft
+  intro hClosed a1 a2 hX hR
+  apply hClosed a2
+  exists a1
+
+  -- fRight
+  intro h1 a1 hRelImg
+  obtain ⟨a2, hX, hR⟩ := hRelImg
+  apply h1 a2 a1
+  exact hX
+  exact hR
 
 --------------------------------------------------------------------------------
 -- 500：最終：reach/must の “吸収” 形（設計で頻出）
@@ -1248,7 +1402,29 @@ theorem ex499 (R : Rel α α) (X : Pred α) :
 --------------------------------------------------------------------------------
 theorem ex500 (R : Rel α α) (B : Pred α) :
     reach R (must R B) ⊆ₚ must R B := by
-  -- TODO
-  sorry
+  -- must R B は「R を何回たどっても到達先が常に B の中」という安全集合。
+  -- その要素からさらに R を何回たどって到達した点も、やはり B の中に留まる（安全性は到達で崩れない）。
+  -- 言い換えると must R B は star R に対して閉じており、そこからの到達集合 reach R (must R B) は元の集合に含まれる。
+  intro a1
+  intro hReach
+  obtain ⟨a2, hMust, ⟨n1, hRelPow⟩⟩ := hReach
+  revert a1 a2
+  induction n1 with
+  | zero =>
+    intro a1 a2 hMust hRelPow
+    rw [←hRelPow]
+    exact hMust
+  | succ n1 ih =>
+    intro a3 a4 hMust hRelPow a5 hRelStar
+    obtain ⟨a6, hRelPow2, hR⟩ := hRelPow
+    obtain ⟨n2, hRelPow3⟩ := hRelStar
+    apply hMust a5
+    exists (n1 + 1 + n2)
+    obtain hEx367 := ex367 R (n1 + 1) n2 a4 a5
+    apply hEx367
+    exists a3
+    constructor
+    exists a6
+    exact hRelPow3
 
 end TL
