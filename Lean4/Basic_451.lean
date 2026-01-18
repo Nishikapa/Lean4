@@ -774,8 +774,71 @@ theorem ex478 (R : Rel α α) :
     (∀ A : Pred α, A ⊆ₚ reach R A) ∧
     (∀ A B : Pred α, (A ⊆ₚ B) → (reach R A ⊆ₚ reach R B)) ∧
     (∀ A : Pred α, reach R (reach R A) = reach R A) := by
-  -- TODO
-  sorry
+
+  constructor
+
+  -- left
+  intro A a1 h1
+  exists a1
+  constructor
+  exact h1
+  exists 0
+
+  -- right
+  refine ⟨?fLeft, ?fRight⟩
+
+  -- fLeft
+  intro A1 A2 hPredLe a1 hReach1
+  obtain ⟨a2, hA1, ⟨n1, hRelPow1⟩⟩ := hReach1
+  exists a2
+  constructor
+
+  -- fLeft.left
+  apply hPredLe
+  exact hA1
+
+  -- fLeft.right
+  exists n1
+
+  -- fRight
+  intro A1
+  funext a3
+  apply propext
+  refine ⟨?fLeft2, ?fRight2⟩
+
+  -- fLeft2
+  intro hReach2
+  obtain ⟨a4, ⟨a5, hA1, ⟨n2, hRelPow2⟩⟩, ⟨n3, hRelPow3⟩⟩ := hReach2
+  exists a5
+  constructor
+
+  -- fLeft2.left
+  exact hA1
+
+  -- fLeft2.right
+  exists (n2 + n3)
+  obtain hEx367 := ex367 R n2 n3 a5 a3
+  apply hEx367
+  exists a4
+
+  -- fRight2
+  intro hReach3
+  obtain ⟨a6, hA2, ⟨n4, hRelPow4⟩⟩ := hReach3
+  exists a6
+  constructor
+
+  -- fRight2.left
+  exists a6
+  constructor
+
+  -- fRight2.left.left
+  exact hA2
+
+  -- fRight2.left.right
+  exists 0
+
+  -- fRight2.right
+  exists n4
 
 --------------------------------------------------------------------------------
 -- 479：must は「内点演算子」(interior operator) である（まとめ）
@@ -790,8 +853,47 @@ theorem ex479 (R : Rel α α) :
     (∀ B : Pred α, must R B ⊆ₚ B) ∧
     (∀ B C : Pred α, (B ⊆ₚ C) → (must R B ⊆ₚ must R C)) ∧
     (∀ B : Pred α, must R (must R B) = must R B) := by
-  -- TODO
-  sorry
+
+  constructor
+
+  -- left
+  intro P1 a1 hMust1
+  apply hMust1 a1
+  exists 0
+
+  -- right
+  constructor
+
+  -- right.left
+  intro P3 P4 hPredLe a1 hMust1 a2 hRelStar1
+  obtain ⟨n1,hRelPow1⟩ := hRelStar1
+  apply hPredLe
+  apply hMust1 a2
+  exists n1
+
+  -- right.right
+  intro P5
+  funext a3
+  apply propext
+  refine ⟨?fLeft, ?fRight⟩
+
+  -- fLeft
+  intro hMust2 a4 hRelStar2
+  obtain ⟨n2, hRelPow2⟩ := hRelStar2
+  apply hMust2 a4
+  exists n2
+  exists 0
+
+  -- fRight
+  intro hMust3 a5 hRelStar3
+  obtain ⟨n3, hRelPow3⟩ := hRelStar3
+  intro a6 hRelStar4
+  obtain ⟨n4, hRelPow4⟩ := hRelStar4
+  apply hMust3
+  exists (n3 + n4)
+  obtain hEx367 := ex367 R n3 n4 a3 a6
+  apply hEx367
+  exists a5
 
 --------------------------------------------------------------------------------
 -- 480：閉じた集合は must で不動点（一般化 ex450）
@@ -803,8 +905,37 @@ theorem ex479 (R : Rel α α) :
 --------------------------------------------------------------------------------
 theorem ex480 (R : Rel α α) (B : Pred α) :
     Closed R B → must R B = B := by
-  -- TODO
-  sorry
+
+  intro hClosed
+  funext a1
+  apply propext
+  refine ⟨?fLeft, ?fRight⟩
+
+  -- fLeft
+  intro hMust
+  apply hMust
+  exists 0
+
+  -- fRight
+  intro hB a2 hReStar1
+  obtain ⟨n1, hRelPow1⟩ := hReStar1
+  -- apply hClosed a2
+  revert a1 a2
+  induction n1 with
+  | zero =>
+    intro a1 hB a2 hRelPow1
+    rw [←hRelPow1]
+    exact hB
+  | succ n1 ih =>
+    intro a3 hB a4 hRelPow1
+    obtain ⟨a5, hRelPow2, hR⟩ := hRelPow1
+    apply hClosed a4
+    exists a5
+    constructor
+    apply ih a3
+    exact hB
+    exact hRelPow2
+    exact hR
 
 --------------------------------------------------------------------------------
 -- 481：ガロア対応の unit（star 版）
@@ -817,8 +948,26 @@ theorem ex480 (R : Rel α α) (B : Pred α) :
 --------------------------------------------------------------------------------
 theorem ex481 (R : Rel α α) (A : Pred α) :
     A ⊆ₚ must R (reach R A) := by
-  -- TODO
-  sorry
+
+  intro a1 hA a2 hRelStar1
+  obtain ⟨n1, hRelPow1⟩ := hRelStar1
+  revert a1 a2
+  induction n1 with
+  | zero =>
+    intro a1 hA1 a2 hRelPow1
+    rw [←hRelPow1]
+    exists a1
+    constructor
+    exact hA1
+    exists 0
+  | succ n1 ih =>
+    intro a3 hA2 a4 hRelPow2
+    obtain ⟨a5, hRelPow2, hR⟩ := hRelPow2
+    exists a3
+    constructor
+    exact hA2
+    exists (n1 + 1)
+    exists a5
 
 --------------------------------------------------------------------------------
 -- 482：ガロア対応の counit（star 版）
@@ -828,8 +977,22 @@ theorem ex481 (R : Rel α α) (A : Pred α) :
 --------------------------------------------------------------------------------
 theorem ex482 (R : Rel α α) (B : Pred α) :
     reach R (must R B) ⊆ₚ B := by
-  -- TODO
-  sorry
+
+  intro a1 hReach
+  obtain ⟨a2, hMust, ⟨n1, hRelPow⟩⟩ := hReach
+  revert a1 a2
+  induction n1 with
+  | zero =>
+    intro a1 a2 hMust hRelPow
+    rw [←hRelPow]
+    apply hMust
+    exists 0
+  | succ n1 ih =>
+    intro a3 a4 hMust hRelPow
+    obtain ⟨a5, hRelPow2, hR⟩ := hRelPow
+    apply hMust a3
+    exists (n1 + 1)
+    exists a5
 
 --------------------------------------------------------------------------------
 -- 483：rRes は右引数に単調（T ⊆ T' なら S▷T ⊆ S▷T'）
@@ -839,8 +1002,11 @@ theorem ex482 (R : Rel α α) (B : Pred α) :
 --------------------------------------------------------------------------------
 theorem ex483 (S : Rel α γ) (T T' : Rel β γ) :
     (T ⊆ T') → (rRes S T ⊆ rRes S T') := by
-  -- TODO
-  sorry
+
+  intro hRelLe b1 a1 hRres g1 hS
+  apply hRelLe
+  apply hRres
+  exact hS
 
 --------------------------------------------------------------------------------
 -- 484：rRes は左引数に反単調（S ⊆ S' なら S'▷T ⊆ S▷T）
@@ -850,24 +1016,33 @@ theorem ex483 (S : Rel α γ) (T T' : Rel β γ) :
 --------------------------------------------------------------------------------
 theorem ex484 (S S' : Rel α γ) (T : Rel β γ) :
     (S ⊆ S') → (rRes S' T ⊆ rRes S T) := by
-  -- TODO
-  sorry
+
+  intro hRelLe b1 a1 hRres g1 hS
+  apply hRres
+  apply hRelLe
+  exact hS
 
 --------------------------------------------------------------------------------
 -- 485：lRes は右引数に単調（T ⊆ T' なら R⊲T ⊆ R⊲T'）
 --------------------------------------------------------------------------------
 theorem ex485 (R : Rel α β) (T T' : Rel α γ) :
     (T ⊆ T') → (lRes R T ⊆ lRes R T') := by
-  -- TODO
-  sorry
+
+  intro hRelLe b1 g1 hLres a1 hR
+  apply hRelLe
+  apply hLres
+  exact hR
 
 --------------------------------------------------------------------------------
 -- 486：lRes は左引数に反単調（R ⊆ R' なら R'⊲T ⊆ R⊲T）
 --------------------------------------------------------------------------------
 theorem ex486 (R R' : Rel α β) (T : Rel α γ) :
     (R ⊆ R') → (lRes R' T ⊆ lRes R T) := by
-  -- TODO
-  sorry
+
+  intro hRelLe b1 g1 hLres a1 hR
+  apply hLres
+  apply hRelLe
+  exact hR
 
 --------------------------------------------------------------------------------
 -- 487：reach の “反復閉包” 版：reach (star R) A = reach R A
@@ -879,8 +1054,41 @@ theorem ex486 (R R' : Rel α β) (T : Rel α γ) :
 --------------------------------------------------------------------------------
 theorem ex487 (R : Rel α α) (A : Pred α) :
     reach (relStar R) A = reach R A := by
-  -- TODO
-  sorry
+
+  funext a1
+  apply propext
+  refine ⟨?fLeft, ?fRight⟩
+
+  -- fLeft
+  intro hReach1
+  obtain ⟨a2, hA1, ⟨n1, hRelPow1⟩⟩ := hReach1
+  exists a2
+  constructor
+  exact hA1
+  exact ex382_pre R n1 a2 a1 hRelPow1
+
+  -- fRight
+  intro hReach2
+  obtain ⟨a3, hA2, ⟨n2, hRelPow2⟩⟩ := hReach2
+  exists a3
+  constructor
+  exact hA2
+  exists n2
+  revert a3 a1
+  induction n2 with
+  | zero =>
+    intro a3 a1 hA hRelPow2
+    exact hRelPow2
+  | succ n2 ih =>
+    intro a4 a1 hA hRelPow2
+    obtain ⟨a5, hRelPow3, hR⟩ := hRelPow2
+    exists a5
+    constructor
+    apply ih
+    exact hA
+    exact hRelPow3
+    exists 1
+    exists a5
 
 --------------------------------------------------------------------------------
 -- 488：must の “反復閉包” 版：must (star R) B = must R B
