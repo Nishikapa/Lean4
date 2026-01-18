@@ -56,7 +56,6 @@ theorem ex452 (R : Rel α β) :
     relComp (relId α) R = R := by
 
   funext a1 b1
-  dsimp [relComp, relId]
   apply propext
   refine ⟨?fLeft, ?fRight⟩
 
@@ -76,7 +75,6 @@ theorem ex452 (R : Rel α β) :
 theorem ex453 (R : Rel α β) :
     relComp R (relId β) = R := by
   funext a1 b1
-  dsimp [relComp, relId]
   apply propext
   refine ⟨?fLeft, ?fRight⟩
 
@@ -219,9 +217,6 @@ theorem ex458 (R : Rel α α) (A C : Pred α) :
     reach R (predAdd A C) = predAdd (reach R A) (reach R C) := by
 
   funext a1
-  dsimp [reach]
-  dsimp [relImg]
-  dsimp [predAdd]
   apply propext
   refine ⟨?fLeft, ?fRight⟩
 
@@ -230,8 +225,6 @@ theorem ex458 (R : Rel α α) (A C : Pred α) :
   obtain ⟨a2, h2|h3, ⟨n1, h4⟩⟩ := h1
 
   -- fLeft.inl
-  dsimp [relImg]
-  dsimp [relStar]
   left
   exists a2
   constructor
@@ -239,8 +232,6 @@ theorem ex458 (R : Rel α α) (A C : Pred α) :
   exists n1
 
   -- fLeft.inr
-  dsimp [relImg]
-  dsimp [relStar]
   right
   exists a2
   constructor
@@ -248,8 +239,6 @@ theorem ex458 (R : Rel α α) (A C : Pred α) :
   exists n1
 
   --- fRight
-  dsimp [relImg]
-  dsimp [relStar]
   intro h5
   obtain ⟨a3, h6, ⟨n2, h7⟩⟩ | ⟨a4, h8, ⟨n3, h9⟩⟩ := h5
 
@@ -432,30 +421,25 @@ theorem ex464 (R : Rel α α) (A X : Pred α) :
 theorem ex465 (R : Rel α α) (B X : Pred α) :
     (X ⊆ₚ B) → Closed R X → (X ⊆ₚ must R B) := by
 
-  dsimp [PredLe]
-  dsimp [Closed]
-  dsimp [must]
-  dsimp [relPreAll]
-  dsimp [relStar]
   intro h1 h2 a1 h3 a2 h4
-  dsimp [PredLe, relImg] at h2
   obtain ⟨n1, h5⟩ := h4
+  apply h1
   revert a1 a2
   induction n1 with
   | zero =>
     intro a1 a2 h6 h7
-    apply h1
     rw [←h7]
     exact a2
   | succ n1 ih =>
     intro a3 h8 a4 h9
-    apply h1
-    apply h2
-    dsimp [relPow, relComp] at h9
     obtain ⟨a5, h10, h11⟩ := h9
-
-    sorry
-
+    apply h2 a4
+    exists a5
+    constructor
+    apply ih a3
+    exact h8
+    exact h10
+    exact h11
 
 --------------------------------------------------------------------------------
 -- 466：安全集合から到達しても安全（counit 的コロラリ）
@@ -467,8 +451,21 @@ theorem ex465 (R : Rel α α) (B X : Pred α) :
 --------------------------------------------------------------------------------
 theorem ex466 (R : Rel α α) (B : Pred α) :
     reach R (must R B) ⊆ₚ B := by
-  -- TODO
-  sorry
+  intro a1 hReach
+  obtain ⟨a2, hMust, ⟨n1, hRelPow⟩⟩ := hReach
+  revert a1 a2
+  induction n1 with
+  | zero =>
+    intro a1 a2 hMust hRelPow
+    rw [←hRelPow]
+    apply hMust
+    exists 0
+  | succ n1 ih =>
+    intro a3 a4 hMust hRelPow
+    obtain ⟨a5, hRelPow2, hR⟩ := hRelPow
+    apply hMust a3
+    exists (n1 + 1)
+    exists a5
 
 --------------------------------------------------------------------------------
 -- 467：仕様 T を満たす head が2つあるなら、和(head1+head2) も仕様を満たす
@@ -481,8 +478,19 @@ theorem ex467 (QK1 QK2 : Rel α β) (KV : Rel β γ) (T : Rel α γ) :
     (attnRel QK1 KV ⊆ T) →
     (attnRel QK2 KV ⊆ T) →
     (attnRel (relAdd QK1 QK2) KV ⊆ T) := by
-  -- TODO
-  sorry
+
+  intro hAttnRel1 hAttnRel2
+  intro a g
+  intro hAttnRel3
+  obtain ⟨b1, hQK1|hQK2, hKV⟩ := hAttnRel3
+
+  -- inl
+  apply hAttnRel1
+  exists b1
+
+  -- inr
+  apply hAttnRel2
+  exists b1
 
 --------------------------------------------------------------------------------
 -- 468：和(head1+head2) が仕様を満たすなら、それぞれの head も満たす
@@ -495,8 +503,29 @@ theorem ex467 (QK1 QK2 : Rel α β) (KV : Rel β γ) (T : Rel α γ) :
 theorem ex468 (QK1 QK2 : Rel α β) (KV : Rel β γ) (T : Rel α γ) :
     (attnRel (relAdd QK1 QK2) KV ⊆ T) →
       (attnRel QK1 KV ⊆ T) ∧ (attnRel QK2 KV ⊆ T) := by
-  -- TODO
-  sorry
+
+  intro hAttnRel1
+  constructor
+
+  -- left
+  intro a1 g1 hAttnRel2
+  obtain ⟨b1, hQK1, hKV1⟩ := hAttnRel2
+  apply hAttnRel1
+  exists b1
+  constructor
+  left
+  exact hQK1
+  exact hKV1
+
+  -- right
+  intro a2 g2 hAttnRel3
+  obtain ⟨b2, hQK2, hKV2⟩ := hAttnRel3
+  apply hAttnRel1
+  exists b2
+  constructor
+  right
+  exact hQK2
+  exact hKV2
 
 --------------------------------------------------------------------------------
 -- 469：residual で “最大の QK” を作る（仕様を必ず満たす）
@@ -506,8 +535,11 @@ theorem ex468 (QK1 QK2 : Rel α β) (KV : Rel β γ) (T : Rel α γ) :
 --------------------------------------------------------------------------------
 theorem ex469 (KV : Rel β γ) (T : Rel α γ) :
     attnRel (rRes KV T) KV ⊆ T := by
-  -- TODO
-  sorry
+
+  intro a1 g1 hAttnRel1
+  obtain ⟨b1, hRRes1, hKV1⟩ := hAttnRel1
+  apply hRRes1
+  exact hKV1
 
 --------------------------------------------------------------------------------
 -- 470：residual の最大性（これ以上大きい QK は仕様を壊す）
@@ -517,8 +549,9 @@ theorem ex469 (KV : Rel β γ) (T : Rel α γ) :
 --------------------------------------------------------------------------------
 theorem ex470 (QK : Rel α β) (KV : Rel β γ) (T : Rel α γ) :
     (attnRel QK KV ⊆ T) → (QK ⊆ rRes KV T) := by
-  -- TODO
-  sorry
+  intro hAttnRel1 a1 b1 hQK1 g1 hKV1
+  apply hAttnRel1
+  exists b1
 
 --------------------------------------------------------------------------------
 -- 471〜500：演習（star の単調性 / reach・must の閉包演算子 / residual の単調性 / 安全設計）
@@ -540,8 +573,22 @@ theorem ex470 (QK : Rel α β) (KV : Rel β γ) (T : Rel α γ) :
 --------------------------------------------------------------------------------
 theorem ex471 (R S : Rel α α) :
     (R ⊆ S) → ∀ n, (relPow R n ⊆ relPow S n) := by
-  -- TODO
-  sorry
+
+  intro hRelLe n1 a1 a2 hRelPow1
+  revert a1 a2
+  induction n1 with
+  | zero =>
+    intro a1 a2 hRelPow1
+    exact hRelPow1
+  | succ n1 ih =>
+    intro a1 a2 hRelPow2
+    obtain ⟨b1, hRelPow3, hR⟩ := hRelPow2
+    exists b1
+    constructor
+    apply ih
+    exact hRelPow3
+    apply hRelLe
+    exact hR
 
 --------------------------------------------------------------------------------
 -- 472：star の単調性（関係側）
@@ -552,8 +599,12 @@ theorem ex471 (R S : Rel α α) :
 --------------------------------------------------------------------------------
 theorem ex472 (R S : Rel α α) :
     (R ⊆ S) → (relStar R ⊆ relStar S) := by
-  -- TODO
-  sorry
+
+  intro hRelLe a1 a2 hRelStar1
+  obtain ⟨n1, hRelPow1⟩ := hRelStar1
+  exists n1
+  obtain h2 := ex471 R S hRelLe n1 a1 a2 hRelPow1
+  exact h2
 
 --------------------------------------------------------------------------------
 -- 473：reach は関係に単調（遷移が増えるほど到達集合は増える）
@@ -565,8 +616,15 @@ theorem ex472 (R S : Rel α α) :
 --------------------------------------------------------------------------------
 theorem ex473 (R S : Rel α α) (A : Pred α) :
     (R ⊆ S) → (reach R A ⊆ₚ reach S A) := by
-  -- TODO
-  sorry
+
+  intro hRelLe a1 hReach
+  obtain ⟨a2, hA, ⟨n1, hRelPow1⟩⟩ := hReach
+  exists a2
+  constructor
+  exact hA
+  exists n1
+  obtain h3 := ex471 R S hRelLe n1 a2 a1 hRelPow1
+  apply h3
 
 --------------------------------------------------------------------------------
 -- 474：must は関係に反単調（遷移が増えるほど must は厳しくなる）
@@ -578,8 +636,12 @@ theorem ex473 (R S : Rel α α) (A : Pred α) :
 --------------------------------------------------------------------------------
 theorem ex474 (R S : Rel α α) (B : Pred α) :
     (R ⊆ S) → (must S B ⊆ₚ must R B) := by
-  -- TODO
-  sorry
+
+  intro hRelLe a1 hMustS b1 hReachR
+  obtain hReachS :=
+    ex472 R S hRelLe a1 b1 hReachR
+  apply hMustS
+  exact hReachS
 
 --------------------------------------------------------------------------------
 -- 475：star の右展開（片方向）
@@ -596,8 +658,23 @@ theorem ex474 (R S : Rel α α) (B : Pred α) :
 --------------------------------------------------------------------------------
 theorem ex475 (R : Rel α α) :
     relStar R ⊆ relAdd (relId α) (relComp (relStar R) R) := by
-  -- TODO
-  sorry
+
+  intro a1 a2 hRelStar1
+  obtain ⟨n1, hRelPow1⟩ := hRelStar1
+  revert a1 a2
+  cases n1 with
+  | zero =>
+    intro a1 a2 hRelPow1
+    left
+    exact hRelPow1
+  | succ n1 =>
+    intro a1 a2 hRelPow1
+    right
+    obtain ⟨b1, hRelPow2, hR⟩ := hRelPow1
+    exists b1
+    constructor
+    exists n1
+    exact hR
 
 --------------------------------------------------------------------------------
 -- 476：star の右展開（逆方向）
@@ -609,8 +686,29 @@ theorem ex475 (R : Rel α α) :
 --------------------------------------------------------------------------------
 theorem ex476 (R : Rel α α) :
     relAdd (relId α) (relComp (relStar R) R) ⊆ relStar R := by
-  -- TODO
-  sorry
+
+  intro a1 a2 hRelAdd1
+  obtain h1 | ⟨a3, ⟨n1, hRelPow1⟩, hR⟩ := hRelAdd1
+
+  -- inl
+  rw [h1]
+  exists 0
+
+  -- inr
+  revert a1 a2
+  induction n1 with
+  | zero =>
+    intro a1 a2 hR hRelPow1
+    exists 1
+    exists a3
+  | succ n1 ih =>
+    intro a1 a2 hR hRelPow1
+    obtain ⟨b1, hRelPow2, hR2⟩ := hRelPow1
+    exists (n1 + 2)
+    exists a3
+    constructor
+    exists b1
+    exact hR
 
 --------------------------------------------------------------------------------
 -- 477：star の右展開（等式）
@@ -620,8 +718,48 @@ theorem ex476 (R : Rel α α) :
 --------------------------------------------------------------------------------
 theorem ex477 (R : Rel α α) :
     relStar R = relAdd (relId α) (relComp (relStar R) R) := by
-  -- TODO
-  sorry
+  funext a1 a2
+  apply propext
+  refine ⟨?fLeft, ?fRight⟩
+
+  -- fLeft
+  intro hRelStar1
+  obtain ⟨n1, hRelPow1⟩ := hRelStar1
+  revert a1 a2
+  induction n1 with
+  | zero =>
+    intro a1 a2 hRelPow1
+    left
+    exact hRelPow1
+  | succ n1 ih =>
+    intro a1 a2 hRelPow1
+    right
+    obtain ⟨b1, hRelPow2, hR⟩ := hRelPow1
+    exists b1
+    constructor
+    exists n1
+    exact hR
+
+  --- fRight
+  intro hRelAdd1
+  obtain h1 | ⟨a3, ⟨n1, hRelPow1⟩, hR⟩ := hRelAdd1
+  -- fRight.inl
+  exists 0
+  -- fRight.inr
+  revert a1 a2
+  induction n1 with
+  | zero =>
+    intro a1 a2 hR hRelPow1
+    exists 1
+    exists a3
+  | succ n1 ih =>
+    intro a1 a2 hR hRelPow1
+    obtain ⟨b1, hRelPow2, hR2⟩ := hRelPow1
+    exists (n1 + 2)
+    exists a3
+    constructor
+    exists b1
+    exact hR
 
 --------------------------------------------------------------------------------
 -- 478：reach は「閉包演算子」(closure operator) である（まとめ）
