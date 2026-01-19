@@ -76,137 +76,239 @@ def attnNat (keys : List β) (score : α → β → Nat) (val : β → Nat) : α
 -- 501：wsum [] = 0
 theorem ex501 {X : Type} (f : X → Nat) :
     wsum ([] : List X) f = 0 := by
-  -- TODO
-  sorry
+  dsimp [wsum]
 
 -- 502：wsum (x::xs) = f x + wsum xs
 theorem ex502 {X : Type} (x : X) (xs : List X) (f : X → Nat) :
     wsum (x :: xs) f = f x + wsum xs f := by
-  -- TODO
-  sorry
+  dsimp [wsum]
 
 -- 503：wsum の単調性（点ごと ≤ なら和も ≤）
 theorem ex503 {X : Type} (xs : List X) (f g : X → Nat) :
     (∀ x, f x ≤ g x) → wsum xs f ≤ wsum xs g := by
-  -- TODO
-  sorry
+
+  intro h1
+  induction xs with
+  | nil =>
+    dsimp [wsum]
+    apply Nat.zero_le
+  | cons x xs ih =>
+    dsimp [wsum]
+    apply Nat.add_le_add
+    apply h1
+    apply ih
 
 -- 504：空 keys の合成はゼロ
 theorem ex504 (R : WRel α β) (S : WRel β γ) :
     wCompList ([] : List β) R S = wZero α γ := by
-  -- TODO
-  sorry
+
+  funext a1 g1
+  dsimp [wCompList]
+  dsimp [wZero]
+  dsimp [wsum]
 
 -- 505：keys = [b] のとき 1 項だけ
 theorem ex505 (b : β) (R : WRel α β) (S : WRel β γ) :
     ∀ a c, wCompList [b] R S a c = R a b * S b c := by
-  -- TODO
-  sorry
+
+  intro a1 g1
+  dsimp [wCompList]
+  dsimp [wsum]
 
 -- 506：wAdd の点ごとの形
 theorem ex506 (R S : WRel α β) :
     ∀ a b, wAdd R S a b = R a b + S a b := by
-  -- TODO
-  sorry
+
+  intro a1 b1
+  dsimp [wAdd]
 
 -- 507：wAdd の可換
 theorem ex507 (R S : WRel α β) :
     wAdd R S = wAdd S R := by
-  -- TODO
-  sorry
+
+  funext a1 b1
+  apply Nat.add_comm
 
 -- 508：wAdd の結合
 theorem ex508 (R S T : WRel α β) :
     wAdd (wAdd R S) T = wAdd R (wAdd S T) := by
-  -- TODO
-  sorry
+
+  funext a1 b1
+  dsimp [wAdd]
+  apply Nat.add_assoc
 
 -- 509：0 + R = R
 theorem ex509 (R : WRel α β) :
     wAdd (wZero α β) R = R := by
-  -- TODO
-  sorry
+
+  funext a1 b1
+  dsimp [wAdd]
+  dsimp [wZero]
+  apply Nat.zero_add
 
 -- 510：R + 0 = R
 theorem ex510 (R : WRel α β) :
     wAdd R (wZero α β) = R := by
-  -- TODO
-  sorry
+
+  funext a1 b1
+  dsimp [wAdd]
+  dsimp [wZero]
 
 -- 511：左線形性（(R+S);T = R;T + S;T）
 theorem ex511 (keys : List β) (R S : WRel α β) (T : WRel β γ) :
     wCompList keys (wAdd R S) T
       = wAdd (wCompList keys R T) (wCompList keys S T) := by
-  -- TODO
-  sorry
+
+  funext a1 g1
+  induction keys with
+  | nil =>
+    rfl
+  | cons b keys ih =>
+    dsimp [wCompList] at ih
+    dsimp [wAdd] at ih
+    dsimp [wCompList]
+    dsimp [wsum]
+    dsimp [wAdd]
+    rw [ih]
+    dsimp [wCompList]
+    dsimp [wsum]
+    rw [Nat.right_distrib (R a1 b) (S a1 b) (T b g1)]
+    rw [←Nat.add_assoc]
+    rw [←Nat.add_assoc]
+    rw [Nat.add_assoc (R a1 b * T b g1) (S a1 b * T b g1) (wsum keys fun b => R a1 b * T b g1)]
+    rw [Nat.add_comm (S a1 b * T b g1) (wsum keys fun b => R a1 b * T b g1)]
+    rw [←Nat.add_assoc]
 
 -- 512：右線形性（R;(S+T) = R;S + R;T）
 theorem ex512 (keys : List β) (R : WRel α β) (S T : WRel β γ) :
     wCompList keys R (wAdd S T)
       = wAdd (wCompList keys R S) (wCompList keys R T) := by
-  -- TODO
-  sorry
+  funext a1 g1
+  dsimp [wAdd]
+  induction keys with
+  | nil =>
+    rfl
+  | cons b keys ih =>
+    dsimp [wCompList] at ih
+    dsimp [wAdd] at ih
+    dsimp [wCompList]
+    dsimp [wsum]
+    dsimp [wAdd]
+    rw [ih]
+    rw [Nat.left_distrib]
+    rw [←Nat.add_assoc]
+    rw [←Nat.add_assoc]
+    rw [Nat.add_assoc (R a1 b * S b g1) (R a1 b * T b g1) (wsum keys fun b => R a1 b * S b g1)]
+    rw [Nat.add_comm (R a1 b * T b g1) (wsum keys fun b => R a1 b * S b g1)]
+    rw [←Nat.add_assoc]
 
 -- 513：0 ≤ wCompList ...
 theorem ex513 (keys : List β) (R : WRel α β) (S : WRel β γ) :
     ∀ a c, 0 ≤ wCompList keys R S a c := by
-  -- TODO
-  sorry
+
+  intro a1 g1
+  apply Nat.zero_le
 
 -- 514：maskW は 0 か 1
 theorem ex514 (M : Rel α β) :
     ∀ a b, maskW M a b = 0 ∨ maskW M a b = 1 := by
   -- ヒント：by classical; by_cases h : M a b; simp [maskW, h]
-  -- TODO
-  sorry
+  intro a1 b1
+  classical
+  dsimp [maskW]
+  by_cases h : M a1 b1
+  right
+  rw [if_pos h]
+  left
+  rw [if_neg h]
 
 -- 515：wMask の if 展開形
 theorem ex515 (R : WRel α β) (M : Rel α β) :
     ∀ a b, wMask R M a b = R a b * maskW M a b := by
-  -- TODO
-  sorry
+
+  intro a1 b1
+  dsimp [wMask]
 
 -- 516：True マスクは恒等
 theorem ex516 (R : WRel α β) :
     wMask R (fun _ _ => True) = R := by
-  -- TODO
-  sorry
+
+  funext a1 b1
+  dsimp [wMask]
+  dsimp [maskW]
+  rw [if_pos (by trivial)]
+  rw [Nat.mul_one]
 
 -- 517：False マスクは 0
 theorem ex517 (R : WRel α β) :
     wMask R (fun _ _ => False) = wZero α β := by
-  -- TODO
-  sorry
+
+  funext a1 b1
+  dsimp [wMask]
+  dsimp [maskW]
+  dsimp [wZero]
+  rw [if_neg (by trivial)]
+  rw [Nat.mul_zero]
 
 -- 518：WLe は pointwise ≤
 theorem ex518 (R S : WRel α β) :
     WLe R S ↔ (∀ a b, R a b ≤ S a b) := by
-  -- TODO
-  sorry
+
+  refine ⟨?hLeft, ?hRight⟩
+
+  -- fLeft
+  dsimp [WLe]
+  intro h1 a1 b1
+  apply h1
+
+  -- fRight
+  dsimp [WLe]
+  intro h2 a1 b1
+  apply h2
 
 -- 519：wAdd の単調性（左）
 theorem ex519 (R R' S : WRel α β) :
     WLe R R' → WLe (wAdd R S) (wAdd R' S) := by
-  -- TODO
-  sorry
+
+  intro h1 a1 b1
+  apply Nat.add_le_add_right
+  apply h1
 
 -- 520：wCompList の単調性（左）
 theorem ex520 (keys : List β) (R R' : WRel α β) (S : WRel β γ) :
     WLe R R' → WLe (wCompList keys R S) (wCompList keys R' S) := by
-  -- TODO
-  sorry
+
+  intro h1 a1 g1
+  -- theorem ex503 {X : Type} (xs : List X) (f g : X → Nat) :
+  --     (∀ x, f x ≤ g x) → wsum xs f ≤ wsum xs g
+  apply ex503
+  intro b1
+  apply Nat.mul_le_mul_right
+  apply h1
 
 -- 521：wCompList の単調性（右）
 theorem ex521 (keys : List β) (R : WRel α β) (S S' : WRel β γ) :
     WLe S S' → WLe (wCompList keys R S) (wCompList keys R S') := by
-  -- TODO
-  sorry
+
+  intro h1 a1 g1
+  apply ex503
+  intro b1
+  apply Nat.mul_le_mul_left
+  apply h1
 
 -- 522：右 0（R ; 0 = 0）
 theorem ex522 (keys : List β) (R : WRel α β) :
     wCompList keys R (wZero β γ) = wZero α γ := by
-  -- TODO
-  sorry
+
+  funext a1 g1
+  dsimp [wCompList, wZero]
+  induction keys with
+  | nil =>
+    rfl
+  | cons b keys ih =>
+    dsimp [wsum]
+    rw [Nat.zero_add]
+    exact ih
 
 -- 523：左 0（0 ; R = 0）
 -- ★修正点：R の型は WRel β γ（中間の型が β なので）
