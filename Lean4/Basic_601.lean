@@ -37,32 +37,114 @@ def relInKeys {α β : Type} (keys : List β) : Rel α β :=
 -- 601：wsum の ext（リスト中の点ごとの一致で和が一致）
 theorem ex601 {X : Type} (xs : List X) (f g : X → Nat) :
     (∀ x, x ∈ xs → f x = g x) → wsum xs f = wsum xs g := by
-  -- TODO
-  sorry
+
+  intro h1
+  induction xs with
+  | nil =>
+    dsimp [wsum]
+  | cons y ys ih =>
+    dsimp [wsum]
+    obtain h2 : f y = g y := by
+      apply h1
+      apply List.mem_cons_self
+    rw [h2]
+    rw [Nat.add_right_inj]
+    apply ih
+    intro x hmem
+    apply h1
+    apply List.mem_cons_of_mem
+    exact hmem
 
 -- 602：wsum の定数和（k を length 回足す）
 theorem ex602 {X : Type} (xs : List X) (k : Nat) :
     wsum xs (fun _ => k) = k * xs.length := by
-  -- TODO
-  sorry
+
+  induction xs with
+  | nil =>
+    dsimp [wsum]
+  | cons y ys ih =>
+    dsimp [wsum]
+    rw [ih]
+    rw [Nat.mul_succ]
+    rw [Nat.add_comm]
 
 -- 603：map との交換
 theorem ex603 {X Y : Type} (xs : List X) (g : X → Y) (f : Y → Nat) :
     wsum (xs.map g) f = wsum xs (fun x => f (g x)) := by
-  -- TODO
-  sorry
+
+  induction xs with
+  | nil =>
+    dsimp [wsum, List.map]
+  | cons y ys ih =>
+    dsimp [wsum, List.map]
+    rw [Nat.add_right_inj]
+    exact ih
 
 -- 604：∃ (mem かつ正) なら wsum は正
 theorem ex604 {X : Type} (xs : List X) (f : X → Nat) :
     (∃ x, x ∈ xs ∧ f x > 0) → wsum xs f > 0 := by
-  -- TODO
-  sorry
+
+  intro h
+  obtain ⟨x, hmem, hpos⟩ := h
+  induction xs with
+  | nil =>
+    dsimp [wsum]
+    contradiction
+  | cons y ys ih =>
+    dsimp [wsum]
+    by_cases hxy : x = y
+
+    -- pos
+    rw [←hxy]
+    apply Nat.add_pos_left
+    exact hpos
+
+    -- neg
+    obtain h2 :=
+      List.mem_of_ne_of_mem hxy hmem
+
+    obtain h3 :=
+      ih h2
+
+    apply Nat.add_pos_right
+
+    exact h3
 
 -- 605：wsum が正なら ∃ (mem かつ正)
 theorem ex605 {X : Type} (xs : List X) (f : X → Nat) :
     wsum xs f > 0 → (∃ x, x ∈ xs ∧ f x > 0) := by
-  -- TODO
-  sorry
+
+  intro h
+  induction xs with
+  | nil =>
+    dsimp [wsum] at h
+    contradiction
+  | cons y ys ih =>
+    dsimp [wsum] at h
+    by_cases hy : f y > 0
+
+    -- pos
+    exists y
+    constructor
+    apply List.mem_cons_self
+    exact hy
+
+    -- neg
+    obtain hZero :=
+      Nat.eq_zero_of_not_pos hy
+
+    rw [hZero] at h
+    rw [Nat.zero_add] at h
+
+    obtain ih2 := ih h
+    obtain ⟨x1, hmem, hpos⟩ := ih2
+
+    exists x1
+
+    constructor
+    apply List.mem_cons_of_mem
+    exact hmem
+    exact hpos
 
 -- 606：まとめ：wsum xs f > 0 ↔ ∃x∈xs, f x > 0
 theorem ex606 {X : Type} (xs : List X) (f : X → Nat) :

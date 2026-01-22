@@ -1204,7 +1204,41 @@ theorem ex593 (keys : List β) (QK : WRel α β) (KV : WRel β γ) :
 --------------------------------------------------------------------------------
 theorem ex594 (keys : List β) (QK : WRel α β) (KV : WRel β γ) (T : Rel α γ) :
     (wSupp QK ⊆ safeRel (α:=α) KV T) → (wSupp (wCompList keys QK KV) ⊆ T) := by
+
+  -- 仮定 wSupp QK ⊆ safeRel KV T は、「QK が support で選ぶ中間 b はすべて安全で、
+  -- その b から wSupp KV で到達できる先 c は必ず T a c に入る」という条件。
+  -- wCompList keys QK KV の support で (a,c) が出るなら、ある b ∈ keys を経由して
+  -- wSupp QK a b と wSupp KV b c が成り立つので、その安全条件から T a c が従う。
+  -- よって wSupp (wCompList keys QK KV) ⊆ T。
+
   -- ヒント：ex593 で boolean attention に押し上げ、ex591 で T に落とす（推移）
+
+  -- def wSupp (R : WRel α β) : Rel α β :=
+  --   fun a b => R a b > 0
+
+  -- def rRes (S : Rel α γ) (T : Rel β γ) : Rel β α :=
+  --   fun b a => ∀ c, S a c → T b c
+
+  -- def safeRel (KV : WRel β γ) (T : Rel α γ) : Rel α β :=
+  --   rRes (wSupp KV) T
+
+  -- def safeRel (KV : WRel β γ) (T : Rel α γ) : Rel α β :=
+  --   fun a b => ∀ c, (KV b c > 0) → T a c　
+
+  -- def wCompList {α β γ : Type} (keys : List β) (R : WRel α β) (S : WRel β γ) : WRel α γ :=
+  --   fun a c => wsum keys (fun b => R a b * S b c)
+
+  -- wSupp QK                         -- a b に対しQKが0より大きいか？
+  -- safeRel (α:=α) KV T              -- a b に対し、任意のgについて、 KV b g が0より大きいなら T a g が成り立つか？
+  -- wSupp QK ⊆ safeRel (α:=α) KV T  -- a b に対しQKが0より大きいなら、必ず任意のgについて、 KV b g が0より大きいなら T a g が成り立つ
+                                      -- つまりQKとKVの両方が0よりも大きいならTが成り立つ
+  -- wSupp (wCompList keys QK KV)
+  -- T
+
+  -- (QK と KV の結果が0を超えるなら、Tが成り立つ)なら、そりゃwSupp (wCompList keys QK KV) ⊆ Tいえますよね
+  -- 任意のgについて成り立つんだから、それをkeysで制限したって成り立つ
+
+  --obtain h2 := wSupp (wCompList keys QK KV) ⊆ T
 
   -- theorem ex589 (keys : List β) (QK : WRel α β) (KV : WRel β γ) :
   --     wSupp (wCompList keys QK KV) ⊆ attnRel (wSupp QK) (wSupp KV) := by
@@ -1222,6 +1256,16 @@ theorem ex595 (QK : WRel α β) (KV : WRel β γ) (T : Rel α γ) :
     wSupp (wMask QK (safeRel (α:=α) KV T)) ⊆ safeRel (α:=α) KV T := by
   -- ヒント：ex583（support(wMask)=support∧mask）で右射影
 
+  -- noncomputable def maskW {α β : Type} (M : Rel α β) : WRel α β := by
+  --   classical
+  --   exact fun a b => if M a b then 1 else 0
+
+  -- noncomputable def wMask {α β : Type} (R : WRel α β) (M : Rel α β) : WRel α β :=
+  --   fun a b => R a b * maskW M a b
+
+  -- def safeRel (KV : WRel β γ) (T : Rel α γ) : Rel α β :=
+  --   fun a b => ∀ c, (KV b c > 0) → T a c　
+
   -- theorem ex583 (R : WRel α β) (M : Rel α β) :
   --     wSupp (wMask R M) = relMul (wSupp R) M := by
 
@@ -1237,20 +1281,24 @@ theorem ex595 (QK : WRel α β) (KV : WRel β γ) (T : Rel α γ) :
 theorem ex596 (keys : List β) (QK : WRel α β) (KV : WRel β γ) (T : Rel α γ) :
     wSupp (wCompList keys (wMask QK (safeRel (α:=α) KV T)) KV) ⊆ T := by
   -- ヒント：ex594 に、ex595 を入れる
-  intro a1 g1 hwSupp
-  --dsimp [wSupp, wCompList, wMask, maskW, safeRel, rRes] at hwSupp
 
-  -- obtain hSafeRel :=
-  --   ex595 QK KV T
+  -- theorem ex594 (keys : List β) (QK : WRel α β) (KV : WRel β γ) (T : Rel α γ) :
+  --     (wSupp QK ⊆ safeRel (α:=α) KV T) → (wSupp (wCompList keys QK                       KV) ⊆ T) := by
+  --                                         wSupp (wCompList keys (wMask QK (safeRel KV T)) KV) ⊆ T
 
-  -- obtain hT :=
-  --   ex594 keys (wMask QK (safeRel (α:=α) KV T)) KV T hSafeRel a1 g1 hwSupp
+  obtain ex594_1 :=
+    ex594 keys (wMask QK (safeRel KV T)) KV T
 
-  -- exact hT
+  apply ex594_1
 
-  sorry
+  -- theorem ex595 (QK : WRel α β) (KV : WRel β γ) (T : Rel α γ) :
+  --     wSupp (wMask QK (safeRel (α:=α) KV T)) ⊆ safeRel (α:=α) KV T := by
+  --     wSupp (wMask QK (safeRel KV T))        ⊆        safeRel KV T
 
+  obtain ex595_1 :=
+    ex595 QK KV T
 
+  exact ex595_1
 
 --------------------------------------------------------------------------------
 -- 597：すでに安全ならマスクしても変わらない（wSupp を仮定にする版）
@@ -1259,8 +1307,32 @@ theorem ex597 (QK : WRel α β) (KV : WRel β γ) (T : Rel α γ) :
     (wSupp QK ⊆ safeRel (α:=α) KV T) →
       wMask QK (safeRel (α:=α) KV T) = QK := by
   -- ヒント：support(QK) で mask が True になることを使って funext で示す
-  -- TODO
-  sorry
+
+  -- QKが0の時には必ずsafeRel (α:=α) KV T)が成り立っているのであれば、
+  -- QKをそれでマスクしても結果は変わらない。
+
+  intro hRelLe
+  dsimp [RelLe, wSupp, safeRel, rRes] at hRelLe
+  funext a1 b1
+  obtain hRelLe2 := hRelLe a1 b1
+  dsimp [wMask]
+  dsimp [maskW]
+  dsimp [safeRel]
+  dsimp [rRes]
+  dsimp [wSupp]
+  by_cases hSuppQK : wSupp QK a1 b1
+  dsimp [wSupp] at hSuppQK
+  obtain hSafeRel := hRelLe2 hSuppQK
+  conv =>
+    lhs
+    rhs
+    rw [if_pos hSafeRel]
+  rw [Nat.mul_one]
+  dsimp [wSupp] at hSuppQK
+  have hSuppQK2 :=
+    Nat.eq_zero_of_not_pos hSuppQK
+  rw [hSuppQK2]
+  rw [Nat.zero_mul]
 
 --------------------------------------------------------------------------------
 -- 598：safeRel は仕様 T に単調（T ⊆ T' なら safeRel KV T ⊆ safeRel KV T'）
@@ -1268,8 +1340,20 @@ theorem ex597 (QK : WRel α β) (KV : WRel β γ) (T : Rel α γ) :
 theorem ex598 (KV : WRel β γ) (T T' : Rel α γ) :
     (T ⊆ T') → (safeRel (α:=α) KV T ⊆ safeRel (α:=α) KV T') := by
   -- ヒント：safeRel は rRes (wSupp KV) T。ex483（rRes の右単調）を使う。
-  -- TODO
-  sorry
+
+  -- def safeRel (KV : WRel β γ) (T : Rel α γ) : Rel α β :=
+  --   rRes (wSupp KV) T
+
+  -- theorem ex483 (S : Rel α γ) (T T' : Rel β γ) :
+  --     (T ⊆ T') → (rRes S T ⊆ rRes S T') := by
+
+  obtain ex483_1 :=
+    ex483 (wSupp KV) T T'
+
+  dsimp [safeRel]
+  intro hRelLe
+  apply ex483_1
+  exact hRelLe
 
 --------------------------------------------------------------------------------
 -- 599：safeRel は KV（support）に反単調（KV が増えるほど safeRel は厳しくなる）
@@ -1278,8 +1362,16 @@ theorem ex599 (KV KV' : WRel β γ) (T : Rel α γ) :
     (wSupp KV ⊆ wSupp KV') →
       (safeRel (α:=α) KV' T ⊆ safeRel (α:=α) KV T) := by
   -- ヒント：ex484（rRes の左反単調）
-  -- TODO
-  sorry
+
+  -- theorem ex484 (S S' : Rel α γ) (T : Rel β γ) :
+  --     (S ⊆ S') → (rRes S' T ⊆ rRes S T) := by
+
+  obtain ex484_1 :=
+    ex484 (wSupp KV) (wSupp KV') T
+
+  intro hRelLe
+  apply ex484_1
+  exact hRelLe
 
 --------------------------------------------------------------------------------
 -- 600：keys 付きの安全条件（必要十分に近い形）
@@ -1289,7 +1381,31 @@ theorem ex600 (keys : List β) (QK : WRel α β) (KV : WRel β γ) (T : Rel α �
     (∀ a b, b ∈ keys → wSupp QK a b → safeRel (α:=α) KV T a b) →
       (wSupp (wCompList keys QK KV) ⊆ T) := by
   -- ヒント：ex588（存在表現）で witness b を取り、仮定で T を出す
-  -- TODO
-  sorry
+
+  -- theorem ex588 (keys : List β) (QK : WRel α β) (KV : WRel β γ) :
+  --     ∀ a c,
+  --       wSupp (wCompList keys QK KV) a c
+  --         ↔ ∃ b, b ∈ keys ∧ wSupp QK a b ∧ wSupp KV b c := by
+
+  --       wSupp (wCompList keys QK KV) a1 c1
+
+  intro hSafeRel
+  intro a1
+  intro c1
+
+  obtain ex588_1 :=
+    ex588 keys QK KV a1 c1
+
+  intro hSupp
+
+  have h : ∃ b, b ∈ keys ∧ wSupp QK a1 b ∧ wSupp KV b c1 := by
+    apply ex588_1.mp
+    exact hSupp
+
+  dsimp [wSupp] at h
+  obtain ⟨b1, hIn, hWSuppQK, hWSuppKV⟩ := h
+  rw [safeRel] at hSafeRel
+  obtain h2 := hSafeRel a1 b1 hIn hWSuppQK c1 hWSuppKV
+  exact h2
 
 end TL
