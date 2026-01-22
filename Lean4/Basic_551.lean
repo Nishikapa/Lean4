@@ -6,6 +6,7 @@
 --------------------------------------------------------------------------------
 
 import Lean4.Basic_501
+import Mathlib.Data.List.Basic
 
 namespace TL
 
@@ -878,10 +879,54 @@ theorem ex587 (keys : List β) (QK : WRel α β) (KV : WRel β γ) :
     ∀ a c,
       (∃ b, b ∈ keys ∧ wSupp QK a b ∧ wSupp KV b c) →
         wSupp (wCompList keys QK KV) a c := by
+
   -- ヒント：keys で帰納。mem_cons を使って cases。
 
-  -- TODO
-  sorry
+  -- def WRel (α β : Type) := α → β → Nat
+
+  -- def wSupp (R : WRel α β) : Rel α β :=
+  --   fun a b => R a b > 0
+
+  -- def wCompList {α β γ : Type} (keys : List β) (R : WRel α β) (S : WRel β γ) : WRel α γ :=
+  --   fun a c => wsum keys (fun b => R a b * S b c)
+
+  -- すべてのa:α, c:γの組み合わせについて、QK及びKVの結果が0より大きくなる値b:βがkeys内に存在するのであれば、
+  -- wCompList keys QK KV a c の結果も0より大きくなる。
+
+  -- そのkeys内に存在するbを取り出して、QK a b > 0 かつ KV b c > 0 であることを利用して、
+  -- wCompList keys QK KV a c = wsum keys (fun b => QK a b * KV b c) > 0 を示す。
+
+  intro a1 c1 hExist
+  obtain ⟨b1, hIn, hQK, hKV⟩ := hExist
+
+  dsimp [wSupp]
+  dsimp [wCompList]
+  dsimp [wSupp] at hQK
+  dsimp [wSupp] at hKV
+
+  induction keys with
+  | nil =>
+    dsimp [wsum]
+    cases hIn
+  | cons b2 keys ih =>
+    dsimp [wsum]
+    rw [List.mem_cons] at hIn
+    obtain hCase1 | hCase2 := hIn
+
+    -- hCase1
+    rw [←hCase1]
+    have hQK_hKV : QK a1 b1 * KV b1 c1 > 0 := by
+      apply Nat.mul_pos
+      exact hQK
+      exact hKV
+
+    apply Nat.add_pos_left
+    apply hQK_hKV
+
+    -- hCase2
+    apply Nat.add_pos_right
+    obtain ih2 := ih hCase2
+    exact ih2
 
 --------------------------------------------------------------------------------
 -- 588：まとめ：support(wCompList) の “存在” 表現
@@ -891,8 +936,29 @@ theorem ex588 (keys : List β) (QK : WRel α β) (KV : WRel β γ) :
       wSupp (wCompList keys QK KV) a c
         ↔ ∃ b, b ∈ keys ∧ wSupp QK a b ∧ wSupp KV b c := by
   -- ヒント：ex586 と ex587
-  -- TODO
-  sorry
+
+  -- def WRel (α β : Type) := α → β → Nat
+
+  -- def wSupp (R : WRel α β) : Rel α β :=
+  --   fun a b => R a b > 0
+
+  -- def wCompList {α β γ : Type} (keys : List β) (R : WRel α β) (S : WRel β γ) : WRel α γ :=
+  --   fun a c => wsum keys (fun b => R a b * S b c)
+
+  -- すべてのa:α, c:γの組み合わせについて、wCompList keys QK KV a c の結果が0より大きくなることと、
+  -- keys内に存在するb:βがQK a b > 0
+  -- かつ KV b c > 0 であることは同値である。
+
+  intro a1 c1
+  refine ⟨?fLeft, ?fRight⟩
+  -- fLeft
+  intro hwSupp
+  apply ex586
+  exact hwSupp
+  -- fRight
+  intro hExist
+  apply ex587
+  exact hExist
 
 --------------------------------------------------------------------------------
 -- 589：wCompList の support は boolean attention（attnRel）に含まれる
@@ -900,8 +966,41 @@ theorem ex588 (keys : List β) (QK : WRel α β) (KV : WRel β γ) :
 theorem ex589 (keys : List β) (QK : WRel α β) (KV : WRel β γ) :
     wSupp (wCompList keys QK KV) ⊆ attnRel (wSupp QK) (wSupp KV) := by
   -- ヒント：attnRel = relComp。ex585 を使うだけ。
-  -- TODO
-  sorry
+
+  -- def WRel (α β : Type) := α → β → Nat
+
+  -- def wSupp (R : WRel α β) : Rel α β :=
+  --   fun a b => R a b > 0
+
+  -- def wCompList {α β γ : Type} (keys : List β) (R : WRel α β) (S : WRel β γ) : WRel α γ :=
+  --   fun a c => wsum keys (fun b => R a b * S b c)
+
+  -- def relComp (R : Rel α β) (S : Rel β γ) : Rel α γ :=
+  --   fun a c => ∃ b, R a b ∧ S b c
+
+  -- def attnRel (QK : Rel α β) (KV : Rel β γ) : Rel α γ :=
+  --   relComp QK KV
+
+  -- infix:50 " ⊆ " => RelLe
+  -- def RelLe (R S : Rel α β) : Prop :=
+  --   ∀ a b, R a b → S a b
+
+  -- RelLe
+  intro a1 c1 hwSupp
+  -- hwSupp
+  -- theorem ex586 (keys : List β) (QK : WRel α β) (KV : WRel β γ) :
+  --     ∀ a c,
+  --       wSupp (wCompList keys QK KV) a c →
+  --         ∃ b, b ∈ keys ∧ wSupp QK a b ∧ wSupp KV b c := by
+  obtain hExist :=
+    ex586 keys QK KV a1 c1 hwSupp
+
+  obtain ⟨b1, hIn, hQK, hKV⟩ := hExist
+
+  -- Goal
+  dsimp [attnRel]
+  dsimp [relComp]
+  exists b1
 
 --------------------------------------------------------------------------------
 -- 590：wMask すると support も ∧ で減る（support レベルの再掲）
@@ -909,8 +1008,33 @@ theorem ex589 (keys : List β) (QK : WRel α β) (KV : WRel β γ) :
 theorem ex590 (R : WRel α β) (M : Rel α β) :
     wSupp (wMask R M) ⊆ wSupp R := by
   -- ヒント：ex583 で右射影
-  -- TODO
-  sorry
+
+  -- def wSupp (R : WRel α β) : Rel α β :=
+  --   fun a b => R a b > 0
+
+  -- def wMask (R : WRel α β) (M : Rel α β) : WRel α β :=
+  --   fun a b => R a b * maskW M a b
+
+  -- def maskW (M : Rel α β) : WRel α β :=
+  --   fun a b => if M a b then 1 else 0
+
+  -- Mが成り立ち、かつRの結果が0より大きい場合、
+  -- Rの結果も0より大きいことを示す。
+
+  intro a1 b1 hwSupp
+  dsimp [wSupp] at hwSupp
+  dsimp [wMask] at hwSupp
+  dsimp [maskW] at hwSupp
+  dsimp [wSupp]
+  by_cases hM : M a1 b1
+  -- pos
+  rw [if_pos hM] at hwSupp
+  rw [Nat.mul_one] at hwSupp
+  exact hwSupp
+  -- neg
+  rw [if_neg hM] at hwSupp
+  rw [Nat.mul_zero] at hwSupp
+  cases hwSupp
 
 --------------------------------------------------------------------------------
 -- 591〜600：residual（rRes）で “安全な head” を設計する（support を介して）
@@ -930,8 +1054,48 @@ theorem ex591 (KV : WRel β γ) (T : Rel α γ) :
     attnRel (safeRel (α:=α) KV T) (wSupp KV) ⊆ T := by
   -- ヒント：ex433 を (QK:=safeRel KV T), (KV:=wSupp KV) に適用して、
   --         右側は「X ⊆ X」で reflexive。
-  -- TODO
-  sorry
+
+  -- safeRel KV T は「この b を経由して wSupp KV で到達できる先は、必ず T でカバーされる」
+  -- という“安全なクエリ→キー”関係（= KV と T から作ったフィルタ）だと見なせる。
+  -- その安全条件を満たす b だけを通して wSupp KV を合成すると、到達結果は必ず T の中に入る。
+  -- つまり「安全化してから attention（合成）すれば、仕様 T を破らない」という主張。
+
+  -- 指定されたaからSによっていける行き先は、指定されたbからTによっていけはず
+  -- def rRes (S : Rel α γ) (T : Rel β γ) : Rel β α :=
+  --   fun b a => ∀ c, S a c → T b c
+
+  -- 結果が０を超える
+  -- def wSupp (R : WRel α β) : Rel α β :=
+  --   fun a b => R a b > 0
+
+  -- KVの結果が0を超えるならTも成り立つよ
+  -- def safeRel (KV : WRel β γ) (T : Rel α γ) : Rel α β :=
+  --   rRes (wSupp KV) T
+
+  -- つながるパスがあるよ
+  -- def relComp (R : Rel α β) (S : Rel β γ) : Rel α γ :=
+  --   fun a c => ∃ b, R a b ∧ S b c
+
+  -- つながるパスがあるよ
+  -- def attnRel (QK : Rel α β) (KV : Rel β γ) : Rel α γ :=
+  --   relComp QK KV
+
+  -- def RelLe (R S : Rel α β) : Prop :=
+  --   ∀ a b, R a b → S a b
+
+  -- safeRel (α:=α) KV T
+  -- KVの結果が0を超えるならTも成り立つよ
+
+  intro a1 c1 hAttn
+
+  dsimp [attnRel] at hAttn
+  dsimp [relComp] at hAttn
+  obtain ⟨b1, hSafeRel, hSuppKV⟩ := hAttn
+  dsimp [safeRel] at hSafeRel
+  dsimp [rRes] at hSafeRel
+
+  obtain hT := hSafeRel c1 hSuppKV
+  exact hT
 
 --------------------------------------------------------------------------------
 -- 592：residual の最大性（boolean）：attnRel QK KV ⊆ T → QK ⊆ (KV▷T)
@@ -939,25 +1103,52 @@ theorem ex591 (KV : WRel β γ) (T : Rel α γ) :
 theorem ex592 (QKrel : Rel α β) (KV : WRel β γ) (T : Rel α γ) :
     (attnRel QKrel (wSupp KV) ⊆ T) → (QKrel ⊆ safeRel (α:=α) KV T) := by
   -- ヒント：ex433 の (→) 方向
-  -- TODO
-  sorry
+
+  -- 仮定は「QKrel で選んだ b を経由して wSupp KV で出力すると、常に T を満たす」という仕様。
+  -- safeRel KV T は、その仕様を満たすような (a,b) だけを集めた“安全な QK 関係”（フィルタ）だと思えばよい。
+  -- したがって仕様を満たす任意の QKrel は、すべて safeRel KV T の中に含まれる（QKrel ⊆ safeRel KV T）。
+
+  -- theorem ex433 (QK : Rel α β) (KV : Rel β γ) (T : Rel α γ) :
+  --     (attnRel QK KV ⊆ T) ↔ (QK ⊆ rRes KV T) := by
+  intro hAttn
+  obtain ex433_1 := ex433 QKrel (wSupp KV) T
+  rw [ex433_1] at hAttn
+  rw [safeRel]
+  exact hAttn
 
 --------------------------------------------------------------------------------
 -- 593：wCompList の support は boolean attention に含まれる（再掲：接続の要）
 --------------------------------------------------------------------------------
 theorem ex593 (keys : List β) (QK : WRel α β) (KV : WRel β γ) :
     wSupp (wCompList keys QK KV) ⊆ attnRel (wSupp QK) (wSupp KV) := by
+
+  -- wCompList keys QK KV は、keys を介して「重み付きの QK と KV を合成」したもの。
+  -- wSupp は「重みが 0 でない（到達がある）」ペアだけを取り出すので、重み付き合成で到達できるなら、
+  -- ある中間キー b を経由して wSupp QK と wSupp KV の両方で到達できるはず。
+  -- よって wSupp (wCompList keys QK KV) は、support を普通の関係として合成した attnRel (wSupp QK) (wSupp KV) に含まれる。
+
   -- ヒント：ex589
-  -- TODO
-  sorry
+  apply ex589
 
 --------------------------------------------------------------------------------
 -- 594：安全条件（support(QK) ⊆ KV▷T）なら、support(wCompList) ⊆ T
 --------------------------------------------------------------------------------
 theorem ex594 (keys : List β) (QK : WRel α β) (KV : WRel β γ) (T : Rel α γ) :
     (wSupp QK ⊆ safeRel (α:=α) KV T) → (wSupp (wCompList keys QK KV) ⊆ T) := by
+
+  -- 仮定は「QK の support で選ぶ中間キー b はすべて安全で、wSupp KV で到達できる先は必ず T に入る」という条件。
+  -- wCompList keys QK KV の support で (a,c) に到達できるなら、ある b を経由して wSupp QK a b と wSupp KV b c が成り立つ。
+  -- その b は安全（safeRel）なので、KV 側で到達した c は必ず T a c を満たす。
+  -- よって wSupp (wCompList keys QK KV) ⊆ T（重み付き合成の到達先は仕様 T を破らない）。
+
   -- ヒント：ex593 で boolean attention に押し上げ、ex591 で T に落とす（推移）
-  -- TODO
+
+  -- theorem ex593 (keys : List β) (QK : WRel α β) (KV : WRel β γ) :
+  --     wSupp (wCompList keys QK KV) ⊆ attnRel (wSupp QK) (wSupp KV) := by
+
+  -- theorem ex591 (KV : WRel β γ) (T : Rel α γ) :
+  --     attnRel (safeRel (α:=α) KV T) (wSupp KV) ⊆ T := by
+
   sorry
 
 --------------------------------------------------------------------------------
