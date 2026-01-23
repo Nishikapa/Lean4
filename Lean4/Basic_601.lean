@@ -948,8 +948,10 @@ theorem ex646 (keys : List β) (QK : WRel α β) (KV : WRel β γ) (T1 T2 : Rel 
     wSupp (attnWRel keys (wMask QK (rRes (wSupp KV) (fun a c => T1 a c ∧ T2 a c))) KV)
       ⊆ (fun a c => T1 a c ∧ T2 a c) := by
   -- ヒント：ex642 を T := (T1 ∧ T2) で適用
-  -- TODO
-  sorry
+  obtain hEx642 :=
+    ex642 keys QK KV (fun a c => T1 a c ∧ T2 a c)
+
+  apply hEx642
 
 -- 647：keys を 2 ブロックに分けた attn の support は OR になる（Rel 視点）
 theorem ex647 (keys1 keys2 : List β) (QK : WRel α β) (KV : WRel β γ) :
@@ -957,8 +959,67 @@ theorem ex647 (keys1 keys2 : List β) (QK : WRel α β) (KV : WRel β γ) :
       =
     relAdd (wSupp (attnWRel keys1 QK KV)) (wSupp (attnWRel keys2 QK KV)) := by
   -- ヒント：ex621 で relCompList へ、append は mem_append で OR になる
-  -- TODO
+
+  obtain hEx621 :=
+    ex621 (keys1 ++ keys2) QK KV
+
+  rw [hEx621]
+
+  funext a1 g1
+  --dsimp [relAdd, wSupp, attnWRel, wCompList, relCompList]
+  apply propext
+  constructor
+  -- (→)
+  intro hExists
+  obtain ⟨b1, hMem, hQK, hKV⟩ := hExists
+  by_cases hIn1 : b1 ∈ keys1
+  -- b1 ∈ keys1
+  left
+  obtain hEx587 :=
+    ex587 keys1 QK KV a1 g1
+  apply hEx587
+  exists b1
+  right
+  have hMem1 : b1 ∈ keys2 := by
+    rw [List.mem_append] at hMem
+    obtain hMemLeft | hMemRight := hMem
+    contradiction
+    exact hMemRight
+  obtain hEx587 :=
+    ex587 keys2 QK KV a1 g1
+  apply hEx587
+  exists b1
+  intro hRelAdd
+  obtain hLeft | hRight := hRelAdd
+
+  rw [←hEx621]
+
+  rw [wSupp, attnWRel, wCompList] at *
+  obtain hEx604 :=
+    ex604 (keys1 ++ keys2) (fun b => QK a1 b * KV b g1)
+  apply hEx604
+
   sorry
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 -- 648：keys 分割の spec 検証：両ブロックが T を満たせば全体も T
 theorem ex648 (keys1 keys2 : List β) (QK : WRel α β) (KV : WRel β γ) (T : Rel α γ) :
