@@ -48,16 +48,33 @@ def WSpec {α β : Type} (R : WRel α β) (T : Rel α β) : Prop :=
 -- 651：空 keys の relCompList は空関係
 theorem ex651 (R : Rel α β) (S : Rel β γ) :
     relCompList ([] : List β) R S = (relBot α γ) := by
-  -- TODO
-  sorry
+
+  funext a1 g1
+  dsimp [relCompList, relBot]
+  apply propext
+  constructor
+  intro h
+  obtain ⟨b, hb, hR, hS⟩ := h
+  cases hb
+  intro h
+  contradiction
 
 -- 652：cons 展開（head で当たるか tail に流す）
 theorem ex652 (b : β) (keys : List β) (R : Rel α β) (S : Rel β γ) :
     relCompList (b :: keys) R S
       =
     relAdd (fun a c => R a b ∧ S b c) (relCompList keys R S) := by
-  -- TODO
-  sorry
+
+  funext a1 g1
+  dsimp [relCompList, relAdd]
+  apply propext
+  constructor
+  intro h
+  obtain ⟨b1, hb1, hR, hS⟩ := h
+
+
+
+
 
 -- 653：singleton keys の relCompList
 theorem ex653 (b : β) (R : Rel α β) (S : Rel β γ) :

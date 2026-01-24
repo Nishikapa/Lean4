@@ -962,23 +962,24 @@ theorem ex647 (keys1 keys2 : List β) (QK : WRel α β) (KV : WRel β γ) :
 
   obtain hEx621 :=
     ex621 (keys1 ++ keys2) QK KV
-
   rw [hEx621]
 
   funext a1 g1
-  --dsimp [relAdd, wSupp, attnWRel, wCompList, relCompList]
   apply propext
   constructor
   -- (→)
   intro hExists
   obtain ⟨b1, hMem, hQK, hKV⟩ := hExists
   by_cases hIn1 : b1 ∈ keys1
-  -- b1 ∈ keys1
+
+  -- pos
   left
   obtain hEx587 :=
     ex587 keys1 QK KV a1 g1
   apply hEx587
   exists b1
+
+  -- neg
   right
   have hMem1 : b1 ∈ keys2 := by
     rw [List.mem_append] at hMem
@@ -989,37 +990,39 @@ theorem ex647 (keys1 keys2 : List β) (QK : WRel α β) (KV : WRel β γ) :
     ex587 keys2 QK KV a1 g1
   apply hEx587
   exists b1
+
+  -- (←)
   intro hRelAdd
-  obtain hLeft | hRight := hRelAdd
 
-  rw [←hEx621]
+  -- theorem ex556 (keys1 keys2 : List β) (QK : WRel α β) (KV : WRel β γ) :
+  --     ∀ a c,
+  --       wCompList (keys1 ++ keys2) QK KV a c
+  --         = wCompList keys1 QK KV a c + wCompList keys2 QK KV a c := by
+  obtain hEx556 :=
+    ex556 keys1 keys2 QK KV a1 g1
 
-  rw [wSupp, attnWRel, wCompList] at *
   obtain hEx604 :=
     ex604 (keys1 ++ keys2) (fun b => QK a1 b * KV b g1)
+
+  -- theorem ex605 {X : Type} (xs : List X) (f : X → Nat) :
+  --     wsum xs f > 0 → (∃ x, x ∈ xs ∧ f x > 0) := by
+  obtain hEx605 :=
+    ex605 (keys1 ++ keys2) (fun x =>  QK a1 x * KV x g1)
+
+  rw [←hEx621]
   apply hEx604
+  apply hEx605
+  rw [attnWRel, wCompList] at *
+  rw [hEx556]
 
-  sorry
+  obtain hLeft | hRight := hRelAdd
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  -- inl
+  apply Nat.add_pos_left
+  exact hLeft
+  -- inr
+  apply Nat.add_pos_right
+  exact hRight
 
 -- 648：keys 分割の spec 検証：両ブロックが T を満たせば全体も T
 theorem ex648 (keys1 keys2 : List β) (QK : WRel α β) (KV : WRel β γ) (T : Rel α γ) :
@@ -1027,23 +1030,48 @@ theorem ex648 (keys1 keys2 : List β) (QK : WRel α β) (KV : WRel β γ) (T : R
     (wSupp (attnWRel keys2 QK KV) ⊆ T) →
     (wSupp (attnWRel (keys1 ++ keys2) QK KV) ⊆ T) := by
   -- ヒント：ex647 で OR に分解し、cases で流す
-  -- TODO
-  sorry
+
+  intro hSpec1 hSpec2 a1 g1 hSupp
+
+-- theorem ex647 (keys1 keys2 : List β) (QK : WRel α β) (KV : WRel β γ) :
+--     wSupp (attnWRel (keys1 ++ keys2) QK KV)
+--       =
+--     relAdd (wSupp (attnWRel keys1 QK KV)) (wSupp (attnWRel keys2 QK KV))
+  obtain hEx647 :=
+    ex647 keys1 keys2 QK KV
+  rw [hEx647] at hSupp
+
+  obtain hLeftSupp | hRightSupp := hSupp
+
+  -- left
+  apply hSpec1
+  exact hLeftSupp
+
+  -- right
+  apply hSpec2
+  exact hRightSupp
+
 
 -- 649：最終チェック：support 視点の “multi-head + residual safety” の基本形
 -- 2-head の QK を足し、残余で安全化しても spec を満たす
 theorem ex649 (keys : List β) (QK1 QK2 : WRel α β) (KV : WRel β γ) (T : Rel α γ) :
     wSupp (attnWRel keys (wMask (wAdd QK1 QK2) (rRes (wSupp KV) T)) KV) ⊆ T := by
   -- ヒント：ex642 を QK := (QK1+QK2) で適用
-  -- TODO
-  sorry
+
+  -- theorem ex642 (keys : List β) (QK : WRel α β) (KV : WRel β γ) (T : Rel α γ) :
+  --     wSupp (attnWRel keys (wMask QK             (rRes (wSupp KV) T)) KV) ⊆ T
+  --     wSupp (attnWRel keys (wMask (wAdd QK1 QK2) (rRes (wSupp KV) T)) KV) ⊆ T
+
+  obtain hEx642 :=
+    ex642 keys (wAdd QK1 QK2) KV T
+
+  apply hEx642
 
 -- 650：まとめ：このファイルの “設計式” を 1 行で言う（文章の代わりの定理）
 -- 「support(attn) ⊆ T を保証したいなら、QK を (supp KV ▷ T) でマスクせよ」
 theorem ex650 (keys : List β) (QK : WRel α β) (KV : WRel β γ) (T : Rel α γ) :
     wSupp (attnWRel keys (wMask QK (rRes (wSupp KV) T)) KV) ⊆ T := by
   -- ヒント：ex642 そのもの（exact ex642 _ _ _ _ でもOK）
-  -- TODO
-  sorry
+  apply ex642
 
 end TL
