@@ -69,56 +69,227 @@ theorem ex652 (b : β) (keys : List β) (R : Rel α β) (S : Rel β γ) :
   dsimp [relCompList, relAdd]
   apply propext
   constructor
+
+  -- mp
   intro h
   obtain ⟨b1, hb1, hR, hS⟩ := h
+  by_cases hEq : b = b1
 
+  -- pos
+  left
+  rw [hEq]
+  constructor
 
+  -- pos.left
+  exact hR
+  -- pos.right
+  exact hS
 
+  -- neg
+  right
 
+  have hEq2 : ¬ b1 = b := by
+    intro hEq2_1
+    rw [hEq2_1] at hEq
+    contradiction
+
+  obtain hb2 :=
+    List.mem_of_ne_of_mem (hEq2) hb1
+
+  exists b1
+
+  -- mpr
+  intro h
+  obtain ⟨hR1, hS1⟩ | ⟨b1, hContains, hR2, hS2⟩ := h
+
+  -- mpr.inl
+  exists b
+  constructor
+
+  -- mpr.inl.left
+  apply List.mem_cons_self
+
+  -- mpr.inl.right
+  constructor
+  -- mpr.inl.right.left
+  exact hR1
+  -- mpr.inl.right.right
+  exact hS1
+  -- mpr.inr
+  exists b1
+  constructor
+  -- mpr.inr.left
+  apply List.mem_cons_of_mem
+  exact hContains
+  -- mpr.inr.right
+  constructor
+  -- mpr.inr.right.left
+  exact hR2
+  -- mpr.inr.right.right
+  exact hS2
 
 -- 653：singleton keys の relCompList
 theorem ex653 (b : β) (R : Rel α β) (S : Rel β γ) :
     relCompList [b] R S = (fun a c => R a b ∧ S b c) := by
-  -- TODO
-  sorry
+
+  -- theorem ex652 (b : β) (keys : List β) (R : Rel α β) (S : Rel β γ) :
+  --     relCompList (b :: keys) R S
+  --       =
+  --     relAdd (fun a c => R a b ∧ S b c) (relCompList keys R S)
+  obtain hEx652 :=
+    ex652 b [] R S
+  rw [hEx652]
+
+  funext a1 g1
+  dsimp [relAdd, relCompList]
+  apply propext
+  constructor
+  intro h1
+  obtain ⟨hR1, hS1⟩ | ⟨b1,hContains,hR2,hS2⟩ := h1
+  constructor
+  exact hR1
+  exact hS1
+  contradiction
+  intro h2
+  obtain ⟨hR3, hS3⟩ := h2
+  left
+  constructor
+  exact hR3
+  exact hS3
 
 -- 654：append 分解（keys を 2 ブロックに分けると OR）
 theorem ex654 (keys1 keys2 : List β) (R : Rel α β) (S : Rel β γ) :
     relCompList (keys1 ++ keys2) R S
       =
     relAdd (relCompList keys1 R S) (relCompList keys2 R S) := by
-  -- TODO
-  sorry
+
+  funext a1 g1
+  apply propext
+  constructor
+  intro hRelCompList
+  obtain ⟨b1, hContains1, hR1, hS1⟩ := hRelCompList
+  by_cases hInKeys1 : b1 ∈ keys1
+  left
+  exists b1
+  have hInKeys2 : b1 ∈ keys2 := by
+    rw [List.mem_append] at hContains1
+    obtain hContainsLeft | hContainsRight := hContains1
+    contradiction
+    exact hContainsRight
+  right
+  exists b1
+  dsimp [relCompList, relAdd]
+  intro h2
+  obtain ⟨b2, hContains2,hR2,hS2⟩ | ⟨b3, hContains3,hR3,hS3⟩ := h2
+  exists b2
+  constructor
+  apply List.mem_append_left
+  exact hContains2
+  constructor
+  exact hR2
+  exact hS2
+  exists b3
+  constructor
+  apply List.mem_append_right
+  exact hContains3
+  constructor
+  exact hR3
+  exact hS3
 
 -- 655：keys の単調性（候補が増えるほど relCompList は増える）
 theorem ex655 (keys keys' : List β) (R : Rel α β) (S : Rel β γ) :
     (∀ b, b ∈ keys → b ∈ keys') →
       relCompList keys R S ⊆ relCompList keys' R S := by
-  -- TODO
-  sorry
+
+  intro h1 a1 g1 hRelCompList1
+  obtain ⟨b1, hContains1, hR1, hS1⟩ := hRelCompList1
+
+  obtain h2 :=
+    h1 b1 hContains1
+
+  exists b1
 
 -- 656：R/S の単調性（R⊆R', S⊆S' なら relCompList も ⊆）
 theorem ex656 (keys : List β) (R R' : Rel α β) (S S' : Rel β γ) :
     (R ⊆ R') → (S ⊆ S') →
       relCompList keys R S ⊆ relCompList keys R' S' := by
-  -- TODO
-  sorry
+
+  intro hRSub hSSub a1 g1 hRelCompList1
+  obtain ⟨b1, hContains1, hR1, hS1⟩ := hRelCompList1
+  exists b1
+  constructor
+  exact hContains1
+  constructor
+  apply hRSub
+  exact hR1
+  apply hSSub
+  exact hS1
 
 -- 657：左の和（∨）に分配：relCompList keys (R+R') S = ...
 theorem ex657 (keys : List β) (R R' : Rel α β) (S : Rel β γ) :
     relCompList keys (relAdd R R') S
       =
     relAdd (relCompList keys R S) (relCompList keys R' S) := by
-  -- TODO
-  sorry
+
+  funext a1 g1
+  apply propext
+  constructor
+
+  intro hRelCompList1
+  obtain ⟨b1, hContains1, hR1 | hR2, hS1⟩ := hRelCompList1
+  left
+  exists b1
+  right
+  exists b1
+
+  intro hRelAdd1
+  obtain ⟨b1, hContains1, hR1, hS1⟩ | ⟨b2, hContains2, hR2, hS2⟩ := hRelAdd1
+  exists b1
+  constructor
+  exact hContains1
+  constructor
+  left
+  exact hR1
+  exact hS1
+  exists b2
+  constructor
+  exact hContains2
+  constructor
+  right
+  exact hR2
+  exact hS2
 
 -- 658：右の和（∨）に分配：relCompList keys R (S+S') = ...
 theorem ex658 (keys : List β) (R : Rel α β) (S S' : Rel β γ) :
     relCompList keys R (relAdd S S')
       =
     relAdd (relCompList keys R S) (relCompList keys R S') := by
-  -- TODO
-  sorry
+
+  funext a1 g1
+  apply propext
+  constructor
+  intro hRelCompList1
+  obtain ⟨b1, hContains1, hR1, hS1 | hS2⟩ := hRelCompList1
+  left
+  exists b1
+  right
+  exists b1
+  intro hRelAdd1
+  obtain ⟨b1, hContains1, hR1, hS1⟩ | ⟨b2, hContains2, hR2, hS2⟩ := hRelAdd1
+  exists b1
+  constructor
+  exact hContains1
+  constructor
+  exact hR1
+  left
+  exact hS1
+  exists b2
+  constructor
+  exact hContains2
+  constructor
+  exact hR2
+  right
+  exact hS2
 
 -- 659：relCompList の結合（2段 witness の並べ替え）
 theorem ex659 (keysβ : List β) (keysg : List γ)
@@ -126,16 +297,56 @@ theorem ex659 (keysβ : List β) (keysg : List γ)
     relCompList keysg (relCompList keysβ R S) T
       =
     relCompList keysβ R (relCompList keysg S T) := by
-  -- TODO
-  sorry
+
+  funext a1 s1
+  apply propext
+  constructor
+  intro hRelCompList1
+  obtain ⟨g1, hContainsg1, hRelCompList2, hT1⟩ := hRelCompList1
+  obtain ⟨b1, hContainsb1, hR1, hS1⟩ := hRelCompList2
+  exists b1
+  constructor
+  exact hContainsb1
+  constructor
+  exact hR1
+  exists g1
+  intro hContainsg2
+  obtain ⟨b1, hContains1, hR, g1, hContains2, hS, hT⟩ := hContainsg2
+  exists g1
+  constructor
+  exact hContains2
+  constructor
+  exists b1
+  exact hT
 
 -- 660：relInKeys の append は OR になる
 theorem ex660 (keys1 keys2 : List β) :
     relInKeys (α:=α) (keys1 ++ keys2)
       =
     relAdd (relInKeys (α:=α) keys1) (relInKeys (α:=α) keys2) := by
-  -- TODO
-  sorry
+
+  funext a1 b1
+  apply propext
+  constructor
+  intro hInKeys
+  by_cases hInKeys1 : b1 ∈ keys1
+  left
+  exact hInKeys1
+  right
+  have hInKeys2 : b1 ∈ keys2 := by
+    dsimp [relInKeys] at hInKeys
+    rw [List.mem_append] at hInKeys
+    obtain hContainsLeft | hContainsRight := hInKeys
+    contradiction
+    exact hContainsRight
+  exact hInKeys2
+  dsimp [relAdd, relInKeys]
+  intro hRelAdd
+  obtain hInKeys1 | hInKeys2 := hRelAdd
+  apply List.mem_append_left
+  exact hInKeys1
+  apply List.mem_append_right
+  exact hInKeys2
 
 --------------------------------------------------------------------------------
 -- 661〜670：wTrans / wMul（Hadamard）/ wCompList との相性
@@ -144,46 +355,55 @@ theorem ex660 (keys1 keys2 : List β) :
 -- 661：wTrans は 2 回で元に戻る
 theorem ex661 (R : WRel α β) :
     wTrans (wTrans R) = R := by
-  -- TODO
-  sorry
+  funext a1 b1
+  dsimp [wTrans]
 
 -- 662：wTrans は wAdd と可換
 theorem ex662 (R S : WRel α β) :
     wTrans (wAdd R S) = wAdd (wTrans R) (wTrans S) := by
-  -- TODO
-  sorry
+  funext b1 a1
+  dsimp [wTrans, wAdd]
 
 -- 663：wTrans は wZero と可換
 theorem ex663 :
     wTrans (wZero α β) = wZero β α := by
-  -- TODO
-  sorry
+  funext b1 a1
+  dsimp [wTrans, wZero]
 
 -- 664：wTrans は wMask と可換（mask 側は transpose する）
 theorem ex664 (R : WRel α β) (M : Rel α β) :
     wTrans (wMask R M) = wMask (wTrans R) (relTrans M) := by
   -- ヒント：by classical; funext b a; simp [wTrans, wMask, maskW, relTrans]
-  -- TODO
-  sorry
+  funext b1 a1
+  dsimp [wTrans, wMask, maskW, relTrans]
 
 -- 665：transpose は縮約の順序を逆にする（weighted 版）
 theorem ex665 (keys : List β) (R : WRel α β) (S : WRel β γ) :
     wTrans (wCompList keys R S) = wCompList keys (wTrans S) (wTrans R) := by
   -- ヒント：Nat.mul_comm が本体
-  -- TODO
-  sorry
+  funext c1 a1
+  dsimp [wTrans, wCompList]
+  induction keys with
+  | nil =>
+    dsimp [wsum]
+  | cons b keys ih =>
+    dsimp [wsum]
+    have hEq : R a1 b * S b c1 = S b c1 * R a1 b := by
+      apply Nat.mul_comm
+    rw [hEq]
+    rw [ih]
 
 -- 666：support は transpose と可換
 theorem ex666 (R : WRel α β) :
     wSupp (wTrans R) = relTrans (wSupp R) := by
-  -- TODO
-  sorry
+
+  funext b1 a1
+  dsimp [wSupp, wTrans, relTrans]
 
 -- 667：support(Hadamard) は ∧ になる
 theorem ex667 (R S : WRel α β) :
     wSupp (wMul R S) = relMul (wSupp R) (wSupp S) := by
   -- ヒント：Nat の積の正（ex608）を使う
-  -- TODO
   sorry
 
 -- 668：wMul の可換
