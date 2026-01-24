@@ -503,8 +503,63 @@ theorem ex678 (keys : List β) (R : WRel α β) (g : β → γ) :
     ∀ a c,
       wSupp (wCompList keys R (wGraph g)) a c
         ↔ (∃ b, b ∈ keys ∧ wSupp R a b ∧ g b = c) := by
-  -- TODO
-  sorry
+
+  -- def relGraph (f : α → β) : Rel α β :=
+  --   fun a b => f a = b
+
+  -- noncomputable def maskW {α β : Type} (M : Rel α β) : WRel α β := by
+  --   classical
+  --   exact fun a b => if M a b then 1 else 0
+
+  -- noncomputable def wGraph {α β : Type} (f : α → β) : WRel α β :=
+  --   maskW (relGraph f)
+  --   fun a b => if f a = b then 1 else 0
+
+  -- def wCompList {α β γ : Type} (keys : List β) (R : WRel α β) (S : WRel β γ) : WRel α γ :=
+  --   fun a c => wsum keys (fun b => R a b * S b c)
+
+  -- def wSupp (R : WRel α β) : Rel α β :=
+  --   fun a b => R a b > 0
+
+  -- def attnWRel {α β γ : Type} (keys : List β) (QK : WRel α β) (KV : WRel β γ) : WRel α γ :=
+  --   wCompList keys QK KV
+
+  -- theorem ex621 (keys : List β) (QK : WRel α β) (KV : WRel β γ) :
+  --     wSupp (attnWRel keys QK KV) = relCompList keys (wSupp QK) (wSupp KV) := by
+  obtain hEx621 :=
+    ex621 keys R (wGraph g)
+  rw [attnWRel] at hEx621
+
+  rw [hEx621]
+
+  intro a1 c1
+  constructor
+  -- mp
+  dsimp [relCompList, wGraph, maskW, relGraph]
+  intro hwSupp
+  obtain ⟨b1, hContains1, hR1, hS1⟩ := hwSupp
+  exists b1
+  constructor
+  exact hContains1
+  constructor
+  exact hR1
+  dsimp [wSupp, maskW, relGraph] at hS1
+  by_cases hEq : g b1 = c1
+  exact hEq
+  rw [if_neg hEq] at hS1
+  contradiction
+
+  -- mpr
+  intro hExists
+  obtain ⟨b1, hContains1, hR1, hEq1⟩ := hExists
+  exists b1
+  constructor
+  exact hContains1
+  constructor
+  exact hR1
+  dsimp [wSupp, wGraph, maskW, relGraph]
+  rw [if_pos hEq1]
+  apply Nat.one_pos
 
 -- 679：graph-graph の縮約（support 版）
 theorem ex679 (keys : List β) (f : α → β) (g : β → γ) :
