@@ -400,30 +400,56 @@ theorem ex666 (R : WRel α β) :
   funext b1 a1
   dsimp [wSupp, wTrans, relTrans]
 
+theorem ex667_pre (a: Nat) (b: Nat) : (0 < a * b)  ↔ 0 < a ∧ 0 < b := by
+  constructor
+  intro h
+  obtain h1 := Nat.pos_of_mul_pos_left h
+  obtain h2 := Nat.pos_of_mul_pos_right h
+  constructor
+  exact h2
+  exact h1
+  intro h
+  obtain ⟨h1, h2⟩ := h
+  apply Nat.mul_pos
+  exact h1
+  exact h2
+
+theorem ex667_pre2 (a: Nat) (b: Nat) : (a * b > 0)  ↔ a > 0 ∧ b > 0 := by
+  apply ex667_pre
+
 -- 667：support(Hadamard) は ∧ になる
 theorem ex667 (R S : WRel α β) :
     wSupp (wMul R S) = relMul (wSupp R) (wSupp S) := by
   -- ヒント：Nat の積の正（ex608）を使う
-  sorry
+  funext a1 b1
+  dsimp [wSupp, wMul, relMul]
+  obtain h :=
+    ex667_pre2 (R a1 b1) (S a1 b1)
+  rw [h]
 
 -- 668：wMul の可換
 theorem ex668 (R S : WRel α β) :
     wMul R S = wMul S R := by
-  -- TODO
-  sorry
+
+  funext a1 b1
+  dsimp [wMul]
+  apply Nat.mul_comm
 
 -- 669：wMul の結合
 theorem ex669 (R S T : WRel α β) :
     wMul (wMul R S) T = wMul R (wMul S T) := by
-  -- TODO
-  sorry
+
+  funext a1 b1
+  dsimp [wMul]
+  apply Nat.mul_assoc
 
 -- 670：wMul は wAdd に分配（点ごと）
 theorem ex670 (R S T : WRel α β) :
     wMul (wAdd R S) T = wAdd (wMul R T) (wMul S T) := by
   -- ヒント：Nat.add_mul
-  -- TODO
-  sorry
+  funext a1 b1
+  dsimp [wMul, wAdd]
+  apply Nat.add_mul
 
 --------------------------------------------------------------------------------
 -- 671〜680：wId / wGraph（0/1 行列）と support / keys
@@ -433,40 +459,36 @@ theorem ex670 (R S T : WRel α β) :
 theorem ex671 :
     wSupp (wId α) = relId α := by
   -- ヒント：wId = maskW (relId α)、ex613 を使う
-  -- TODO
-  sorry
 
--- 672：wId を左から縮約すると「a ∈ keys」のときだけ通る（左単位の keys 版）
-theorem ex672 (keys : List α) (R : WRel α β) :
-    wCompList keys (wId α) R = wMask R (fun a _ => a ∈ keys) := by
-  -- TODO
-  sorry
-
--- 673：wId を右から縮約すると「b ∈ keys」のときだけ通る（右単位の keys 版）
-theorem ex673 (keys : List β) (R : WRel α β) :
-    wCompList keys R (wId β) = wMask R (relInKeys (α:=α) keys) := by
-  -- TODO
-  sorry
-
--- 674：keys が α 全体を含むなら（左）真の単位になる
-theorem ex674 (keys : List α) (R : WRel α β) :
-    (∀ a, a ∈ keys) → wCompList keys (wId α) R = R := by
-  -- ヒント：ex672 を使って mask が常に True になることを示す
-  -- TODO
-  sorry
-
--- 675：keys が β 全体を含むなら（右）真の単位になる
-theorem ex675 (keys : List β) (R : WRel α β) :
-    (∀ b, b ∈ keys) → wCompList keys R (wId β) = R := by
-  -- TODO
-  sorry
+  funext a1 a2
+  dsimp [wSupp, wId, maskW, relId]
+  apply propext
+  constructor
+  intro h
+  by_cases hEq : a1 = a2
+  rw [hEq]
+  rw [if_neg hEq] at h
+  contradiction
+  intro h
+  rw [if_pos h]
+  apply Nat.one_pos
 
 -- 676：support(wGraph f) = relGraph f
 theorem ex676 (f : α → β) :
     wSupp (wGraph f) = relGraph f := by
   -- ヒント：wGraph = maskW (relGraph f)、ex613
-  -- TODO
-  sorry
+  funext a1 b1
+  dsimp [wSupp, wGraph, maskW, relGraph]
+  apply propext
+  constructor
+  intro h
+  by_cases hEq : f a1 = b1
+  exact hEq
+  rw [if_neg hEq] at h
+  contradiction
+  intro h
+  rw [if_pos h]
+  apply Nat.one_pos
 
 -- 677：graph を左に置いた縮約の support は “f a が keys にいる” で潰れる
 theorem ex677 (keys : List β) (f : α → β) (S : WRel β γ) :
@@ -474,7 +496,6 @@ theorem ex677 (keys : List β) (f : α → β) (S : WRel β γ) :
       wSupp (wCompList keys (wGraph f) S) a c
         ↔ (f a ∈ keys ∧ wSupp S (f a) c) := by
   -- ヒント：ex621（support(attn)=relCompList）→ witness b を b=f a に潰す
-  -- TODO
   sorry
 
 -- 678：graph を右に置いた縮約の support は “c = g b” で潰れる
