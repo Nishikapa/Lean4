@@ -496,7 +496,66 @@ theorem ex677 (keys : List β) (f : α → β) (S : WRel β γ) :
       wSupp (wCompList keys (wGraph f) S) a c
         ↔ (f a ∈ keys ∧ wSupp S (f a) c) := by
   -- ヒント：ex621（support(attn)=relCompList）→ witness b を b=f a に潰す
-  sorry
+
+  intro a1 c1
+
+  -- theorem ex621 (keys : List β) (QK : WRel α β) (KV : WRel β γ) :
+  --     wSupp (attnWRel keys QK KV) = relCompList keys (wSupp QK) (wSupp KV)
+  -- ⊢ ∀ (a : α) (c : γ),
+  --     wSupp (wCompList keys (wGraph f) S) a c ↔ f a ∈ keys ∧ wSupp S (f a) c
+  obtain hEx621 :=
+    ex621 keys (wGraph f) S
+  rw [attnWRel] at hEx621
+  rw [hEx621]
+  constructor
+
+  -- mp
+  dsimp [relCompList, wGraph, maskW, relGraph]
+  intro hRelCompList
+  obtain ⟨b1, hContains1, hR1, hS1⟩ := hRelCompList
+  dsimp [wSupp, maskW, relGraph] at hR1
+  dsimp [wSupp] at hS1
+  by_cases hEq : b1 = f a1
+
+  -- pos
+  constructor
+  rw [←hEq]
+  exact hContains1
+  dsimp [wSupp, maskW, relGraph]
+  rw [←hEq]
+  exact hS1
+
+  -- neg
+  have hEq2 : ¬f a1 = b1 := by
+    intro hEq2_1
+    apply hEq
+    rw [hEq2_1]
+
+  rw [if_neg hEq2] at hR1
+  contradiction
+
+  -- mpr
+  intro hExists
+  obtain ⟨hInKeys, hS1⟩ := hExists
+  dsimp [wSupp] at hS1
+  dsimp [relCompList, wGraph, maskW, relGraph]
+  exists (f a1)
+  constructor
+
+  -- mpr.left
+  exact hInKeys
+
+  -- mpr.right
+  constructor
+
+  -- mpr.right.left
+  dsimp [wSupp, maskW, relGraph]
+  rw [if_pos rfl]
+  exact Nat.zero_lt_one
+
+  -- mpr.right.right
+  dsimp [wSupp]
+  exact hS1
 
 -- 678：graph を右に置いた縮約の support は “c = g b” で潰れる
 theorem ex678 (keys : List β) (R : WRel α β) (g : β → γ) :
@@ -566,15 +625,63 @@ theorem ex679 (keys : List β) (f : α → β) (g : β → γ) :
     ∀ a c,
       wSupp (wCompList keys (wGraph f) (wGraph g)) a c
         ↔ (f a ∈ keys ∧ g (f a) = c) := by
-  -- TODO
-  sorry
+  -- ヒント：ex677/ex678 を組み合わせる
+
+  intro a1 c1
+
+  -- theorem ex677 (keys : List β) (f : α → β) (S : WRel β γ) :
+  --     ∀ a c,
+  --       wSupp (wCompList keys (wGraph f) S) a c
+  --         ↔ (f a ∈ keys ∧ wSupp S (f a) c)
+  obtain hEx677 :=
+    ex677 keys f (wGraph g) a1 c1
+
+  rw [hEx677]
+
+  constructor
+
+  intro hExists
+  obtain ⟨hInKeys, hWSupp⟩ := hExists
+  constructor
+  exact hInKeys
+  dsimp [wSupp, wGraph, maskW, relGraph] at hWSupp
+  by_cases hEq : g (f a1) = c1
+  exact hEq
+  rw [if_neg hEq] at hWSupp
+  contradiction
+
+  intro hExists2
+  obtain ⟨hInKeys2, hEq2⟩ := hExists2
+  constructor
+  exact hInKeys2
+  dsimp [wSupp, wGraph, maskW, relGraph]
+  rw [if_pos hEq2]
+  apply Nat.one_pos
 
 -- 680：keys が十分大きいと graph の合成がそのまま（support で）
 theorem ex680 (keys : List β) (f : α → β) (g : β → γ) :
     (∀ b, b ∈ keys) →
       wSupp (wCompList keys (wGraph f) (wGraph g)) = relGraph (fun a => g (f a)) := by
-  -- TODO
-  sorry
+
+  -- ヒント：ex679 を全体で使う
+  intro hAll
+  funext a1 c1
+  -- theorem ex679 (keys : List β) (f : α → β) (g : β → γ) :
+  --     ∀ a c,
+  --       wSupp (wCompList keys (wGraph f) (wGraph g)) a c
+  --         ↔ (f a ∈ keys ∧ g (f a) = c) := by
+  obtain hEx679 :=
+    ex679 keys f g a1 c1
+  rw [hEx679]
+  apply propext
+  constructor
+  intro hExists
+  obtain ⟨hInKeys, hEq⟩ := hExists
+  exact hEq
+  intro hEq2
+  constructor
+  apply hAll
+  exact hEq2
 
 --------------------------------------------------------------------------------
 -- 681〜690：multi-head（wAdd）とスカラー倍（wScale）
@@ -586,16 +693,42 @@ theorem ex681 (keys : List β) (QK1 QK2 : WRel α β) (KV : WRel β γ) :
       =
     relAdd (wSupp (wCompList keys QK1 KV)) (wSupp (wCompList keys QK2 KV)) := by
   -- ヒント：ex511（線形性）→ ex612（support(R+S)=∨）
-  -- TODO
-  sorry
+
+  -- theorem ex511 (keys : List β) (R S : WRel α β) (T : WRel β γ) :
+  --     wCompList keys (wAdd R S) T
+  --       = wAdd (wCompList keys R T) (wCompList keys S T)
+  obtain hEx511 :=
+    ex511 keys QK1 QK2 KV
+
+  rw [hEx511]
+
+  -- theorem ex612 (R S : WRel α β) :
+  --     wSupp (wAdd R S) = relAdd (wSupp R) (wSupp S)
+  obtain hEx612 :=
+    ex612 (wCompList keys QK1 KV) (wCompList keys QK2 KV)
+
+  rw [hEx612]
 
 -- 682：KV を足した attention の support も OR
 theorem ex682 (keys : List β) (QK : WRel α β) (KV1 KV2 : WRel β γ) :
     wSupp (wCompList keys QK (wAdd KV1 KV2))
       =
     relAdd (wSupp (wCompList keys QK KV1)) (wSupp (wCompList keys QK KV2)) := by
-  -- TODO
-  sorry
+
+  -- theorem ex512 (keys : List β) (R : WRel α β) (S T : WRel β γ) :
+  --     wCompList keys R (wAdd S T)
+  --       = wAdd (wCompList keys R S) (wCompList keys R T) := by
+  obtain hEx512 :=
+    ex512 keys QK KV1 KV2
+
+  rw [hEx512]
+
+  -- theorem ex612 (R S : WRel α β) :
+  --     wSupp (wAdd R S) = relAdd (wSupp R)
+  obtain hEx612 :=
+    ex612 (wCompList keys QK KV1) (wCompList keys QK KV2)
+
+  rw [hEx612]
 
 -- 683：各 head の到達は “sum-head” の到達に含まれる（片側）
 theorem ex683 (keys : List β) (QK1 QK2 : WRel α β) (KV : WRel β γ) :
