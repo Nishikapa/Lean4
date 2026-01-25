@@ -734,8 +734,81 @@ theorem ex682 (keys : List β) (QK : WRel α β) (KV1 KV2 : WRel β γ) :
 theorem ex683 (keys : List β) (QK1 QK2 : WRel α β) (KV : WRel β γ) :
     wSupp (wCompList keys QK1 KV) ⊆ wSupp (wCompList keys (wAdd QK1 QK2) KV) := by
   -- ヒント：wCompList の WLe 単調性＋ ex615（WLe→supp包含）でも可
-  -- TODO
-  sorry
+
+  -- theorem ex615 (R S : WRel α β) :
+  --     WLe R S → (wSupp R ⊆ wSupp S) := by
+  apply ex615 (wCompList keys QK1 KV) (wCompList keys (wAdd QK1 QK2) KV)
+
+  dsimp [WLe]
+  intro a1 c1
+  dsimp [wCompList]
+  dsimp [wAdd]
+
+  induction keys with
+  | nil =>
+    dsimp [wsum]
+    apply Nat.zero_le
+  | cons b keys ih =>
+    dsimp [wsum]
+
+    have h1 :
+      (QK1 a1 b * KV b c1 + wsum keys fun b => QK1 a1 b * KV b c1) ≤
+      (QK1 a1 b * KV b c1 + wsum keys fun b => (QK1 a1 b + QK2 a1 b) * KV b c1) := by
+      apply Nat.add_le_add_iff_left.mpr
+      exact ih
+
+    have h2 :
+      (QK1 a1 b * KV b c1 + wsum keys fun b => (QK1 a1 b + QK2 a1 b) * KV b c1) ≤
+      ((QK1 a1 b + QK2 a1 b) * KV b c1 + wsum keys fun b => (QK1 a1 b + QK2 a1 b) * KV b c1) := by
+
+      have h2_1 : (QK1 a1 b * KV b c1) ≤ ((QK1 a1 b + QK2 a1 b) * KV b c1) := by
+        apply Nat.mul_le_mul_right
+        apply Nat.le_add_right
+
+      apply Nat.add_le_add_right
+      exact h2_1
+
+    apply Nat.le_trans h1 h2
+
+theorem ex683_2 (keys : List β) (QK1 QK2 : WRel α β) (KV : WRel β γ) :
+    wSupp (wCompList keys QK2 KV) ⊆ wSupp (wCompList keys (wAdd QK1 QK2) KV) := by
+  -- ヒント：wCompList の WLe 単調性＋ ex615（WLe→supp包含）でも可
+
+  -- theorem ex615 (R S : WRel α β) :
+  --     WLe R S → (wSupp R ⊆ wSupp S) := by
+  apply ex615 (wCompList keys QK2 KV) (wCompList keys (wAdd QK1 QK2) KV)
+
+  dsimp [WLe]
+  intro a1 c1
+  dsimp [wCompList]
+  dsimp [wAdd]
+
+  induction keys with
+  | nil =>
+    dsimp [wsum]
+    apply Nat.zero_le
+  | cons b keys ih =>
+    dsimp [wsum]
+
+    have h1 :
+      (QK2 a1 b * KV b c1 + wsum keys fun b => QK2 a1 b * KV b c1) ≤
+      (QK2 a1 b * KV b c1 + wsum keys fun b => (QK1 a1 b + QK2 a1 b) * KV b c1) := by
+      apply Nat.add_le_add_iff_left.mpr
+      exact ih
+
+    have h2 :
+      (QK2 a1 b * KV b c1 + wsum keys fun b => (QK1 a1 b + QK2 a1 b) * KV b c1) ≤
+      ((QK1 a1 b + QK2 a1 b) * KV b c1 + wsum keys fun b => (QK1 a1 b + QK2 a1 b) * KV b c1) := by
+
+      have h2_1 : (QK2 a1 b * KV b c1) ≤ ((QK1 a1 b + QK2 a1 b) * KV b c1) := by
+        apply Nat.mul_le_mul_right
+        apply Nat.le_add_left
+
+      apply Nat.add_le_add_right
+      exact h2_1
+
+    apply Nat.le_trans h1 h2
+
 
 -- 684：両 head が spec を満たせば sum-head も満たす
 theorem ex684 (keys : List β) (QK1 QK2 : WRel α β) (KV : WRel β γ) (T : Rel α γ) :
@@ -743,23 +816,64 @@ theorem ex684 (keys : List β) (QK1 QK2 : WRel α β) (KV : WRel β γ) (T : Rel
     (wSupp (wCompList keys QK2 KV) ⊆ T) →
     (wSupp (wCompList keys (wAdd QK1 QK2) KV) ⊆ T) := by
   -- ヒント：ex681 で OR にして cases
-  -- TODO
-  sorry
+
+  -- QK1とKVをkeysで畳み込んだ値が0より大きければ、それはTに含まれる
+  -- また、QK2とKVをkeysで畳み込んだ値が0より大きければ、それもTに含まれる
+  -- という仮定が満たされるのであれば、
+  -- QK1とQK2を足し合わせたものとKVをkeysで畳み込んだ値が0より大きい場合もTに含まれる
+
+  -- theorem ex681 (keys : List β) (QK1 QK2 : WRel α β) (KV : WRel β γ) :
+  --     wSupp (wCompList keys (wAdd QK1 QK2) KV)
+  --       =
+  --     relAdd (wSupp (wCompList keys QK1 KV)) (wSupp (wCompList keys QK2 KV)) := by
+
+  obtain hEx681 :=
+    ex681 keys QK1 QK2 KV
+  rw [hEx681]
+
+  intro hSpec1 hSpec2
+  intro a1 c1
+  intro hRelAdd
+  obtain hIn1 | hIn2 := hRelAdd
+  apply hSpec1
+  exact hIn1
+  apply hSpec2
+  exact hIn2
 
 -- 685：sum-head が spec を満たすなら、各 head も満たす
 theorem ex685 (keys : List β) (QK1 QK2 : WRel α β) (KV : WRel β γ) (T : Rel α γ) :
     (wSupp (wCompList keys (wAdd QK1 QK2) KV) ⊆ T) →
       (wSupp (wCompList keys QK1 KV) ⊆ T) ∧ (wSupp (wCompList keys QK2 KV) ⊆ T) := by
+
   -- ヒント：ex683（包含）で落とす
-  -- TODO
-  sorry
+  intro hSpec
+  constructor
+  intro a1 c1
+  intro hSupp1
+  apply hSpec
+  apply ex683 keys QK1 QK2 KV
+  exact hSupp1
+  intro a2 c2
+  intro hSupp2
+  apply hSpec
+  apply ex683_2 keys QK1 QK2 KV
+  exact hSupp2
 
 -- 686：wMask は wAdd に分配する（点ごと分配）
 theorem ex686 (R S : WRel α β) (M : Rel α β) :
     wMask (wAdd R S) M = wAdd (wMask R M) (wMask S M) := by
   -- ヒント：Nat.add_mul
-  -- TODO
-  sorry
+  funext a1 b1
+  dsimp [wMask, wAdd, maskW]
+  by_cases hM : M a1 b1
+  rw [if_pos hM]
+  rw [Nat.mul_one]
+  rw [Nat.mul_one]
+  rw [Nat.mul_one]
+  rw [if_neg hM]
+  rw [Nat.mul_zero]
+  rw [Nat.mul_zero]
+  rw [Nat.mul_zero]
 
 -- 687：mask してから multi-head しても、multi-head してから mask しても同じ（重みレベル）
 theorem ex687 (keys : List β) (QK1 QK2 : WRel α β) (KV : WRel β γ) (M : Rel α β) :
@@ -767,28 +881,63 @@ theorem ex687 (keys : List β) (QK1 QK2 : WRel α β) (KV : WRel β γ) (M : Rel
       =
     wAdd (wCompList keys (wMask QK1 M) KV) (wCompList keys (wMask QK2 M) KV) := by
   -- ヒント：ex686 → ex511
-  -- TODO
-  sorry
+  funext a1 c1
+  --dsimp [wCompList]
+  rw [ex686 QK1 QK2 M]
+
+  -- theorem ex511 (keys : List β) (R S : WRel α β) (T : WRel β γ) :
+  --     wCompList keys (wAdd R S) T
+  --       = wAdd (wCompList keys  R            T ) (wCompList keys  S         T) := by
+  --         wAdd (wCompList keys (wMask QK1 M) KV) (wCompList keys (wMask QK2 M) KV)
+  rw [←ex511 keys (wMask QK1 M) (wMask QK2 M) KV]
 
 -- 688：wScale 0 はゼロ
 theorem ex688 (R : WRel α β) :
     wScale 0 R = wZero α β := by
-  -- TODO
-  sorry
+
+  funext a1 b1
+  dsimp [wScale, wZero]
+  rw [Nat.zero_mul]
 
 -- 689：t>0 なら、スカラー倍しても support は変わらない
 theorem ex689 (t : Nat) (R : WRel α β) :
     (t > 0) → wSupp (wScale t R) = wSupp R := by
   -- ヒント：Nat.mul_pos と「¬(m>0)→m=0」など
-  -- TODO
-  sorry
+  intro hT
+  funext a1 b1
+  dsimp [wSupp, wScale]
+  apply propext
+  constructor
+
+  -- mp
+  intro h2
+
+  have h3 : 0 < t * R a1 b1 := h2
+  obtain hPos := Nat.mul_pos_iff_of_pos_left hT
+  rw [hPos] at h3
+  exact h3
+
+  -- mpr
+  intro h4
+  apply Nat.mul_pos
+  exact hT
+  exact h4
 
 -- 690：左側をスカラー倍すると、縮約結果もスカラー倍される（線形性）
 theorem ex690 (keys : List β) (t : Nat) (R : WRel α β) (S : WRel β γ) :
     wCompList keys (wScale t R) S = wScale t (wCompList keys R S) := by
   -- ヒント：ex539/ex538（Σ と * の交換）＋ Nat.mul_assoc
-  -- TODO
-  sorry
+
+  funext a1 c1
+  dsimp [wCompList, wScale]
+  induction keys with
+  | nil =>
+    dsimp [wsum]
+  | cons b keys ih =>
+    dsimp [wsum]
+    rw [ih]
+    rw [Nat.mul_add]
+    rw [Nat.mul_assoc]
 
 --------------------------------------------------------------------------------
 -- 691〜700：WSpec（「仕様の外は0」）と安全設計の “重みレベル” 表現
@@ -800,67 +949,201 @@ theorem ex691 (R : WRel α β) (T : Rel α β) :
   -- ヒント：
   --   (→) : wSupp R a b は R a b >0。T でなければ R a b=0 になって矛盾。
   --   (←) : ¬T なら ¬(R>0) なので Nat.eq_zero_of_not_pos で 0。
-  -- TODO
-  sorry
+  constructor
+  -- (→)
+  intro hWSpec
+  intro a1 b1
+  intro hSupp
+  dsimp [wSupp] at hSupp
+  dsimp [WSpec] at hWSpec
+  obtain hWSpec2 := hWSpec a1 b1
+  by_cases hT : T a1 b1
+  exact hT
+  obtain h3 := hWSpec2 hT
+  have hSupp2 : 0 < R a1 b1 := hSupp
+  rw [Nat.pos_iff_ne_zero] at hSupp2
+  contradiction
+
+  -- (←)
+  intro hSubset
+  intro a1 b1
+  intro hT
+  obtain hSubset2 := hSubset a1 b1
+  have hNotSupp : ¬(wSupp R a1 b1) := by
+    intro hSupp
+    apply hT
+    apply hSubset2
+    exact hSupp
+  obtain hNotSupp2 :=
+    Nat.eq_zero_of_not_pos hNotSupp
+  exact hNotSupp2
 
 -- 692：wZero は任意の spec を満たす
 theorem ex692 (T : Rel α β) :
     WSpec (wZero α β) T := by
-  -- TODO
-  sorry
+
+  dsimp [WSpec, wZero]
+  intro a1 b1
+  intro hT
+  rfl
 
 -- 693：同じ spec なら足しても spec を満たす
 theorem ex693 (R S : WRel α β) (T : Rel α β) :
     WSpec R T → WSpec S T → WSpec (wAdd R S) T := by
-  -- TODO
-  sorry
+  intro hSpecR hSpecS
+  dsimp [WSpec, wAdd] at *
+  intro a1 b1
+  intro hT
+  have hSpecR2 := hSpecR a1 b1 hT
+  have hSpecS2 := hSpecS a1 b1 hT
+  rw [hSpecR2]
+  rw [hSpecS2]
 
 -- 694：要素積（Hadamard）は spec を ∧ で細くする
 theorem ex694 (R S : WRel α β) (T U : Rel α β) :
     WSpec R T → WSpec S U → WSpec (wMul R S) (relMul T U) := by
-  -- TODO
-  sorry
+
+  intro hSpecR hSpecS
+  dsimp [WSpec, wMul, relMul] at *
+  intro a1 b1
+  intro hTU
+  have hSpecR2 := hSpecR a1 b1
+  have hSpecS2 := hSpecS a1 b1
+  by_cases hT : T a1 b1
+  rw [and_iff_right hT] at hTU
+  obtain h3 := hSpecS2 hTU
+  rw [h3]
+  rw [Nat.mul_zero]
+  obtain h3 := hSpecR2 hT
+  rw [h3]
+  rw [Nat.zero_mul]
 
 -- 695：mask すると spec は保たれる（むしろ強くなる）
 theorem ex695 (R : WRel α β) (T : Rel α β) (M : Rel α β) :
     WSpec R T → WSpec (wMask R M) T := by
   -- ヒント：wMask ≤ R を使ってもよい
-  -- TODO
-  sorry
+  intro hSpec
+  dsimp [WSpec, wMask, maskW] at *
+  intro a1 b1
+  intro hT
+  obtain hSpec2 := hSpec a1 b1 hT
+  rw [hSpec2]
+  rw [Nat.zero_mul]
 
 -- 696：support(QK) ⊆ (supp(KV)▷T) なら、attn の重みは T の外で 0
 theorem ex696 (keys : List β) (QK : WRel α β) (KV : WRel β γ) (T : Rel α γ) :
     (wSupp QK ⊆ rRes (wSupp KV) T) →
       WSpec (attnWRel keys QK KV) T := by
   -- ヒント：ex622（support ⊆ T）＋ ex691（WSpec↔support⊆）
-  -- TODO
-  sorry
+  intro hSubset
+  rw [WSpec]
+  intro a1 c1
+  intro hT
+  rw [attnWRel]
+  rw [wCompList]
+
+  have h1 : ∀ (b : β), (QK a1 b = 0) ∨ (KV b c1 = 0) := by
+    intro b1
+    obtain hSubset2 := hSubset a1 b1
+    dsimp [wSupp, rRes] at hSubset2
+    by_cases hQK : QK a1 b1 = 0
+    left
+    exact hQK
+    right
+    by_cases hKV : KV b1 c1 = 0
+    exact hKV
+    obtain hQK2 := Nat.pos_iff_ne_zero.mpr hQK
+    obtain hKV2 := Nat.pos_iff_ne_zero.mpr hKV
+    obtain hSubset3 := hSubset2 hQK2 c1 hKV2
+    contradiction
+
+  induction keys with
+  | nil =>
+    dsimp [wsum]
+  | cons b1 keys ih =>
+    dsimp [wsum]
+    obtain hCase1 | hCase2 := h1 b1
+    rw [hCase1]
+    rw [Nat.zero_mul]
+    rw [Nat.zero_add]
+    rw [ih]
+    rw [hCase2]
+    rw [Nat.mul_zero]
+    rw [Nat.zero_add]
+    rw [ih]
 
 -- 697：安全マスク（residual）を入れると、必ず WSpec を満たす（重みレベル）
 theorem ex697 (keys : List β) (QK : WRel α β) (KV : WRel β γ) (T : Rel α γ) :
     WSpec (attnWRel keys (wMask QK (rRes (wSupp KV) T)) KV) T := by
   -- ヒント：ex650（support ⊆ T）＋ ex691
-  -- TODO
-  sorry
+  intro a1 c1
+  intro hT
+  obtain hEx650 :=
+    ex650 keys QK KV T a1 c1
+  obtain hEx650_2 :=
+    mt hEx650 hT
+  obtain hEx650_3 :=
+    Nat.eq_zero_of_not_pos hEx650_2
+  exact hEx650_3
 
 -- 698：spec は右に単調（T ⊆ T' なら WSpec R T → WSpec R T'）
 theorem ex698 (R : WRel α β) (T T' : Rel α β) :
     (T ⊆ T') → WSpec R T → WSpec R T' := by
-  -- TODO
-  sorry
+
+  intro hSubset hWSpec
+  dsimp [WSpec] at *
+  intro a1 b1
+  intro hT'
+  apply hWSpec
+  obtain hSubset2 := hSubset a1 b1
+  obtain hSubset3 := mt hSubset2 hT'
+  exact hSubset3
 
 -- 699：spec を 2 つ同時に満たすなら、∧ も満たす（tightening）
 theorem ex699 (R : WRel α β) (T U : Rel α β) :
     WSpec R T → WSpec R U → WSpec R (relMul T U) := by
-  -- TODO
-  sorry
+  intro hSpecT hSpecU
+  dsimp [WSpec, relMul] at *
+  intro a1 b1
+  intro hTU
+  obtain hSpecT2 := hSpecT a1 b1
+  obtain hSpecU2 := hSpecU a1 b1
+
+  by_cases hT : T a1 b1
+  rw [and_iff_right hT] at hTU
+  obtain h3 := hSpecU2 hTU
+  exact h3
+  obtain h3 := hSpecT2 hT
+  exact h3
 
 -- 700：入力側/出力側の spec があると、縮約後の spec は relComp で表せる
 theorem ex700 (keys : List β) (R : WRel α β) (S : WRel β γ)
     (T : Rel α β) (U : Rel β γ) :
     WSpec R T → WSpec S U → WSpec (wCompList keys R S) (relComp T U) := by
   -- ヒント：support(wCompList) ⊆ relCompList ⊆ relComp を経由して ex691 へ
-  -- TODO
-  sorry
+
+  intro hSpecR hSpecS
+  rw [WSpec] at *
+  intro a1 c1
+  intro hRelComp
+  dsimp [relComp] at hRelComp
+  dsimp [wCompList]
+  rw [not_exists] at hRelComp
+  induction keys with
+  | nil =>
+    dsimp [wsum]
+  | cons b1 keys ih =>
+    dsimp [wsum]
+    rw [ih]
+    rw [Nat.add_zero]
+    obtain hRelComp2 := hRelComp b1
+    by_cases hT : T a1 b1
+    rw [and_iff_right hT] at hRelComp2
+    obtain hSpecS2 := hSpecS b1 c1 hRelComp2
+    rw [hSpecS2]
+    rw [Nat.mul_zero]
+    obtain hSpecR2 := hSpecR a1 b1 hT
+    rw [hSpecR2]
+    rw [Nat.zero_mul]
 
 end TL

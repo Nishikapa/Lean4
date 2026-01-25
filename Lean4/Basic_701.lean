@@ -33,26 +33,39 @@ def wColSum (keys : List α) (R : WRel α β) (b : β) : Nat :=
 -- 701：空 keys の rowSum は 0
 theorem ex701 (R : WRel α β) (a : α) :
     wRowSum ([] : List β) R a = 0 := by
-  -- TODO
-  sorry
+  dsimp [wRowSum, wsum]
 
 -- 702：cons 展開（rowSum）
 theorem ex702 (b : β) (keys : List β) (R : WRel α β) (a : α) :
     wRowSum (b :: keys) R a = R a b + wRowSum keys R a := by
-  -- TODO
-  sorry
+  dsimp [wRowSum, wsum]
 
 -- 703：rowSum の ext（keys 上で点ごと一致なら rowSum も一致）
 theorem ex703 (keys : List β) (R S : WRel α β) (a : α) :
     (∀ b, b ∈ keys → R a b = S a b) →
       wRowSum keys R a = wRowSum keys S a := by
-  -- TODO（ヒント：ex601 を wsum に適用）
-  sorry
+  dsimp [wRowSum, wsum]
+  intro hEq
+  induction keys with
+  | nil =>
+    rfl
+  | cons b bs ih =>
+    dsimp [wsum]
+
+    have h2 : (wsum bs fun b => R a b) = wsum bs fun b => S a b := by
+      apply ih
+      intro b1 hContins
+      apply hEq
+      apply List.mem_cons_of_mem
+      exact hContins
+    rw [h2]
+    rw [Nat.add_right_cancel_iff]
+    apply hEq
+    apply List.mem_cons_self
 
 -- 704：rowSum は wAdd に関して線形（点ごと）
 theorem ex704 (keys : List β) (R S : WRel α β) (a : α) :
     wRowSum keys (wAdd R S) a = wRowSum keys R a + wRowSum keys S a := by
-  -- TODO
   sorry
 
 -- 705：rowSum とスカラー倍（wScale）
