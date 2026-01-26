@@ -66,43 +66,64 @@ theorem ex703 (keys : List β) (R S : WRel α β) (a : α) :
 -- 704：rowSum は wAdd に関して線形（点ごと）
 theorem ex704 (keys : List β) (R S : WRel α β) (a : α) :
     wRowSum keys (wAdd R S) a = wRowSum keys R a + wRowSum keys S a := by
-  sorry
+  dsimp [wRowSum, wsum, wAdd]
+  induction keys with
+  | nil =>
+    rfl
+  | cons b bs ih =>
+    dsimp [wsum, wAdd]
+    rw [ih]
+    rw [←Nat.add_assoc]
+    rw [Nat.add_assoc (R a b) (S a b) (wsum bs fun b => R a b)]
+    rw [Nat.add_comm (S a b) (wsum bs fun b => R a b)]
+    rw [← Nat.add_assoc]
+    rw [← Nat.add_assoc]
 
 -- 705：rowSum とスカラー倍（wScale）
 theorem ex705 (keys : List β) (t : Nat) (R : WRel α β) (a : α) :
     wRowSum keys (wScale t R) a = t * wRowSum keys R a := by
-  -- TODO（ヒント：wsum と * の交換（Basic_551 側の補題））
-  sorry
+  dsimp [wRowSum, wsum, wScale]
+  induction keys with
+  | nil =>
+    rfl
+  | cons b bs ih =>
+    dsimp [wsum, wScale]
+    rw [ih]
+    rw [Nat.mul_add]
 
 -- 706：空 keys の colSum は 0
 theorem ex706 (R : WRel α β) (b : β) :
     wColSum ([] : List α) R b = 0 := by
-  -- TODO
-  sorry
+  dsimp [wColSum]
+  dsimp [wsum]
 
 -- 707：cons 展開（colSum）
 theorem ex707 (a : α) (keys : List α) (R : WRel α β) (b : β) :
     wColSum (a :: keys) R b = R a b + wColSum keys R b := by
-  -- TODO
-  sorry
+  dsimp [wColSum]
+  dsimp [wsum]
 
 -- 708：transpose は row/col を入れ替える（rowSum）
 theorem ex708 (keys : List α) (R : WRel α β) (b : β) :
     wRowSum keys (wTrans R) b = wColSum keys R b := by
-  -- TODO
-  sorry
+  dsimp [wRowSum]
+  dsimp [wColSum]
+  dsimp [wTrans]
 
 -- 709：transpose は row/col を入れ替える（colSum）
 theorem ex709 (keys : List β) (R : WRel α β) (a : α) :
     wColSum keys (wTrans R) a = wRowSum keys R a := by
-  -- TODO
-  sorry
+  dsimp [wColSum]
+  dsimp [wRowSum]
+  dsimp [wTrans]
 
 -- 710：rowSum > 0 ↔ ∃ b∈keys, R a b > 0
 theorem ex710 (keys : List β) (R : WRel α β) (a : α) :
     wRowSum keys R a > 0 ↔ ∃ b, b ∈ keys ∧ R a b > 0 := by
-  -- TODO（ヒント：ex606 を f := fun b => R a b に）
-  sorry
+  dsimp [wRowSum]
+  obtain hEx606 :=
+    ex606 keys (fun b => R a b)
+  rw [hEx606]
 
 --------------------------------------------------------------------------------
 -- 711〜720：row/col の “0⇔全0” と maskW
@@ -111,62 +132,150 @@ theorem ex710 (keys : List β) (R : WRel α β) (a : α) :
 -- 711：rowSum = 0 ↔ ∀ b∈keys, R a b = 0
 theorem ex711 (keys : List β) (R : WRel α β) (a : α) :
     wRowSum keys R a = 0 ↔ (∀ b, b ∈ keys → R a b = 0) := by
-  -- TODO（ヒント：ex607 を f := fun b => R a b に）
-  sorry
+  dsimp [wRowSum]
+  -- theorem ex607 {X : Type} (xs : List X) (f : X → Nat) :
+  --     wsum xs f = 0 ↔ (∀ x, x ∈ xs → f x = 0)
+  obtain hEx607 :=
+    ex607 keys (R a)
+  rw [hEx607]
 
 -- 712：colSum > 0 ↔ ∃ a∈keys, R a b > 0
 theorem ex712 (keys : List α) (R : WRel α β) (b : β) :
     wColSum keys R b > 0 ↔ ∃ a, a ∈ keys ∧ R a b > 0 := by
-  -- TODO（ヒント：ex606）
-  sorry
+  -- theorem ex606 {X : Type} (xs : List X) (f : X → Nat) :
+  --   (wsum xs f > 0) ↔ (∃ x, x ∈ xs ∧ f x > 0) := by
+  dsimp [wColSum]
+  obtain hEx606 :=
+    ex606 keys (fun a => R a b)
+  rw [hEx606]
 
 -- 713：colSum = 0 ↔ ∀ a∈keys, R a b = 0
 theorem ex713 (keys : List α) (R : WRel α β) (b : β) :
     wColSum keys R b = 0 ↔ (∀ a, a ∈ keys → R a b = 0) := by
-  -- TODO（ヒント：ex607）
-  sorry
+
+  dsimp [wColSum]
+  -- theorem ex607 {X : Type} (xs : List X) (f : X → Nat) :
+  --     wsum xs f = 0 ↔ (∀ x, x ∈ xs → f x = 0) := by
+  obtain hEx607 :=
+    ex607 keys (fun a => R a b)
+  rw [hEx607]
 
 -- 714：singleton rowSum（正）↔ 成分（正）
 theorem ex714 (a : α) (b : β) (R : WRel α β) :
     wRowSum [b] R a > 0 ↔ R a b > 0 := by
-  -- TODO
-  sorry
+  dsimp [wRowSum]
+  dsimp [wsum]
+  rfl
 
 -- 715：b∈keys かつ R a b>0 なら rowSum>0
 theorem ex715 (keys : List β) (R : WRel α β) (a : α) (b : β) :
     b ∈ keys → R a b > 0 → wRowSum keys R a > 0 := by
-  -- TODO（ヒント：ex604 を xs:=keys, f:=fun b => R a b に）
-  sorry
+  dsimp [wRowSum]
+  intro hIn hRab
+  obtain hEx606 :=
+    ex606 keys (fun b => R a b)
+  rw [hEx606]
+  exists b
 
 -- 716：append 分解（rowSum）
 theorem ex716 (keys more : List β) (R : WRel α β) (a : α) :
     wRowSum (keys ++ more) R a = wRowSum keys R a + wRowSum more R a := by
-  -- TODO
-  sorry
+  dsimp [wRowSum]
+  -- theorem ex536 {X : Type} (xs ys : List X) (f : X → Nat) :
+  --     wsum (xs ++ ys) f = wsum xs f + wsum ys f := by
+  obtain hEx536 :=
+    ex536 keys more (R a)
+  rw [hEx536]
 
 -- 717：append 分解（colSum）
 theorem ex717 (keys more : List α) (R : WRel α β) (b : β) :
     wColSum (keys ++ more) R b = wColSum keys R b + wColSum more R b := by
-  -- TODO
-  sorry
+  dsimp [wColSum]
+  obtain hEx536 :=
+    ex536 keys more (fun a => R a b)
+  rw [hEx536]
 
 -- 718：rowSum>0 は append で保たれる
 theorem ex718 (keys more : List β) (R : WRel α β) (a : α) :
     wRowSum keys R a > 0 → wRowSum (keys ++ more) R a > 0 := by
   -- TODO（ヒント：ex716 と Nat.add_pos_left / Nat.add_pos_right）
-  sorry
+
+  -- theorem ex716 (keys more : List β) (R : WRel α β) (a : α) :
+  --     wRowSum (keys ++ more) R a = wRowSum keys R a + wRowSum more R a
+  rw [ex716 keys more R a]
+  dsimp [wRowSum]
+  intro h1
+  apply Nat.add_pos_left
+  exact h1
 
 -- 719：wZero の rowSum は常に 0
 theorem ex719 (keys : List β) (a : α) :
     wRowSum keys (wZero α β) a = 0 := by
-  -- TODO
-  sorry
+  dsimp [wRowSum]
+  dsimp [wZero]
+  induction keys with
+  | nil =>
+    rfl
+  | cons b bs ih =>
+    dsimp [wsum]
+    rw [Nat.zero_add]
+    exact ih
 
 -- 720：maskW の rowSum>0 ↔ ∃ b∈keys, M a b
 theorem ex720 (keys : List β) (M : Rel α β) (a : α) :
     wRowSum keys (maskW M) a > 0 ↔ ∃ b, b ∈ keys ∧ M a b := by
-  -- TODO（ヒント：ex710 と ex613（wSupp(maskW M)=M）を組み合わせる）
-  sorry
+
+  dsimp [wRowSum, maskW]
+  constructor
+  intro hwRowSum1
+  induction keys with
+  | nil =>
+    dsimp [wsum] at hwRowSum1
+    contradiction
+  | cons b1 bs ih =>
+    dsimp [wsum] at hwRowSum1
+    --obtain hwRowSum2 : 0 < ((if M a b1 then 1 else 0) + wsum bs fun b => if M a b then 1 else 0) := hwRowSum1
+
+    rw [gt_iff_lt] at hwRowSum1
+    rw [Nat.add_pos_iff_pos_or_pos] at hwRowSum1
+    cases hwRowSum1 with
+    | inl hMab1 =>
+      by_cases hM : M a b1
+      rw [if_pos hM] at hMab1
+      exists b1
+      constructor
+      apply List.mem_cons_self
+      exact hM
+      rw [if_neg hM] at hMab1
+      contradiction
+    | inr hWsumBs =>
+      obtain h2 := ih hWsumBs
+      obtain ⟨b2, hContains, hMab2⟩ := h2
+      exists b2
+      constructor
+      apply List.mem_cons_of_mem
+      exact hContains
+      exact hMab2
+
+  intro hExists
+  obtain ⟨b, hIn, hMab⟩ := hExists
+  induction keys with
+  | nil =>
+    dsimp [wsum]
+    contradiction
+  | cons b1 bs ih =>
+    dsimp [wsum]
+    rw [gt_iff_lt]
+    rw [Nat.add_pos_iff_pos_or_pos]
+    by_cases hEq : b = b1
+    rw [←hEq]
+    left
+    rw [if_pos hMab]
+    exact Nat.zero_lt_one
+    right
+    obtain hInc := List.mem_of_ne_of_mem hEq hIn
+    obtain hWsumBs := ih hInc
+    exact hWsumBs
 
 --------------------------------------------------------------------------------
 -- 721〜730：wCompList / wMask / wGraph（重みレベル）
@@ -175,38 +284,68 @@ theorem ex720 (keys : List β) (M : Rel α β) (a : α) :
 -- 721：空 keys の wCompList は wZero
 theorem ex721 (R : WRel α β) (S : WRel β γ) :
     wCompList ([] : List β) R S = wZero α γ := by
-  -- TODO
-  sorry
+  funext a c
+  dsimp [wCompList, wZero, wsum]
 
 -- 722：singleton keys の wCompList（1 項だけ）
 theorem ex722 (b : β) (R : WRel α β) (S : WRel β γ) :
     wCompList [b] R S = (fun a c => R a b * S b c) := by
-  -- TODO
-  sorry
+  funext a c
+  dsimp [wCompList, wsum]
 
 -- 723：右をスカラー倍すると結果もスカラー倍（右線形性）
 theorem ex723 (keys : List β) (t : Nat) (R : WRel α β) (S : WRel β γ) :
     wCompList keys R (wScale t S) = wScale t (wCompList keys R S) := by
-  -- TODO（ヒント：Σ と * の交換 + Nat.mul_assoc）
-  sorry
+  funext a c
+  dsimp [wCompList, wScale, wsum]
+  induction keys with
+  | nil =>
+    rfl
+  | cons b bs ih =>
+    dsimp [wsum, wScale]
+    rw [ih]
+    rw [Nat.mul_add]
+    rw [←Nat.mul_assoc (R a b) t (S b c)]
+    rw [←Nat.mul_comm t (R a b)]
+    rw [←Nat.mul_assoc t (R a b) (S b c)]
 
 -- 724：両側をスカラー倍すると係数は積になる
 theorem ex724 (keys : List β) (t u : Nat) (R : WRel α β) (S : WRel β γ) :
     wCompList keys (wScale t R) (wScale u S) = wScale (t * u) (wCompList keys R S) := by
-  -- TODO（ヒント：ex690 / ex723 の組合せでも可）
-  sorry
+  funext a c
+  dsimp [wCompList, wScale, wsum]
+  induction keys with
+  | nil =>
+    rfl
+  | cons b1 bs ih =>
+    dsimp [wsum, wScale]
+    rw [ih]
+    rw [Nat.mul_add]
+    rw [←Nat.mul_assoc (t * R a b1) u (S b1 c)]
+    rw [Nat.mul_assoc t (R a b1) u]
+    rw [Nat.mul_comm (R a b1) u]
+    rw [←Nat.mul_assoc t u (R a b1)]
+    rw [←Nat.mul_assoc (t * u) (R a b1) (S b1 c)]
 
 -- 725：wMask は Hadamard（wMul）で “maskW を掛ける” のと同じ
 theorem ex725 (R : WRel α β) (M : Rel α β) :
     wMask R M = wMul R (maskW M) := by
-  -- TODO
-  sorry
+  funext a b
+  dsimp [wMask, wMul, maskW]
 
 -- 726：Hadamard と mask の交換（mask を外へ寄せる）
 theorem ex726 (R S : WRel α β) (M : Rel α β) :
     wMul (wMask R M) S = wMask (wMul R S) M := by
-  -- TODO（ヒント：Nat.mul_assoc / Nat.mul_left_comm / Nat.mul_comm）
-  sorry
+  funext a b
+  dsimp [wMask, wMul, maskW]
+  by_cases hMab : M a b
+  rw [if_pos hMab]
+  rw [Nat.mul_one]
+  rw [Nat.mul_one]
+  rw [if_neg hMab]
+  rw [Nat.mul_zero]
+  rw [Nat.mul_zero]
+  rw [Nat.zero_mul]
 
 -- 727：keys.Nodup のとき、graph を左に置いた縮約は “行選択＋mask” になる（重み）
 theorem ex727 (keys : List β) (f : α → β) (S : WRel β γ) :
@@ -214,7 +353,6 @@ theorem ex727 (keys : List β) (f : α → β) (S : WRel β γ) :
       wCompList keys (wGraph f) S
         =
       wMask (fun a c => S (f a) c) (fun a _ => f a ∈ keys) := by
-  -- TODO
   sorry
 
 -- 728：ex727 の “>0” 版（重みが正になる条件）
