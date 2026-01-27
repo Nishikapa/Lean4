@@ -353,7 +353,49 @@ theorem ex727 (keys : List β) (f : α → β) (S : WRel β γ) :
       wCompList keys (wGraph f) S
         =
       wMask (fun a c => S (f a) c) (fun a _ => f a ∈ keys) := by
-  sorry
+
+  intro hNodup
+  funext a c
+  dsimp [wCompList, wGraph, wMask, maskW, wsum, relGraph]
+  induction keys with
+  | nil =>
+    dsimp [wsum]
+    obtain h1 :=
+      if_neg List.not_mem_nil
+    rw [h1]
+    rw [Nat.mul_zero]
+  | cons b1 bs ih =>
+    dsimp [wsum]
+    obtain hNodup2 := hNodup.of_cons
+    obtain hNodup3 := (List.nodup_cons.mp hNodup).1
+    obtain ih2 := ih hNodup2
+    by_cases hEq : f a = b1
+
+    -- pos
+    rw [if_pos hEq]
+    rw [Nat.one_mul]
+    rw [hEq]
+    rw [if_pos List.mem_cons_self]
+    rw [Nat.mul_one]
+    rw [hEq] at ih2
+    rw [ih2]
+    obtain hNodup4 := if_neg hNodup3
+    rw [hNodup4]
+    rw [Nat.mul_zero]
+    rw [Nat.add_zero]
+
+    -- neg
+    rw [if_neg hEq]
+    rw [Nat.zero_mul]
+    rw [Nat.zero_add]
+    rw [ih2]
+    obtain hhh_iff : f a ∈ b1 :: bs ↔ f a ∈ bs :=
+      ⟨fun h =>
+        match List.mem_cons.mp h with
+        | .inl eq => (hEq eq).elim  -- 「f a = b1」だったら矛盾なので消去
+        | .inr mem => mem,          -- 「f a ∈ bs」だったらそのまま返す
+      fun h => List.mem_cons.mpr (.inr h)⟩
+    rw [hhh_iff]
 
 -- 728：ex727 の “>0” 版（重みが正になる条件）
 theorem ex728 (keys : List β) (f : α → β) (S : WRel β γ) :
@@ -361,8 +403,34 @@ theorem ex728 (keys : List β) (f : α → β) (S : WRel β γ) :
     ∀ a c,
       wCompList keys (wGraph f) S a c > 0
         ↔ (f a ∈ keys ∧ S (f a) c > 0) := by
-  -- TODO（ヒント：ex727 で書き換えてから場合分け）
-  sorry
+  intro hNodup a c
+  rw [ex727 keys f S hNodup]
+  dsimp [wMask, maskW]
+  constructor
+
+  -- → 方向
+  intro hWCompPos
+  rw [gt_iff_lt] at hWCompPos
+  rw [gt_iff_lt]
+  obtain hWCompPos1 := Nat.pos_of_mul_pos_left hWCompPos
+  obtain hWCompPos2 := Nat.pos_of_mul_pos_right hWCompPos
+  have hWCompPos3 : f a ∈ keys := by
+    by_cases hWCompPos3_1 : f a ∈ keys
+    exact hWCompPos3_1
+    rw [if_neg hWCompPos3_1] at hWCompPos1
+    contradiction
+  constructor
+  exact hWCompPos3
+  exact hWCompPos2
+
+  -- ← 方向
+  intro hExists
+  obtain ⟨hIn, hSPos⟩ := hExists
+  rw [gt_iff_lt]
+  rw [gt_iff_lt] at hSPos
+  rw [if_pos hIn]
+  rw [Nat.mul_one]
+  exact hSPos
 
 -- 729：graph-graph の縮約（keys.Nodup のときの “関数合成＋mask”）（重み）
 theorem ex729 (keys : List β) (f : α → β) (g : β → γ) :
@@ -370,8 +438,62 @@ theorem ex729 (keys : List β) (f : α → β) (g : β → γ) :
       wCompList keys (wGraph f) (wGraph g)
         =
       wMask (wGraph (fun a => g (f a))) (fun a _ => f a ∈ keys) := by
-  -- TODO
-  sorry
+  intro hNodup
+  funext a c
+  dsimp [wCompList, wGraph, wMask, maskW, wsum, relGraph]
+  induction keys with
+  | nil =>
+    dsimp [wsum]
+    --obtain h1 := if_neg List.mem_nil_iff
+    rw [if_neg List.not_mem_nil]
+    rw [Nat.mul_zero]
+  | cons b1 bs ih =>
+    dsimp [wsum]
+    obtain hNodup2 := hNodup.of_cons
+    obtain ih2 := ih hNodup2
+    rw [ih2]
+    by_cases hEq : f a = b1
+    rw [if_pos hEq]
+    rw [Nat.one_mul]
+    rw [hEq]
+    rw [if_pos List.mem_cons_self]
+    rw [Nat.mul_one]
+    by_cases hEq2 : g b1 = c
+    rw [if_pos hEq2]
+    rw [Nat.one_mul]
+    obtain hNodup3 := (List.nodup_cons.mp hNodup).1
+    rw [if_neg hNodup3]
+
+    -- neg
+    rw [if_neg hEq2]
+    rw [Nat.zero_mul]
+
+    rw [if_neg hEq]
+    rw [Nat.zero_mul]
+    rw [Nat.zero_add]
+
+    by_cases hEq3 : g (f a) = c
+    rw [if_pos hEq3]
+    rw [Nat.one_mul]
+    rw [Nat.one_mul]
+    by_cases hIn : f a ∈ bs
+    rw [if_pos hIn]
+    have h2 : (f a ∈ b1 :: bs) := by
+      apply List.mem_cons.mpr
+      right
+      exact hIn
+    rw [if_pos h2]
+    have h3 : ¬ (f a ∈ b1 :: bs) := by
+      intro h3_1
+      rw [List.mem_cons] at h3_1
+      obtain h3_2 | h3_3 := h3_1
+      contradiction
+      contradiction
+    rw [if_neg h3]
+    rw [if_neg hIn]
+    rw [if_neg hEq3]
+    rw [Nat.zero_mul]
+    rw [Nat.zero_mul]
 
 -- 730：keys が “十分大きい（全包含）” なら mask が消えて graph 合成そのもの（重み）
 theorem ex730 (keys : List β) (f : α → β) (g : β → γ) :
