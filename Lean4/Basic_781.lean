@@ -43,7 +43,20 @@ theorem ex781 (M T : Rel α β) :
   -- ヒント：
   --   * ex691（WSpec ↔ wSupp ⊆ T）
   --   * ex613（wSupp (maskW M) = M）
-  sorry
+
+  -- theorem ex691 (R : WRel α β) (T : Rel α β) :
+  --     WSpec R T ↔ (wSupp R ⊆ T) := by
+  obtain hEx691 :=
+    ex691 (maskW M) T
+
+  rw [hEx691]
+  clear hEx691
+
+  -- theorem ex613 (M : Rel α β) :
+  --     wSupp (maskW M) = M := by
+  obtain hEx613 :=
+    ex613 M
+  rw [hEx613]
 
 -- 782：0/1 行列同士の WLe は、元の関係の包含と同値
 -- （0/1 なので「≤」は「1 なら右も 1」を意味する）
@@ -54,31 +67,101 @@ theorem ex782 (M N : Rel α β) :
   --   * dsimp [WLe, maskW]
   --   * by_cases (M a b), by_cases (N a b)
   --   * Nat.succ_le_succ_iff / Nat.not_succ_le_zero などでも可
-  sorry
+
+  dsimp [WLe, maskW]
+  constructor
+
+  -- mp
+  intro hWLe a1 b1 hMa1b1
+
+  obtain hWLe1 :=
+    hWLe a1 b1
+
+  rw [if_pos hMa1b1] at hWLe1
+  by_cases hNa1b1 : N a1 b1
+  -- pos
+  exact hNa1b1
+  rw [if_neg hNa1b1] at hWLe1
+  contradiction
+
+  -- mpr
+  intro hMN a2 b2
+  rw [RelLe] at hMN
+  by_cases hMa2b2 : M a2 b2
+
+  -- pos
+  rw [if_pos hMa2b2]
+  obtain hMN2 := hMN a2 b2 hMa2b2
+  rw [if_pos hMN2]
+  apply Nat.le_refl
+
+  -- neg
+  rw [if_neg hMa2b2]
+  by_cases hNa2b2 : N a2 b2
+
+  -- pos
+  rw [if_pos hNa2b2]
+  apply Nat.zero_le
+
+  -- neg
+  rw [if_neg hNa2b2]
+  apply Nat.le_refl
+
 
 -- 783：0/1 行列の Hadamard 積は論理積（∧）に対応する（重みレベルで完全一致）
 theorem ex783 (M N : Rel α β) :
     wMul (maskW M) (maskW N) = maskW (relMul M N) := by
-  -- TODO
   -- ヒント：by classical; funext a b; by_cases hM : M a b <;> by_cases hN : N a b <;>
   --          simp [wMul, maskW, relMul, hM, hN]
-  sorry
+
+  funext a1 b1
+  dsimp [wMul, maskW, relMul]
+  by_cases hMa1b1 : M a1 b1
+  -- pos
+  rw [if_pos hMa1b1]
+  rw [Nat.one_mul]
+  by_cases hNa1b1 : N a1 b1
+  -- pos
+  rw [if_pos hNa1b1]
+  rw [if_pos ⟨hMa1b1, hNa1b1⟩]
+  -- neg
+  rw [if_neg hNa1b1]
+  rw [if_neg]
+  intro hFalse1
+  obtain ⟨hM1, hN1⟩ := hFalse1
+  apply hNa1b1
+  apply hN1
+  -- neg
+  rw [if_neg hMa1b1]
+  rw [Nat.zero_mul]
+  rw [if_neg]
+  intro hFalse2
+  obtain ⟨hM2, hN2⟩ := hFalse2
+  apply hMa1b1
+  apply hM2
 
 -- 784：0/1 行列を関係 N で mask するのは、関係の ∧ を取って 0/1 化するのと同じ
 theorem ex784 (M N : Rel α β) :
     wMask (maskW M) N = maskW (relMul M N) := by
-  -- TODO
   -- ヒント：
   --   * ex725（wMask R M = wMul R (maskW M)）
   --   * ex783 を使う
-  sorry
+
+  obtain hEx725 :=
+    ex725 (maskW M) N
+  rw [hEx725]
+  clear hEx725
+
+  obtain hEx783 :=
+    ex783 M N
+  rw [hEx783]
 
 -- 785：transpose は maskW と可換（関係側も transpose する）
 theorem ex785 (M : Rel α β) :
     wTrans (maskW M) = maskW (relTrans M) := by
-  -- TODO
   -- ヒント：by classical; funext b a; simp [wTrans, maskW, relTrans]
-  sorry
+  funext b1 a1
+  dsimp [wTrans, maskW, relTrans]
 
 --------------------------------------------------------------------------------
 -- 786〜790：wCountComp（「witness の個数」）と relCompList（存在）
@@ -90,24 +173,82 @@ theorem ex786 (keys : List β) (R : Rel α β) (S : Rel β γ) (a : α) (c : γ)
     wCountComp keys R S a c
       =
     wsum keys (fun b => if (R a b ∧ S b c) then 1 else 0) := by
-  -- TODO
   -- ヒント：
   --   * dsimp [wCountComp, wCompList, maskW]
   --   * keys で帰納
   --   * 各 b で by_cases (R a b) と by_cases (S b c)
   --   * Nat.mul_one / Nat.mul_zero / Nat.zero_mul
-  sorry
+  dsimp [wCountComp, wCompList, maskW]
+  induction keys with
+  | nil =>
+    rw [wsum]
+    rw [wsum]
+  | cons b1 bs ih =>
+    rw [wsum]
+    rw [wsum]
+    by_cases hRab1 : R a b1
+    -- pos
+    rw [if_pos hRab1]
+    rw [Nat.one_mul]
+    by_cases hSbc1 : S b1 c
+    -- pos
+    rw [if_pos hSbc1]
+    rw [if_pos ⟨hRab1, hSbc1⟩]
+    rw [ih]
+    -- neg
+    rw [if_neg hSbc1]
+    rw [Nat.zero_add]
+    rw [if_neg]
+    rw [Nat.zero_add]
+    exact ih
+    -- neg
+    intro hRab1_neg
+    obtain ⟨hRab2, hSbc2⟩ := hRab1_neg
+    apply hSbc1
+    exact hSbc2
+
+    -- neg
+    rw [if_neg hRab1]
+    rw [Nat.zero_mul]
+    rw [Nat.zero_add]
+    rw [if_neg]
+    rw [Nat.zero_add]
+    exact ih
+
+    intro hRab1_Sb1c
+    obtain ⟨hRab2, hSbc2⟩ := hRab1_Sb1c
+    apply hRab1
+    exact hRab2
 
 -- 787：support（>0）は「witness が存在する」だけを見るので relCompList に一致
 -- （重みは “数” だが、>0 は “存在” に潰れる）
 theorem ex787 (keys : List β) (R : Rel α β) (S : Rel β γ) :
     wSupp (wCountComp keys R S) = relCompList keys R S := by
-  -- TODO
   -- ヒント：
   --   * ex621（wSupp (wCompList keys QK KV) = relCompList keys (wSupp QK) (wSupp KV)）
   --   * QK := maskW R, KV := maskW S
   --   * ex613（wSupp (maskW M) = M）
-  sorry
+
+  dsimp [wCountComp]
+  -- theorem ex621 (keys : List β) (QK : WRel α β) (KV : WRel β γ) :
+  --     wSupp (attnWRel keys QK KV) = relCompList keys (wSupp QK) (wSupp KV)
+  --     wSupp (wCountComp keys R S) = relCompList keys R S
+
+  -- def attnWRel {α β γ : Type} (keys : List β) (QK : WRel α β) (KV : WRel β γ) : WRel α γ :=
+  --   wCompList keys QK KV
+
+  -- theorem ex613 (M : Rel α β) :
+  --     wSupp (maskW M) = M
+  obtain hEx613_R :=
+    ex613 R
+  obtain hEx613_S :=
+    ex613 S
+  obtain hEx621 :=
+    ex621 keys (maskW R) (maskW S)
+  rw [hEx613_R, hEx613_S] at hEx621
+  rw [←hEx621]
+  clear hEx613_R hEx613_S hEx621
+  rw [attnWRel]
 
 -- 788：keys.Nodup かつ witness が高々 1 個なら、「個数」は 0/1 化（存在なら 1）
 -- （“存在” と “個数” が一致する典型条件）
@@ -119,14 +260,62 @@ theorem ex788 (keys : List β) (R : Rel α β) (S : Rel β γ) :
         R a b₂ → S b₂ c →
         b₁ = b₂) →
       wCountComp keys R S = maskW (relCompList keys R S) := by
-  -- TODO
   -- ヒント：
   --   * funext a c
   --   * ex786 で wsum (if (R a b ∧ S b c) then 1 else 0) の形へ
   --   * keys.Nodup と “witness 一意性” から、true になる b は高々 1 個
   --   * ∃ があるなら wsum は 1、ないなら 0
   --   * RHS は maskW（= if ∃ witness then 1 else 0）
-  sorry
+  intro hNodup
+  intro hUnique
+
+  funext a1 c1
+  obtain hEx786 :=
+    ex786 keys R S a1 c1
+  rw [hEx786]
+  clear hEx786
+  dsimp [maskW, relCompList]
+
+  by_cases h_ex : ∃ b, b ∈ keys ∧ R a1 b ∧ S b c1
+
+  -- pos
+  have h_one : (wsum keys fun b => if R a1 b ∧ S b c1 then 1 else 0) = 1 := by
+    obtain ⟨b_ex, hIn, hR, hS⟩ := h_ex
+    have h_eq_sum : (wsum keys fun b => if R a1 b ∧ S b c1 then 1 else 0) =
+                    wRowSum keys (wId β) b_ex := by
+      dsimp [wRowSum, wId, maskW, relId]
+      apply ex601
+      intro b hb
+      by_cases h_eq : b = b_ex
+      · rw [h_eq]
+        rw [if_pos (And.intro hR hS)]
+        rw [if_pos rfl]
+      · have h_rhs : (if b_ex = b then 1 else 0) = 0 := by
+          apply if_neg
+          intro h
+          exact h_eq h.symm
+        rw [h_rhs]
+        apply if_neg
+        intro h_and
+        have h_cont : b = b_ex := hUnique a1 c1 b b_ex hb hIn h_and.1 h_and.2 hR hS
+        exact h_eq h_cont
+    rw [h_eq_sum]
+    rw [ex761 keys b_ex hNodup]
+    rw [if_pos hIn]
+
+  rw [h_one]
+
+  rw [if_pos h_ex]
+
+  -- neg
+  rw [if_neg h_ex]
+  rw [ex607]
+  intro b1 hIn
+  apply if_neg
+  intro h_and
+  obtain ⟨hR, hS⟩ := h_and
+  apply h_ex
+  exists b1
 
 -- 789：graph（左が関数）なら witness は自動的に一意 → wCountComp は 0/1 で “行選択”
 -- （keys.Nodup で重複カウントが無い前提）

@@ -505,28 +505,95 @@ theorem ex775 (keysα : List α) (keysβ : List β)
 
 -- 776：spec を満たす R は、rowSum をとるとき keys を T でフィルタしても同じ
 -- （T の外の重みが 0 なので落ちる）
-theorem ex776 (keys : List β) (R : WRel α β) (T : Rel α β) (a : α) :
+theorem ex776 (keys : List β) (R : WRel α β) (T : Rel α β) (a1 : α) :
     WSpec R T →
-      wRowSum keys R a
+      wRowSum keys R a1
         =
-      wRowSum (keys.filter (fun b => decide (T a b))) R a := by
-  -- TODO
+      wRowSum (keys.filter (fun b => decide (T a1 b))) R a1 := by
   -- ヒント：
   --   * keys で帰納法
   --   * head について `by_cases h : T a b` をして
   --     - h=true なら filter に残る
   --     - h=false なら WSpec から R a b = 0 なので、足しても変わらない
-  sorry
+  dsimp [wRowSum, maskW, WSpec]
+  intro hSpec
+  induction keys with
+  | nil =>
+    dsimp [wsum]
+  | cons b1 bs ih =>
+    dsimp [List.filter]
+    dsimp [wsum]
+    by_cases hT : T a1 b1
+
+    -- pos
+    have h_decide : decide (T a1 b1) = true := by
+      rw [decide_eq_true]
+      exact hT
+    rw [h_decide]
+    dsimp
+    clear h_decide
+    obtain hEx502 :=
+      ex502 b1 (List.filter (fun b => decide (T a1 b)) bs) (fun b => R a1 b)
+    rw [hEx502]
+    clear hEx502
+    rw [Nat.add_left_cancel_iff]
+    exact ih
+
+    -- neg
+    obtain hSpec2 := hSpec a1 b1 hT
+    have h_decide : decide (T a1 b1) = false := by
+      rw [decide_eq_false]
+      exact hT
+    rw [h_decide]
+    clear h_decide
+    dsimp
+    rw [hSpec2]
+    rw [Nat.zero_add]
+    exact ih
 
 -- 777：spec を満たす R は、colSum をとるとき keys を T でフィルタしても同じ
-theorem ex777 (keys : List α) (R : WRel α β) (T : Rel α β) (b : β) :
+theorem ex777 (keys : List α) (R : WRel α β) (T : Rel α β) (b1 : β) :
     WSpec R T →
-      wColSum keys R b
+      wColSum keys R b1
         =
-      wColSum (keys.filter (fun a => decide (T a b))) R b := by
-  -- TODO
+      wColSum (keys.filter (fun a => decide (T a b1))) R b1 := by
   -- ヒント：ex776 の colSum 版（keys で帰納するのが早い）
-  sorry
+
+  dsimp [wColSum, maskW, WSpec]
+  intro hSpec
+  induction keys with
+  | nil =>
+    dsimp [wsum]
+  | cons a1 as ih =>
+    dsimp [List.filter]
+    dsimp [wsum]
+    by_cases hT : T a1 b1
+
+    -- pos
+    have h_decide : decide (T a1 b1) = true := by
+      rw [decide_eq_true]
+      exact hT
+    rw [h_decide]
+    dsimp
+    clear h_decide
+    obtain hEx502 :=
+      ex502 a1 (List.filter (fun a => decide (T a b1)) as) (fun a => R a b1)
+    rw [hEx502]
+    clear hEx502
+    rw [Nat.add_left_cancel_iff]
+    exact ih
+
+    -- neg
+    obtain hSpec2 := hSpec a1 b1 hT
+    have h_decide : decide (T a1 b1) = false := by
+      rw [decide_eq_false]
+      exact hT
+    rw [h_decide]
+    clear h_decide
+    dsimp
+    rw [hSpec2]
+    rw [Nat.zero_add]
+    exact ih
 
 -- 778：入力側/出力側がそれぞれ spec を持つなら、
 --      合成 wCompList の rowSum も “合成 spec” でフィルタしてよい
@@ -537,11 +604,26 @@ theorem ex778 (keysβ : List β) (keysg : List γ)
         =
       wRowSum (keysg.filter (fun c => decide (relCompList keysβ T U a c)))
         (wCompList keysβ R S) a := by
-  -- TODO
   -- ヒント：
   --   * ex746：WSpec R T, WSpec S U ⇒ WSpec (wCompList keysβ R S) (relCompList keysβ T U)
   --   * その WSpec を ex776 に食わせるだけ
-  sorry
+  intro hSpecRT hSpecSU
+
+  -- theorem ex746 (keys : List β) (R : WRel α β) (S : WRel β γ)
+  --     (T : Rel α β) (U : Rel β γ) :
+  --     WSpec R T → WSpec S U → WSpec (wCompList keys R S) (relCompList keys T U) := by
+  obtain hEx746 :=
+    ex746 keysβ R S T U hSpecRT hSpecSU
+
+  -- theorem ex776 (keys : List β) (R : WRel α β) (T : Rel α β) (a1 : α) :
+  --     WSpec R T →
+  --       wRowSum keys R a1
+  --         =
+  --       wRowSum (keys.filter (fun b => decide (T a1 b))) R a1 := by
+  obtain hEx776 :=
+    ex776 keysg (wCompList keysβ R S) (relCompList keysβ T U) a hEx746
+
+  exact hEx776
 
 -- 779：rowSum>0 を “2段 witness（b と c）” まで展開
 theorem ex779 (keysβ : List β) (keysg : List γ)
@@ -549,12 +631,53 @@ theorem ex779 (keysβ : List β) (keysg : List γ)
     wRowSum keysg (wCompList keysβ R S) a > 0
       ↔
     ∃ b, b ∈ keysβ ∧ ∃ c, c ∈ keysg ∧ R a b > 0 ∧ S b c > 0 := by
-  -- TODO
   -- ヒント：
   --   * ex753 で `∃ b∈keysβ ∧ R a b>0 ∧ wRowSum keysg S b>0`
   --   * さらに ex710（rowSum>0 ↔ ∃c∈keysg, S b c>0）で分解
   --   * 仕上げは ∃ の並べ替え
-  sorry
+
+  -- theorem ex753 (keysβ : List β) (keysg : List γ)
+  --     (R : WRel α β) (S : WRel β γ) (a : α) :
+  --     wRowSum keysg (wCompList keysβ R S) a > 0
+  --       ↔
+  --     ∃ b, b ∈ keysβ ∧ R a b > 0 ∧ wRowSum keysg S b > 0 := by
+  obtain hEx753 :=
+    ex753 keysβ keysg R S a
+
+  rw [hEx753]
+  clear hEx753
+
+  -- theorem ex710 (keys : List β) (R : WRel α β) (a : α) :
+  --     wRowSum keys R a > 0 ↔ ∃ b, b ∈ keys ∧ R a b > 0 := by
+  constructor
+
+  -- mp
+  intro hExist1
+  obtain ⟨b1, hb_in, hR_pos, hRowSum_pos⟩ := hExist1
+
+  obtain hEx710 :=
+    ex710 keysg S b1
+  rw [hEx710] at hRowSum_pos
+  clear hEx710
+
+  obtain ⟨c1, hc_in, hS_pos⟩ := hRowSum_pos
+  exists b1
+  constructor
+  exact hb_in
+  exists c1
+
+  -- mpr
+  intro hExist2
+  obtain ⟨b1, hb_in, c1, hc_in, hR_pos, hS_pos⟩ := hExist2
+  exists b1
+  constructor
+  exact hb_in
+  constructor
+  exact hR_pos
+  obtain hEx710 :=
+    ex710 keysg S b1
+  rw [hEx710]
+  exists c1
 
 --------------------------------------------------------------------------------
 -- 780：wCompList の結合則（有限和の並べ替え / weighted 版）
@@ -566,13 +689,35 @@ theorem ex780 (keysβ : List β) (keysg : List γ)
     wCompList keysg (wCompList keysβ R S) T
       =
     wCompList keysβ R (wCompList keysg S T) := by
-  -- TODO
   -- ヒント：
   --   * funext a d; dsimp [wCompList]
   --   * どちらも “二重和（Σg Σb ...）” なので、
   --     Nat.add_assoc / Nat.add_comm / Nat.mul_add / Nat.add_mul / Nat.mul_assoc で整理する
   --   * すすめ方：keysg で帰納して、途中で必要なら keysβ での補助補題
   --       `wsum keysβ f * t = wsum keysβ (fun b => f b * t)` をその場で作る
-  sorry
+  funext a1 s1
+  dsimp [wCompList, maskW]
+
+  obtain wsum_comm2 :=
+    wsum_comm keysg keysβ (fun b b_1 => R a1 b_1 * S b_1 b * T b s1)
+
+  conv =>
+    lhs
+    arg 2
+    intro b
+    rw [ex538]
+
+  rw [wsum_comm2]
+
+  conv =>
+    rhs
+    arg 2
+    intro b
+    rw [Nat.mul_comm]
+    rw [ex538]
+    arg 2
+    intro b_1
+    rw [Nat.mul_comm]
+    rw [←Nat.mul_assoc]
 
 end TL
