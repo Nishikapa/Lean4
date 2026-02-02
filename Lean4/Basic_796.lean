@@ -84,21 +84,62 @@ theorem ex797 (R : WRel α β) :
 theorem ex798 (keys : List β) (R : WRel α β) (S : WRel β γ) :
     wSupp (wCompList keys (wBool R) S) = wSupp (wCompList keys R S) := by
   -- ヒント：ex621 と ex796 を使う
-  sorry
+
+  -- theorem ex621 (keys : List β) (QK : WRel α β) (KV : WRel β γ) :
+  --     wSupp (attnWRel keys QK KV) = relCompList keys (wSupp QK) (wSupp KV)
+  obtain hEx621 :=
+    ex621 keys (wBool R) S
+  dsimp [attnWRel] at hEx621
+  rw [hEx621]
+  clear hEx621
+
+  -- theorem ex796 (R : WRel α β) :
+  --     wSupp (wBool R) = wSupp R := by
+  obtain hEx796 :=
+    ex796 R
+  rw [hEx796]
+  clear hEx796
+
+  rw [←ex621]
+  dsimp [attnWRel]
 
 -- 799：右を wBool に置き換えても wCompList の support は変わらない
 theorem ex799 (keys : List β) (R : WRel α β) (S : WRel β γ) :
     wSupp (wCompList keys R (wBool S)) = wSupp (wCompList keys R S) := by
-  -- TODO
+
   -- ヒント：ex621 と ex796
-  sorry
+  obtain hEx621 :=
+    ex621 keys R (wBool S)
+  dsimp [attnWRel] at hEx621
+  rw [hEx621]
+  clear hEx621
+
+  obtain hEx796 :=
+    ex796 S
+  rw [hEx796]
+  clear hEx796
+
+  rw [←ex621]
+  dsimp [attnWRel]
 
 -- 800：両側を wBool にしても wCompList の support は変わらない
 theorem ex800 (keys : List β) (R : WRel α β) (S : WRel β γ) :
     wSupp (wCompList keys (wBool R) (wBool S)) = wSupp (wCompList keys R S) := by
-  -- TODO
   -- ヒント：ex798 / ex799 からでも、ex621 + ex796 を 2 回でも
-  sorry
+
+  -- theorem ex798 (keys : List β) (R : WRel α β) (S : WRel β γ) :
+  --     wSupp (wCompList keys (wBool R) S) = wSupp (wCompList keys R S)
+
+  obtain hEx798 :=
+    ex798 keys R (wBool S)
+  rw [hEx798]
+  clear hEx798
+
+  -- theorem ex799 (keys : List β) (R : WRel α β) (S : WRel β γ) :
+  --     wSupp (wCompList keys R (wBool S)) = wSupp (wCompList keys R S)
+  obtain hEx799 :=
+    ex799 keys R S
+  rw [hEx799]
 
 --------------------------------------------------------------------------------
 -- 801〜805：Rel と WRel のブリッジ（maskW / wMask / wCountComp）
@@ -107,37 +148,96 @@ theorem ex800 (keys : List β) (R : WRel α β) (S : WRel β γ) :
 -- 801：0/1 行列 maskW M が R 以下であること ↔ M ⊆ support(R)
 theorem ex801 (M : Rel α β) (R : WRel α β) :
     WLe (maskW M) R ↔ (M ⊆ wSupp R) := by
-  -- TODO
   -- ヒント：
   --   * dsimp [WLe, maskW, wSupp]
   --   * by_cases hM : M a b
   --   * Nat.pos_iff_ne_zero など
-  sorry
+  dsimp [WLe, maskW, wSupp, RelLe]
+  constructor
+
+  -- mp
+  intro h a1 b1 hM
+  obtain h2 := h a1 b1
+  rw [if_pos hM] at h2
+  apply Nat.pos_iff_ne_zero.mpr
+  apply Nat.ne_of_gt
+  exact h2
+
+  -- mpr
+  intro h a1 b1
+  obtain hM := h a1 b1
+  by_cases hM2 : M a1 b1
+
+  -- pos
+  rw [if_pos hM2]
+  obtain h3 := hM hM2
+  exact h3
+
+  -- neg
+  rw [if_neg hM2]
+  apply Nat.zero_le
 
 -- 802：mask したものは必ず「mask の関係」を spec として満たす
 theorem ex802 (R : WRel α β) (M : Rel α β) :
     WSpec (wMask R M) M := by
-  -- TODO
   -- ヒント：by classical; dsimp [WSpec, wMask, maskW]; by_cases (M a b); simp
-  sorry
+  dsimp [WSpec, wMask, maskW]
+  intro a1 b1 hM
+  rw [if_neg hM]
+  rw [Nat.mul_zero]
+
 
 -- 803：mask の support は「元の support ∧ M」
 theorem ex803 (R : WRel α β) (M : Rel α β) :
     wSupp (wMask R M) = relMul (wSupp R) M := by
-  -- TODO
   -- ヒント：by classical; funext a b; by_cases h : M a b <;>
   --   simp [wSupp, wMask, maskW, relMul, h]
-  sorry
+  funext a1 b1
+  dsimp [wSupp, wMask, maskW, relMul]
+  by_cases h : M a1 b1
+  -- pos
+  rw [if_pos h]
+  rw [Nat.mul_one]
+  apply propext
+  constructor
+  intro h1
+  constructor
+  exact h1
+  exact h
+  intro h2
+  obtain ⟨hR, hM⟩ := h2
+  exact hR
+  rw [if_neg h]
+  rw [Nat.mul_zero]
+  apply propext
+  constructor
+  intro h3
+  contradiction
+  intro h4
+  obtain ⟨hR, hM⟩ := h4
+  contradiction
 
 -- 804：0/1 化（wBool）は mask と可換
 theorem ex804 (R : WRel α β) (M : Rel α β) :
     wBool (wMask R M) = wMask (wBool R) M := by
-  -- TODO
   -- ヒント：
   --   * wBool の定義：maskW (wSupp _)
   --   * ex803 で support(wMask) を relMul に
   --   * ex784（wMask (maskW A) B = maskW (A ∧ B)）があるならそれも使える
-  sorry
+  funext a1 b1
+  dsimp [wBool, wMask, maskW, wSupp]
+  by_cases hM : M a1 b1
+  rw [if_pos hM]
+  rw [Nat.mul_one]
+  by_cases hR : R a1 b1 > 0
+  rw [if_pos hR]
+  rw [if_neg hR]
+  rw [if_neg hM]
+  rw [Nat.mul_zero]
+  rw [Nat.mul_zero]
+  rw [if_neg]
+  intro h2
+  contradiction
 
 -- 805：wCountComp の 0/1 化は relCompList（存在）に一致する
 theorem ex805 (keys : List β) (R : Rel α β) (S : Rel β γ) :
