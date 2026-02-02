@@ -324,12 +324,55 @@ theorem ex789 (keys : List β) (f : α → β) (S : Rel β γ) :
       wCountComp keys (relGraph f) S
         =
       maskW (fun a c => f a ∈ keys ∧ S (f a) c) := by
-  -- TODO
   -- ヒント：
   --   * ex788 を R:=relGraph f に適用（witness の一意性は自明）
   --   * relCompList keys (relGraph f) S a c は「∃b∈keys, f a = b ∧ S b c」
   --     なので b を f a に潰して (f a ∈ keys ∧ S (f a) c) に整理
-  sorry
+
+  -- theorem ex788 (keys : List β) (R : Rel α β) (S : Rel β γ) :
+  --     keys.Nodup →
+  --     (∀ a c b₁ b₂,
+  --         b₁ ∈ keys → b₂ ∈ keys →
+  --         R a b₁ → S b₁ c →
+  --         R a b₂ → S b₂ c →
+  --         b₁ = b₂) →
+  --       wCountComp keys R S = maskW (relCompList keys R S) := by
+
+  intro hNodup
+  funext a1 c1
+  obtain hEx788 :=
+    ex788 keys (relGraph f) S hNodup
+  rw [hEx788]
+  clear hEx788
+
+  -- noncomputable def maskW {α β : Type} (M : Rel α β) : WRel α β := by
+  --   classical
+  --   exact fun a b => if M a b then 1 else 0
+
+  dsimp [maskW]
+  dsimp [relCompList, relGraph]
+  by_cases h_in : (∃ b, b ∈ keys ∧ f a1 = b ∧ S b c1)
+
+  -- pos
+  rw [if_pos h_in]
+  obtain ⟨b_ex, hIn, hEq, hS⟩ := h_in
+  rw [hEq]
+  rw [if_pos ⟨hIn, hS⟩]
+
+  -- neg
+  rw [if_neg h_in]
+  have h_no : ¬ (f a1 ∈ keys ∧ S (f a1) c1) := by
+    intro h1
+    obtain ⟨hIn2, hS2⟩ := h1
+    apply h_in
+    exists (f a1)
+  rw [if_neg h_no]
+
+  --
+  intro a2 c2 b1 b2 hContains1 hContains2 hRelGraph1 hS1 hRelGraph2 hS2
+  rw [relGraph] at hRelGraph1 hRelGraph2
+  rw [←hRelGraph1]
+  rw [←hRelGraph2]
 
 -- 790：graph-graph なら “関数合成 + keys マスク” の 0/1 版になる
 theorem ex790 (keys : List β) (f : α → β) (g : β → γ) :
@@ -337,11 +380,22 @@ theorem ex790 (keys : List β) (f : α → β) (g : β → γ) :
       wCountComp keys (relGraph f) (relGraph g)
         =
       maskW (fun a c => f a ∈ keys ∧ g (f a) = c) := by
-  -- TODO
   -- ヒント：
   --   * ex789 に S := relGraph g を入れる
   --   * relGraph g (f a) c は g (f a) = c
-  sorry
+
+  intro hNodup
+  -- theorem ex789 (keys : List β) (f : α → β) (S : Rel β γ) :
+  --     keys.Nodup →
+  --       wCountComp keys (relGraph f) S
+  --         =
+  --       maskW (fun a c => f a ∈ keys ∧ S (f a) c)
+  obtain hEx789 :=
+    ex789 keys f (relGraph g) hNodup
+  rw [hEx789]
+  clear hEx789
+
+  dsimp [relGraph]
 
 --------------------------------------------------------------------------------
 -- 791〜795：wCountComp を row/col-sum で観察（“2段 witness” と行選択）
@@ -353,12 +407,59 @@ theorem ex791 (keysβ : List β) (keysg : List γ)
     wRowSum keysg (wCountComp keysβ R S) a > 0
       ↔
     ∃ b, b ∈ keysβ ∧ ∃ c, c ∈ keysg ∧ R a b ∧ S b c := by
-  -- TODO
   -- ヒント：
   --   * ex710（rowSum>0 ↔ ∃c∈keysg, (..) a c >0）
   --   * (..) := wCountComp keysβ R S
   --   * ex787 で support を relCompList に落として、∃ の並べ替え
-  sorry
+
+  --dsimp [wCountComp]
+
+  -- theorem ex710 (keys : List β) (R : WRel α β) (a : α) :
+  --     wRowSum keys R a > 0 ↔ ∃ b, b ∈ keys ∧ R a b > 0
+  obtain hEx710 :=
+    ex710 keysg (wCountComp keysβ R S) a
+  rw [hEx710]
+  clear hEx710
+
+  -- theorem ex787 (keys : List β) (R : Rel α β) (S : Rel β γ) :
+  --     wSupp (wCountComp keys R S) = relCompList keys R S
+
+  -- def wSupp (R : WRel α β) : Rel α β :=
+  --   fun a b => R a b > 0
+
+  -- def relCompList {α β γ : Type} (keys : List β) (R : Rel α β) (S : Rel β γ) : Rel α γ :=
+  --   fun a c => ∃ b, b ∈ keys ∧ R a b ∧ S b c
+
+  have hEx787 : ∀ a c, wSupp (wCountComp keysβ R S) a c = (relCompList keysβ R S) a c := by
+    intro a2 c2
+    rw [ex787 keysβ R S]
+
+  conv =>
+    lhs
+    arg 1
+    intro g1
+    rhs
+    apply hEx787 a g1
+
+  clear hEx787
+
+  dsimp [relCompList]
+  constructor
+  -- mp
+  intro h_exists
+  obtain ⟨c1, hIn_c1, hRelComp⟩ := h_exists
+  obtain ⟨b1, hIn_b1, hR, hS⟩ := hRelComp
+  exists b1
+  constructor
+  exact hIn_b1
+  exists c1
+
+  intro h_exists2
+  obtain ⟨b2, hIn_b2, ⟨c2, hIn_c2, hR2, hS2⟩⟩ := h_exists2
+  exists c2
+  constructor
+  exact hIn_c2
+  exists b2
 
 -- 792：colSum>0（到達）が “a と b の 2段 witness” に分解できる（Rel 版）
 theorem ex792 (keysα : List α) (keysβ : List β)
@@ -366,11 +467,52 @@ theorem ex792 (keysα : List α) (keysβ : List β)
     wColSum keysα (wCountComp keysβ R S) c > 0
       ↔
     ∃ b, b ∈ keysβ ∧ ∃ a, a ∈ keysα ∧ R a b ∧ S b c := by
-  -- TODO
   -- ヒント：
   --   * ex712（colSum>0 ↔ ∃a∈keysα, (..) a c >0）
   --   * ex787 で relCompList にして整理
-  sorry
+
+  -- theorem ex712 (keys : List α) (R : WRel α β) (b : β) :
+  --     wColSum keys R b > 0 ↔ ∃ a, a ∈ keys ∧ R a b > 0
+  obtain hEx712 :=
+    ex712 keysα (wCountComp keysβ R S) c
+
+  rw [hEx712]
+  clear hEx712
+
+  -- theorem ex787 (keys : List β) (R : Rel α β) (S : Rel β γ) :
+  --     wSupp (wCountComp keys R S) = relCompList keys R S
+  have hEx787 : ∀ a c, wSupp (wCountComp keysβ R S) a c = (relCompList keysβ R S) a c := by
+    intro a2 c2
+    rw [ex787 keysβ R S]
+
+  conv =>
+    lhs
+    arg 1
+    intro a1
+    rhs
+    apply hEx787 a1 c
+
+  clear hEx787
+
+  dsimp [relCompList]
+  constructor
+
+  -- mp
+  intro h_exists
+  obtain ⟨a1, hIn_a1, hRelComp⟩ := h_exists
+  obtain ⟨b1, hIn_b1, hR, hS⟩ := hRelComp
+  exists b1
+  constructor
+  exact hIn_b1
+  exists a1
+
+  -- mpr
+  intro h_exists2
+  obtain ⟨b2, hIn_b2, ⟨a2, hIn_a2, hR2, hS2⟩⟩ := h_exists2
+  exists a2
+  constructor
+  exact hIn_a2
+  exists b2
 
 -- 793：rowSum を押し込む（Rel 版）：到達先 c を全て足すと “(b,c) の組の個数” を数える
 --   Σ_c #{b | R a b ∧ S b c} = Σ_b ( [R a b] * Σ_c [S b c] )
@@ -379,11 +521,44 @@ theorem ex793 (keysβ : List β) (keysg : List γ)
     wRowSum keysg (wCountComp keysβ R S) a
       =
     wsum keysβ (fun b => (if R a b then 1 else 0) * wRowSum keysg (maskW S) b) := by
-  -- TODO
   -- ヒント：
   --   * ex751 を QK := maskW R, KV := maskW S に適用
   --   * wCountComp の定義へ戻す
-  sorry
+
+  rw [wCountComp]
+
+  -- theorem ex751 (keysβ : List β) (keysg : List γ)
+  --     (R : WRel α β) (S : WRel β γ) (a : α) :
+  --     wRowSum keysg (wCompList keysβ R S) a
+  --       =
+  --     wsum keysβ (fun b => R a b * wRowSum keysg S b)
+  obtain hEx751 :=
+    ex751 keysβ keysg (maskW R) (maskW S) a
+  rw [hEx751]
+  clear hEx751
+
+  induction keysβ with
+  | nil =>
+    rw [wsum]
+    rw [wsum]
+  | cons b1 bs ih =>
+    rw [wsum]
+    rw [wsum]
+    rw [maskW]
+    by_cases hRab1 : R a b1
+
+    -- pos
+    rw [if_pos hRab1]
+    rw [Nat.one_mul]
+    rw [Nat.add_left_cancel_iff]
+    rw [ih]
+
+    -- neg
+    rw [if_neg hRab1]
+    rw [Nat.zero_mul]
+    rw [Nat.zero_add]
+    rw [Nat.zero_add]
+    rw [ih]
 
 -- 794：colSum を押し込む（Rel 版）
 theorem ex794 (keysα : List α) (keysβ : List β)
@@ -391,9 +566,22 @@ theorem ex794 (keysα : List α) (keysβ : List β)
     wColSum keysα (wCountComp keysβ R S) c
       =
     wsum keysβ (fun b => wColSum keysα (maskW R) b * (if S b c then 1 else 0)) := by
-  -- TODO
   -- ヒント：ex752 を QK := maskW R, KV := maskW S に適用して整理
-  sorry
+
+  -- theorem ex752 (keysα : List α) (keysβ : List β)
+  --     (R : WRel α β) (S : WRel β γ) (c : γ) :
+  --     wColSum keysα (wCompList keysβ R S) c
+  --       =
+  --     wsum keysβ (fun b => wColSum keysα R b * S b c) := by
+  obtain hEx752 :=
+    ex752 keysα keysβ (maskW R) (fun b c => if S b c then 1 else 0) c
+  conv =>
+    rhs
+    rw [←hEx752]
+  clear hEx752
+
+  dsimp [wColSum, wCompList, wCountComp, maskW]
+
 
 -- 795：graph を左に置くと “行選択” になる：rowSum も if で表せる（重み版）
 theorem ex795 (keys : List β) (keysg : List γ)
@@ -402,12 +590,53 @@ theorem ex795 (keys : List β) (keysg : List γ)
       wRowSum keysg (wCompList keys (wGraph f) W) a
         =
       (if f a ∈ keys then wRowSum keysg W (f a) else 0) := by
-  -- TODO
   -- ヒント：
   --   * ex727（wCompList keys (wGraph f) W = wMask (fun a c => W (f a) c) (f a∈keys)）
   --   * それを wRowSum して、by_cases (f a ∈ keys)
   --   * true 側は mask が全部 1 なので wRowSum がそのまま
   --   * false 側は全項 0 → rowSum=0（ex711）
-  sorry
+
+  -- theorem ex727 (keys : List β) (f : α → β) (S : WRel β γ) :
+  --     keys.Nodup →
+  --       wCompList keys (wGraph f) S
+  --         =
+  --       wMask (fun a c => S (f a) c) (fun a _ => f a ∈ keys) := by
+  obtain hEx727 :=
+    ex727 keys f W
+
+  intro hNodup
+  rw [hEx727 hNodup]
+  clear hEx727
+
+  dsimp [wRowSum, wMask, maskW]
+  by_cases h_in : f a ∈ keys
+  -- pos
+  rw [if_pos h_in]
+  conv =>
+    lhs
+    arg 2
+    intro h
+    rw [Nat.mul_one]
+
+  rw [if_pos h_in]
+
+  -- neg
+  rw [if_neg h_in]
+  conv =>
+    lhs
+    arg 2
+    intro h
+    rw [Nat.mul_zero]
+  conv =>
+    rhs
+    rw [if_neg h_in]
+
+  induction keysg with
+  | nil =>
+    rw [wsum]
+  | cons c1 cs ih =>
+    rw [wsum]
+    rw [Nat.zero_add]
+    rw [ih]
 
 end TL
