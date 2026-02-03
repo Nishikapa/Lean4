@@ -39,7 +39,14 @@ noncomputable def wCountComp (keys : List β) (R : Rel α β) (S : Rel β γ) : 
 -- （「仕様の外は 0」=「仕様の外は False」）
 theorem ex781 (M T : Rel α β) :
     WSpec (maskW M) T ↔ (M ⊆ T) := by
-  -- TODO
+
+  -- def WSpec {α β : Type} (R : WRel α β) (T : Rel α β) : Prop :=
+  --   ∀ a b, ¬ T a b → R a b = 0
+
+  --   ∀ a b, ¬ T a b → (maskW M) a b = 0
+  --   ∀ a b, ¬ T a b → ¬ M a b
+  --   ∀ a b, M a b  → T a b
+
   -- ヒント：
   --   * ex691（WSpec ↔ wSupp ⊆ T）
   --   * ex613（wSupp (maskW M) = M）
@@ -62,7 +69,12 @@ theorem ex781 (M T : Rel α β) :
 -- （0/1 なので「≤」は「1 なら右も 1」を意味する）
 theorem ex782 (M N : Rel α β) :
     WLe (maskW M) (maskW N) ↔ (M ⊆ N) := by
-  -- TODO
+  -- def WLe {α β : Type} (R S : WRel α β) : Prop :=
+  --   ∀ a b, R a b ≤ S a b
+
+  --   ∀ a b, (maskW M) a b ≤ (maskW N) a b
+  --   ∀ a b, M a b → N a b
+
   -- ヒント：
   --   * dsimp [WLe, maskW]
   --   * by_cases (M a b), by_cases (N a b)
@@ -111,6 +123,13 @@ theorem ex782 (M N : Rel α β) :
 -- 783：0/1 行列の Hadamard 積は論理積（∧）に対応する（重みレベルで完全一致）
 theorem ex783 (M N : Rel α β) :
     wMul (maskW M) (maskW N) = maskW (relMul M N) := by
+  -- 論理演算と数値演算をおきかえているだけ
+  -- def wMul {α β : Type} (R S : WRel α β) : WRel α β :=
+  --   fun a b => R a b * S a b
+  --
+  -- def relMul (R S : Rel α β) : Rel α β :=
+  --   fun a b => R a b ∧ S a b
+
   -- ヒント：by classical; funext a b; by_cases hM : M a b <;> by_cases hN : N a b <;>
   --          simp [wMul, maskW, relMul, hM, hN]
 
@@ -143,6 +162,8 @@ theorem ex783 (M N : Rel α β) :
 -- 784：0/1 行列を関係 N で mask するのは、関係の ∧ を取って 0/1 化するのと同じ
 theorem ex784 (M N : Rel α β) :
     wMask (maskW M) N = maskW (relMul M N) := by
+  -- 論理演算を数値演算に置き換えているだけ
+
   -- ヒント：
   --   * ex725（wMask R M = wMul R (maskW M)）
   --   * ex783 を使う
@@ -159,6 +180,8 @@ theorem ex784 (M N : Rel α β) :
 -- 785：transpose は maskW と可換（関係側も transpose する）
 theorem ex785 (M : Rel α β) :
     wTrans (maskW M) = maskW (relTrans M) := by
+  -- 数値化前に転置するのと、数値化後に転置するのは同じ
+
   -- ヒント：by classical; funext b a; simp [wTrans, maskW, relTrans]
   funext b1 a1
   dsimp [wTrans, maskW, relTrans]
@@ -224,6 +247,10 @@ theorem ex786 (keys : List β) (R : Rel α β) (S : Rel β γ) (a : α) (c : γ)
 -- （重みは “数” だが、>0 は “存在” に潰れる）
 theorem ex787 (keys : List β) (R : Rel α β) (S : Rel β γ) :
     wSupp (wCountComp keys R S) = relCompList keys R S := by
+  -- 0より大きければ、条件に該当しているものは少なくとも一つはある
+  -- def wSupp (R : WRel α β) : Rel α β :=
+  --   fun a b => R a b > 0
+
   -- ヒント：
   --   * ex621（wSupp (wCompList keys QK KV) = relCompList keys (wSupp QK) (wSupp KV)）
   --   * QK := maskW R, KV := maskW S
@@ -260,6 +287,8 @@ theorem ex788 (keys : List β) (R : Rel α β) (S : Rel β γ) :
         R a b₂ → S b₂ c →
         b₁ = b₂) →
       wCountComp keys R S = maskW (relCompList keys R S) := by
+  -- aとcの組み合わせに対しR a bとS b cを満たすbは最大一つしかない条件
+
   -- ヒント：
   --   * funext a c
   --   * ex786 で wsum (if (R a b ∧ S b c) then 1 else 0) の形へ
@@ -324,6 +353,11 @@ theorem ex789 (keys : List β) (f : α → β) (S : Rel β γ) :
       wCountComp keys (relGraph f) S
         =
       maskW (fun a c => f a ∈ keys ∧ S (f a) c) := by
+
+  -- def relGraph (f : α → β) : Rel α β := fun a b => f a = b
+  -- def wCompList {α β γ : Type} (keys : List β) (R : WRel α β) (S : WRel β γ) : WRel α γ :=
+  --   fun a c => wsum keys (fun b => R a b * S b c)
+
   -- ヒント：
   --   * ex788 を R:=relGraph f に適用（witness の一意性は自明）
   --   * relCompList keys (relGraph f) S a c は「∃b∈keys, f a = b ∧ S b c」

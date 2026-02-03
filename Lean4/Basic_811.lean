@@ -36,54 +36,106 @@ noncomputable def wReachComp (keys : List β) (R : WRel α β) (S : WRel β γ) 
 -- 811：wBool は 2 回かけても同じ（idempotent）
 theorem ex811 (R : WRel α β) :
     wBool (wBool R) = wBool R := by
-  -- TODO
   -- ヒント：
   --   funext a b; dsimp [wBool]
   --   ex796（wSupp (wBool R) = wSupp R）
-  sorry
-
+  funext a1 b1
+  dsimp [wBool, maskW, wSupp]
+  by_cases hRa1b1 : R a1 b1 > 0
+  rw [if_pos hRa1b1]
+  rw [if_pos Nat.zero_lt_one]
+  rw [if_neg hRa1b1]
+  rw [gt_iff_lt]
+  rw [Nat.pos_iff_ne_zero]
+  rw [if_neg]
+  intro h
+  apply h
+  rfl
 
 -- 812：0/1 行列は wBool で変わらない（maskW は固定点）
 theorem ex812 (M : Rel α β) :
     wBool (maskW M) = maskW M := by
-  -- TODO
   -- ヒント：
   --   wBool の定義：maskW (wSupp _)
   --   ex613：wSupp (maskW M) = M
-  sorry
-
+  funext a1 b1
+  dsimp [wBool, maskW, wSupp]
+  by_cases hMa1b1 : M a1 b1
+  rw [if_pos hMa1b1]
+  rw [if_pos Nat.zero_lt_one]
+  rw [if_neg hMa1b1]
+  rw [gt_iff_lt]
+  rw [if_neg]
+  intro h
+  contradiction
 
 -- 813：wBool は transpose と可換
 theorem ex813 (R : WRel α β) :
     wBool (wTrans R) = wTrans (wBool R) := by
-  -- TODO
   -- ヒント：
   --   * wBool = maskW ∘ wSupp
   --   * ex666：wSupp (wTrans R) = relTrans (wSupp R)
   --   * ex785：wTrans (maskW M) = maskW (relTrans M)
-  sorry
-
+  funext b1 a1
+  dsimp [wBool, wTrans, maskW, wSupp]
 
 -- 814：wBool は Hadamard 積（wMul）と相性がよい（∧ に対応）
 theorem ex814 (R S : WRel α β) :
     wBool (wMul R S) = wMul (wBool R) (wBool S) := by
-  -- TODO
   -- ヒント：
   --   * ex667：wSupp (wMul R S) = relMul (wSupp R) (wSupp S)
   --   * ex783：wMul (maskW A) (maskW B) = maskW (relMul A B)
   --   * wBool の定義
-  sorry
-
+  funext a1 b1
+  dsimp [wBool, wMul, maskW, wSupp]
+  by_cases hRa1b1 : R a1 b1 > 0
+  rw [if_pos hRa1b1]
+  rw [Nat.one_mul]
+  by_cases hSa1b1 : S a1 b1 > 0
+  rw [if_pos hSa1b1]
+  rw [if_pos]
+  apply Nat.mul_pos
+  rw [←gt_iff_lt]
+  exact hRa1b1
+  rw [←gt_iff_lt]
+  exact hSa1b1
+  rw [if_neg hSa1b1]
+  rw [if_neg]
+  intro h
+  apply hSa1b1
+  obtain h2 := Nat.pos_of_mul_pos_left h
+  contradiction
+  rw [if_neg hRa1b1]
+  rw [if_neg]
+  rw [Nat.zero_mul]
+  intro h3
+  apply hRa1b1
+  obtain h4 := Nat.pos_of_mul_pos_right h3
+  contradiction
 
 -- 815：t>0 のとき、wBool はスカラー倍で変わらない
 theorem ex815 (t : Nat) (R : WRel α β) :
     t > 0 → wBool (wScale t R) = wBool R := by
-  -- TODO
   -- ヒント：
   --   * ex689：t>0 → wSupp (wScale t R) = wSupp R
   --   * wBool の定義
-  sorry
-
+  intro ht
+  funext a1 b1
+  dsimp [wBool, wScale, maskW, wSupp]
+  by_cases hRa1b1 : R a1 b1 > 0
+  rw [if_pos hRa1b1]
+  rw [if_pos]
+  apply Nat.mul_pos
+  exact ht
+  exact hRa1b1
+  rw [if_neg hRa1b1]
+  obtain hRa1b1_2 :=
+    Nat.eq_zero_of_not_pos hRa1b1
+  rw [hRa1b1_2]
+  rw [Nat.mul_zero]
+  rw [if_neg]
+  intro h
+  contradiction
 
 --------------------------------------------------------------------------------
 -- 816〜820：wBool / wReachComp と wCompList・row/col-sum の到達
