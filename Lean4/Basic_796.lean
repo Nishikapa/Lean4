@@ -186,7 +186,6 @@ theorem ex802 (R : WRel α β) (M : Rel α β) :
   rw [if_neg hM]
   rw [Nat.mul_zero]
 
-
 -- 803：mask の support は「元の support ∧ M」
 theorem ex803 (R : WRel α β) (M : Rel α β) :
     wSupp (wMask R M) = relMul (wSupp R) M := by
@@ -242,9 +241,14 @@ theorem ex804 (R : WRel α β) (M : Rel α β) :
 -- 805：wCountComp の 0/1 化は relCompList（存在）に一致する
 theorem ex805 (keys : List β) (R : Rel α β) (S : Rel β γ) :
     wBool (wCountComp keys R S) = maskW (relCompList keys R S) := by
-  -- TODO
   -- ヒント：wBool の定義 → ex787（support(wCountComp)=relCompList）→ ex613
-  sorry
+  funext a1 c1
+  dsimp [wBool]
+  -- theorem ex787 (keys : List β) (R : Rel α β) (S : Rel β γ) :
+  --     wSupp (wCountComp keys R S) = relCompList keys R S := by
+  obtain hEx787 :=
+    ex787 keys R S
+  rw [hEx787]
 
 --------------------------------------------------------------------------------
 -- 806〜810：wCountComp の計算規則（keys の分割 / singleton / 結合）
@@ -255,41 +259,81 @@ theorem ex806 (keys₁ keys₂ : List β) (R : Rel α β) (S : Rel β γ) :
     wCountComp (keys₁ ++ keys₂) R S
       =
     wAdd (wCountComp keys₁ R S) (wCountComp keys₂ R S) := by
-  -- TODO
   -- ヒント：
   --   * funext a c; dsimp [wCountComp, wCompList, wAdd]
   --   * ex536（wsum (xs++ys) = ...）
-  sorry
+  funext a1 c1
+  dsimp [wCountComp, wCompList, wAdd, wsum]
+  obtain hEx536 :=
+    ex536 keys₁ keys₂ (fun b => maskW R a1 b * maskW S b c1)
+  rw [hEx536]
 
 -- 807：空 keys の wCountComp は wZero
 theorem ex807 (R : Rel α β) (S : Rel β γ) :
     wCountComp ([] : List β) R S = wZero α γ := by
-  -- TODO
   -- ヒント：ex721 か、dsimp [wCountComp, wCompList, wZero, wsum]
-  sorry
+  dsimp [wCountComp]
+  rw [ex721]
 
 -- 808：singleton keys の wCountComp は 0/1（∧）そのもの
 theorem ex808 (b : β) (R : Rel α β) (S : Rel β γ) :
     wCountComp [b] R S = maskW (fun a c => R a b ∧ S b c) := by
-  -- TODO
   -- ヒント：
   --   * dsimp [wCountComp]
   --   * ex722（wCompList [b] ...）
   --   * (if R then 1 else 0) * (if S then 1 else 0) の整理は ex786 の形
-  sorry
+  dsimp [wCountComp]
+  -- theorem ex722 (b : β) (R : WRel α β) (S : WRel β γ) :
+  --     wCompList [b] R S = (fun a c => R a b * S b c) := by
+  rw [ex722]
+  funext a1 c1
+  dsimp [maskW]
+  by_cases hR : R a1 b
+  rw [if_pos hR]
+  by_cases hS : S b c1
+  rw [if_pos hS]
+  rw [if_pos ⟨hR, hS⟩]
+  rw [if_neg hS]
+  have hNeg : ¬ (R a1 b ∧ S b c1) := by
+    intro h1
+    obtain ⟨hR2, hS2⟩ := h1
+    contradiction
+  rw [if_neg hNeg]
+  rw [if_neg hR]
+  have hNeg2 : ¬ (R a1 b ∧ S b c1) := by
+    intro h2
+    obtain ⟨hR3, hS3⟩ := h2
+    contradiction
+  rw [if_neg hNeg2]
+  rw [Nat.zero_mul]
 
 -- 809：graph を左に置いた wCountComp は “行選択” の count 版になる（rowSum で観察）
-theorem ex809 (keys : List β) (keysg : List γ)
+theorem ex809 (keysb : List β) (keysg : List γ)
     (f : α → β) (S : Rel β γ) (a : α) :
-    keys.Nodup →
-      wRowSum keysg (wCountComp keys (relGraph f) S) a
+    keysb.Nodup →
+      wRowSum keysg (wCountComp keysb (relGraph f) S) a
         =
-      (if f a ∈ keys then wRowSum keysg (maskW S) (f a) else 0) := by
-  -- TODO
+      (if f a ∈ keysb then wRowSum keysg (maskW S) (f a) else 0) := by
   -- ヒント：
   --   * wCountComp の定義で (maskW (relGraph f)) は wGraph f
   --   * ex795 を W := maskW S に適用
-  sorry
+  dsimp [wCountComp]
+  intro hNodup
+
+  -- def relGraph (f : α → β) : Rel α β := fun a b => f a = b
+  -- noncomputable def wGraph {α β : Type} (f : α → β) : WRel α β :=
+  --   maskW (relGraph f)
+
+  -- theorem ex795 (keys : List β) (keysg : List γ)
+  --     (f : α → β) (W : WRel β γ) (a : α) :
+  --     keys.Nodup →
+  --       wRowSum keysg (wCompList keys (wGraph f) W) a
+  --         =
+  --       (if f a ∈ keys then wRowSum keysg W (f a) else 0) := by
+  obtain hEx795 :=
+    ex795 keysb keysg f (maskW S) a hNodup
+  dsimp [wGraph] at hEx795
+  rw [hEx795]
 
 -- 810：wCountComp を 3 段にするとき、wCompList の結合則で “(b,g) の個数” を整理できる
 theorem ex810 (keysβ : List β) (keysg : List γ)
@@ -297,8 +341,17 @@ theorem ex810 (keysβ : List β) (keysg : List γ)
     wCompList keysg (wCountComp keysβ R S) (maskW T)
       =
     wCompList keysβ (maskW R) (wCountComp keysg S T) := by
-  -- TODO
   -- ヒント：wCountComp を展開して ex780 を使うだけ
-  sorry
+  funext a1 d1
+  dsimp [wCountComp]
+  -- theorem ex780 (keysβ : List β) (keysg : List γ)
+  --     (R : WRel α β) (S : WRel β γ) (T : WRel γ δ) :
+  --     wCompList keysg (wCompList keysβ R S) T
+  --       =
+  --     wCompList keysβ R (wCompList keysg S T) := by
+  obtain hEx780 :=
+    ex780
+      keysβ keysg (maskW R) (maskW S) (maskW T)
+  rw [hEx780]
 
 end TL

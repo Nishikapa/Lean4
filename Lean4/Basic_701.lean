@@ -18,13 +18,15 @@ variable {α β γ δ ε : Type}
 -- 0) このファイルで追加する定義（row/col-sum）
 --------------------------------------------------------------------------------
 
--- 行方向の有限和：列候補 keys 上で R a b を足す
+-- 行番号指定で、横方向の有限和：列候補 keys 上で R a b を足す
 -- aで指定された行について、keys に含まれる列の成分を全部足す
+-- a:行番号, b:列番号
 def wRowSum (keys : List β) (R : WRel α β) (a : α) : Nat :=
   wsum keys (fun b => R a b)
 
--- 列方向の有限和：行候補 keys 上で R a b を足す
+-- 列番号指定で、縦方向の有限和：行候補 keys 上で R a b を足す
 -- bで指定された列について、keys に含まれる行の成分を全部足す
+-- a:行番号, b:列番号
 def wColSum (keys : List α) (R : WRel α β) (b : β) : Nat :=
   wsum keys (fun a => R a b)
 

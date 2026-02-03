@@ -28,6 +28,7 @@ variable {α β γ δ ε : Type}
 
 theorem ex766_pre :
   wTrans (wId α) = wId α := by
+  -- 単位行列は転置しても単位行列
   funext a1 a2
   dsimp [wTrans, wId, maskW, relId]
   by_cases h_eq : (a2 = a1)
@@ -44,6 +45,9 @@ theorem ex766_pre :
 theorem ex766 (keys : List α) (a : α) :
     keys.Nodup →
       wColSum keys (wId α) a = (if a ∈ keys then 1 else 0) := by
+  -- 一意のキーリストである列の和を取った時、
+  -- 和を取る列の列番号が keys に含まれていれば 1、含まれていなければ 0
+
   -- ヒント：
   --   * ex761（rowSum 版）＋ ex709（transposeで row/col 入替）を使うのが楽
   --   * あるいは keys で帰納して ex761 と同型に解いてもよい
@@ -62,6 +66,15 @@ theorem ex767 (keys : List α) (f : α → β) (b : β) :
     wColSum keys (wGraph f) b > 0
       ↔
     ∃ a, a ∈ keys ∧ f a = b := by
+  -- noncomputable def maskW {α β : Type} (M : Rel α β) : WRel α β := by
+  --   classical
+  --   exact fun a b => if M a b then 1 else 0
+
+  -- def relGraph (f : α → β) : Rel α β := fun a b => f a = b
+
+  -- noncomputable def wGraph {α β : Type} (f : α → β) : WRel α β :=
+  --   maskW (relGraph f)
+
   -- ヒント：ex712 を R := wGraph f に適用し、wGraph の定義を展開
   --dsimp [wColSum, wGraph]
   -- theorem ex712 (keys : List α) (R : WRel α β) (b : β) :
@@ -98,6 +111,11 @@ theorem ex768 (keys : List α) (f : α → β) (b : β) :
       wColSum keys (wGraph f) b
         =
       (if (∃ a, a ∈ keys ∧ f a = b) then 1 else 0) := by
+  -- wColSum: y座標を決め、x軸方向に和を取る
+  -- あるy座標bに対し、指定されたx座標で合計を取るとき、
+  -- (単射のため、多くても一か所しか該当しないため、その合計の最大値は 1 である。)
+  -- 右辺の値と一致する
+
   -- ヒント：
   --   * keys で帰納
   --   * 「∃a∈(x::xs), ...」の分解（head と tail）
@@ -217,6 +235,9 @@ theorem ex769 (keys : List α) (a : α) :
     keys.Nodup →
     (∀ x : α, x ∈ keys) →
       wRowSum keys (wId α) a = 1 := by
+  -- wRowSum: x座標を決め、y軸方向に和を取る
+  -- 単位行列について、いかなる列番号について、その縦方向のすべての和を取っても 1 になる
+
   -- ヒント：ex761 で (if a∈keys then 1 else 0) にして if_pos
   intro hNodup hAll
   obtain hEx761 :=
@@ -230,6 +251,8 @@ theorem ex770 (keys : List β) (f : α → β) (a : α) :
     keys.Nodup →
     (∀ x : α, f x ∈ keys) →
       wRowSum keys (wGraph f) a = 1 := by
+  -- 関数については、いかなるx座標についても、その縦方向のすべての和を取っても 1 になる
+
   -- ヒント：ex762 で if にして if_pos
   intro hNodup hAll
   obtain hEx762 :=
@@ -248,7 +271,11 @@ theorem ex771 (keysα : List α) (keysg : List γ) (R : WRel α γ) (a : α) :
     wRowSum keysg (wCompList keysα (wId α) R) a
       =
     (if a ∈ keysα then wRowSum keysg R a else 0) := by
-  -- TODO
+  -- 結局 keysαとkeysgでそれぞれ、行、列で絞り込んで和を取っているだけ
+
+  -- def wCompList {α β γ : Type} (keys : List β) (R : WRel α β) (S : WRel β γ) : WRel α γ :=
+  --   fun a c => wsum keys (fun b => R a b * S b c)
+
   -- ヒント：
   --   * ex751 で rowSum を wsum(keysα) の形へ押し込む
   --   * keysα.Nodup のもとで、wId a b は「b=a のときだけ 1」なので、wsum が if で潰れる（keysα で帰納）
@@ -256,7 +283,6 @@ theorem ex771 (keysα : List α) (keysg : List γ) (R : WRel α γ) (a : α) :
 
   intro hNodup
   dsimp [wRowSum, wCompList, wId, maskW, relId]
-
 
   by_cases h_in : a ∈ keysα
 
@@ -314,7 +340,6 @@ theorem ex771 (keysα : List α) (keysg : List γ) (R : WRel α γ) (a : α) :
     apply List.mem_of_ne_of_mem
     exact h_eq
     exact h_in
-
 
   -- neg
   rw [if_neg h_in]
@@ -403,7 +428,6 @@ theorem ex773 (keys : List α) (R : WRel α β) (b : β) :
   --   * ex766 で wColSum keys (wId α) a = if a∈keys then 1 else 0（keys.Nodup が必要）
   --   * a∈keys なので if は常に 1、よって Σ_a 1 * R a b = Σ_a R a b
 
-
   intro hNodup
 
   -- theorem ex752 (keysα : List α) (keysβ : List β)
@@ -440,6 +464,9 @@ theorem ex774 (keysβ : List β) (keysg : List γ)
     (R : WRel α β) (S : WRel β γ) (a : α) :
     (∀ b, b ∈ keysβ → wRowSum keysg S b = 0) →
       wRowSum keysg (wCompList keysβ R S) a = 0 := by
+  -- Sについて、keysβとkeysgの組み合わせの場所の値がすべて0ならば、
+  -- RとSの合成についてもkeysβとkeysgの組み合わせで絞り込んで和をとるなら結果は0となる
+
   -- ヒント：
   --   * ex751 で `wRowSum keysg (wCompList keysβ R S) a` を書き換える
   --   * 右辺の wsum の各項が 0 になる（Nat.mul_zero）ことを示して ex711 で締める
