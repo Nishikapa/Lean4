@@ -39,20 +39,7 @@ noncomputable def wReachComp (keys : List β) (R : WRel α β) (S : WRel β γ) 
 -- 811：wBool は 2 回かけても同じ（idempotent）
 theorem ex811 (R : WRel α β) :
     wBool (wBool R) = wBool R := by
-  -- 冪等性の証明パターン：
-
-  -- noncomputable def maskW {α β : Type} (M : Rel α β) : WRel α β := by
-  --   classical
-  --   exact fun a b => if M a b then 1 else 0
-
-  -- def wSupp (R : WRel α β) : Rel α β :=
-  --   fun a b => R a b > 0
-
-  -- noncomputable def wBool (R : WRel α β) : WRel α β :=
-  --   maskW (wSupp R)
-
-  --   fun a b => if (R a b > 0) then 1 else 0
-
+  -- TODO
   -- ヒント：
   --   funext a b; dsimp [wBool]
   --   ex796（wSupp (wBool R) = wSupp R）

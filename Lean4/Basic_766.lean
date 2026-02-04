@@ -373,6 +373,7 @@ theorem ex771 (keysα : List α) (keysg : List γ) (R : WRel α γ) (a : α) :
 theorem ex772 (keys : List β) (R : WRel α β) (a : α) :
     keys.Nodup →
     wRowSum keys (wCompList keys R (wId β)) a = wRowSum keys R a := by
+
   -- ヒント：
   --   * ex751 を (keysβ:=keys) (keysg:=keys) (R:=R) (S:=wId β) に適用（rowSum を押し込む）
   --   * ex761 で wRowSum keys (wId β) b = if b∈keys then 1 else 0（keys.Nodup が必要）
@@ -498,6 +499,10 @@ theorem ex775 (keysα : List α) (keysβ : List β)
     (R : WRel α β) (S : WRel β γ) (c : γ) :
     (∀ b, b ∈ keysβ → wColSum keysα R b = 0) →
       wColSum keysα (wCompList keysβ R S) c = 0 := by
+
+  -- keysβおよびkeysαで指定された組み合わせすべてに対して
+  -- Rの値が0であるならば、RとSの合成について、いかなるcに対してもその合計は0となる
+
   -- ヒント：
   --   * ex752 で `wColSum keysα (wCompList keysβ R S) c` を書き換える
   --   * 右辺の wsum の各項が 0 になる（Nat.zero_mul）ことを示して ex713 で締める
@@ -537,6 +542,10 @@ theorem ex776 (keys : List β) (R : WRel α β) (T : Rel α β) (a1 : α) :
       wRowSum keys R a1
         =
       wRowSum (keys.filter (fun b => decide (T a1 b))) R a1 := by
+  -- Tがtrueの時のみRが正の値を取る条件であれば、
+  -- まずkeysをTで絞り込んでからrowSumを取っても、
+  -- Tで絞り込みを行わずrowSumを取っても同じ結果になる
+
   -- ヒント：
   --   * keys で帰納法
   --   * head について `by_cases h : T a b` をして
@@ -716,6 +725,8 @@ theorem ex780 (keysβ : List β) (keysg : List γ)
     wCompList keysg (wCompList keysβ R S) T
       =
     wCompList keysβ R (wCompList keysg S T) := by
+  -- 行列の結合律
+
   -- ヒント：
   --   * funext a d; dsimp [wCompList]
   --   * どちらも “二重和（Σg Σb ...）” なので、
