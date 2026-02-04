@@ -28,6 +28,7 @@ variable {α β γ δ ε : Type}
 -- WRel を “到達だけ残す” 0/1 行列に潰す（重みの大小は捨てて >0 だけ残す）
 noncomputable def wBool (R : WRel α β) : WRel α β :=
   maskW (wSupp R)
+  -- fun a b => if (R a b > 0) then 1 else 0
 
 --------------------------------------------------------------------------------
 -- 796〜800：wBool と wCompList の到達（support）不変性
