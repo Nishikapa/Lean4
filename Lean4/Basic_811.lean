@@ -463,23 +463,38 @@ theorem ex823 (R : WRel α β) (T : Rel α β) :
 -- 824：wReachComp は両側を wBool に置き換えても不変（到達だけを見るので）
 theorem ex824 (keys : List β) (R : WRel α β) (S : WRel β γ) :
     wReachComp keys (wBool R) (wBool S) = wReachComp keys R S := by
-  -- TODO
   -- ヒント：
   --   * wReachComp は supp だけを見る
   --   * ex796 を 2 回使う
-  sorry
+  dsimp [wReachComp]
+  -- theorem ex796 (R : WRel α β) :
+  --     wSupp (wBool R) = wSupp R := by
+  obtain hEx796_R :=
+    ex796 R
+  obtain hEx796_S :=
+    ex796 S
+  rw [hEx796_R]
+  rw [hEx796_S]
 
 -- 825：wId / wGraph は 0/1 行列なので wBool の固定点
 theorem ex825_id :
     wBool (wId α) = wId α := by
-  -- TODO
   -- ヒント：wId の定義（maskW (relId α)）と ex812
-  sorry
+  -- theorem ex812 (M : Rel α β) :
+  --     wBool (maskW M) = maskW M
+  dsimp [wId]
+  obtain hEx812 :=
+    ex812 (relId α)
+  apply hEx812
 
 theorem ex825_graph (f : α → β) :
     wBool (wGraph f) = wGraph f := by
-  -- TODO
   -- ヒント：wGraph の定義（maskW (relGraph f)）と ex812
-  sorry
+  -- theorem ex812 (M : Rel α β) :
+  --     wBool (maskW M) = maskW M
+  dsimp [wGraph]
+  obtain hEx812 :=
+    ex812 (relGraph f)
+  apply hEx812
 
 end TL

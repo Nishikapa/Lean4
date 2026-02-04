@@ -34,8 +34,24 @@ variable {α β γ δ ε : Type}
 theorem ex826 (keys keys' : List β) (R : WRel α β) (S : WRel β γ) :
     (∀ b, b ∈ keys → b ∈ keys') →
       WLe (wReachComp keys R S) (wReachComp keys' R S) := by
-  -- TODO
-  sorry
+
+  intro h1
+  dsimp [wReachComp]
+
+  -- theorem ex782 (M N : Rel α β) :
+  --     WLe (maskW M) (maskW N) ↔ (M ⊆ N) := by
+  obtain hEx782 :=
+    ex782 (relCompList keys (wSupp R) (wSupp S)) (relCompList keys' (wSupp R) (wSupp S))
+  rw [hEx782]
+  clear hEx782
+
+  -- theorem ex655 (keys keys' : List β) (R : Rel α β) (S : Rel β γ) :
+  --     (∀ b, b ∈ keys → b ∈ keys') →
+  --       relCompList keys R S ⊆ relCompList keys' R S := by
+  obtain hEx655 :=
+     ex655 keys keys' (wSupp R) (wSupp S) h1
+
+  apply hEx655
 
 -- 827：R/S の単調性（R≤R', S≤S' なら reach も ≤）
 --
@@ -45,8 +61,29 @@ theorem ex826 (keys keys' : List β) (R : WRel α β) (S : WRel β γ) :
 theorem ex827 (keys : List β) (R R' : WRel α β) (S S' : WRel β γ) :
     WLe R R' → WLe S S' →
       WLe (wReachComp keys R S) (wReachComp keys R' S') := by
-  -- TODO
-  sorry
+
+  -- theorem ex615 (R S : WRel α β) :
+  --     WLe R S → (wSupp R ⊆ wSupp S) := by
+  obtain hEx615_1 :=
+    ex615 R R'
+  obtain hEx615_2 :=
+    ex615 S S'
+  intro h1 h2
+  obtain hSupp1 := hEx615_1 h1
+  obtain hSupp2 := hEx615_2 h2
+
+  -- theorem ex656 (keys : List β) (R R' : Rel α β) (S S' : Rel β γ) :
+  --     (R ⊆ R') → (S ⊆ S') →
+  --       relCompList keys R S ⊆ relCompList keys R' S' := by
+  obtain hEx656 :=
+    ex656 keys (wSupp R) (wSupp R') (wSupp S) (wSupp S') hSupp1 hSupp2
+  clear hEx615_1 hEx615_2 hSupp1 hSupp2
+
+  -- theorem ex782 (M N : Rel α β) :
+  --     WLe (maskW M) (maskW N) ↔ (M ⊆ N) := by
+  rw [←ex782] at hEx656
+  dsimp [wReachComp]
+  apply hEx656
 
 -- 828：左の wAdd（multi-head）に対する reach の分配（OR）
 --
@@ -56,8 +93,125 @@ theorem ex828 (keys : List β) (R R' : WRel α β) (S : WRel β γ) :
       =
     maskW (relAdd (relCompList keys (wSupp R)  (wSupp S))
                   (relCompList keys (wSupp R') (wSupp S))) := by
-  -- TODO
-  sorry
+
+  -- theorem ex817 (keys : List β) (R : WRel α β) (S : WRel β γ) :
+  --     wBool (wCompList keys R S) = wReachComp keys R S
+  obtain hEx817 :=
+    ex817 keys (wAdd R R') S
+  rw [←hEx817]
+  clear hEx817
+
+  -- theorem ex657 (keys : List β) (R R' : Rel α β) (S : Rel β γ) :
+  --     relCompList keys (relAdd R R') S
+  --       =
+  --     relAdd (relCompList keys R S) (relCompList keys R' S) := by
+  obtain hEx657 :=
+    ex657 keys (wSupp R) (wSupp R') (wSupp S)
+  rw [←hEx657]
+  clear hEx657
+
+  -- theorem ex612 (R S : WRel α β) :
+  --     wSupp (wAdd R S) = relAdd (wSupp R) (wSupp S) := by
+  obtain hEx612 :=
+    ex612 R R'
+  rw [←hEx612]
+  clear hEx612
+  dsimp [wBool]
+  funext a1 c1
+  dsimp [maskW, wSupp, wCompList, wAdd, relCompList]
+  induction keys with
+  | nil =>
+    dsimp [wsum]
+    rw [if_neg]
+    rw [if_neg]
+    intro h1
+    obtain ⟨b1,hContains,h2,h3⟩ := h1
+    contradiction
+    intro h4
+    contradiction
+  | cons b1 keysTail ih =>
+    dsimp [wsum]
+
+    have h5 : ((wsum keysTail fun b => (R a1 b + R' a1 b) * S b c1) > 0) ↔ (∃ b, b ∈ keysTail ∧ R a1 b + R' a1 b > 0 ∧ S b c1 > 0) := by
+      --by_cases h5_1 : (wsum keysTail fun b => (R a1 b + R' a1 b) * S b c1) > 0
+      constructor
+      intro h5_1
+      rw [if_pos h5_1] at ih
+      by_cases h5_2 : ∃ b, b ∈ keysTail ∧ R a1 b + R' a1 b > 0 ∧ S b c1 > 0
+      exact h5_2
+      rw [if_neg h5_2] at ih
+      contradiction
+      intro h5_3
+      rw [if_pos h5_3] at ih
+      by_cases h5_4 : (wsum keysTail fun b => (R a1 b + R' a1 b) * S b c1) > 0
+      rw [if_pos h5_4] at ih
+      exact h5_4
+      rw [if_neg h5_4] at ih
+      contradiction
+
+    clear ih
+
+    by_cases h6 : ((R a1 b1 + R' a1 b1) * S b1 c1 + wsum keysTail fun b => (R a1 b + R' a1 b) * S b c1) > 0
+    -- pos
+    rw [if_pos h6]
+    rw [gt_iff_lt] at h6
+    rw [Nat.add_pos_iff_pos_or_pos] at h6
+    obtain h6_1 | h6_2 := h6
+    obtain h6_3 := Nat.pos_of_mul_pos_left h6_1
+    obtain h6_4 := Nat.pos_of_mul_pos_right h6_1
+    clear h6_1
+
+    have h7 : ∃ b, b ∈ b1 :: keysTail ∧ R a1 b + R' a1 b > 0 ∧ S b c1 > 0 := by
+      exists b1
+      constructor
+      apply List.mem_cons_self
+      constructor
+      exact h6_4
+      exact h6_3
+    rw [if_pos h7]
+    rw [←gt_iff_lt] at h6_2
+    rw [h5] at h6_2
+    clear h5
+    obtain ⟨b2,hContains,hRSumPos,hSPos⟩ := h6_2
+    have h8 : ∃ b, b ∈ b1 :: keysTail ∧ R a1 b + R' a1 b > 0 ∧ S b c1 > 0 := by
+      exists b2
+      constructor
+      apply List.mem_cons_of_mem
+      exact hContains
+      constructor
+      exact hRSumPos
+      exact hSPos
+    rw [if_pos h8]
+
+    -- neg
+    rw [if_neg h6]
+
+    have h9 : ¬(∃ b, b ∈ b1 :: keysTail ∧ R a1 b + R' a1 b > 0 ∧ S b c1 > 0) := by
+      intro h9_1
+      obtain ⟨b2,hContains,hRSumPos,hSPos⟩ := h9_1
+      apply h6
+      rw [gt_iff_lt]
+      rw [Nat.add_pos_iff_pos_or_pos]
+      by_cases h10 : b2 = b1
+      left
+      apply Nat.mul_pos
+      rw [←gt_iff_lt]
+      rw [←h10]
+      exact hRSumPos
+      rw [←gt_iff_lt]
+      rw [←h10]
+      exact hSPos
+      obtain h11 :=
+        List.mem_of_ne_of_mem h10 hContains
+
+      have h12 : ∃ b, b ∈ keysTail ∧ R a1 b + R' a1 b > 0 ∧ S b c1 > 0 := by
+        exists b2
+
+      rw [←h5] at h12
+
+      right
+      exact h12
+    rw [if_neg h9]
 
 -- 829：右の wAdd に対する reach の分配（OR）
 --
