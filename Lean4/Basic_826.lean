@@ -132,8 +132,9 @@ theorem ex828 (keys : List β) (R R' : WRel α β) (S : WRel β γ) :
   | cons b1 keysTail ih =>
     dsimp [wsum]
 
-    have h5 : ((wsum keysTail fun b => (R a1 b + R' a1 b) * S b c1) > 0) ↔ (∃ b, b ∈ keysTail ∧ R a1 b + R' a1 b > 0 ∧ S b c1 > 0) := by
-      --by_cases h5_1 : (wsum keysTail fun b => (R a1 b + R' a1 b) * S b c1) > 0
+    have h5 :
+      ((wsum keysTail fun b => (R a1 b + R' a1 b) * S b c1) > 0) ↔
+      (∃ b, b ∈ keysTail ∧ R a1 b + R' a1 b > 0 ∧ S b c1 > 0) := by
       constructor
       intro h5_1
       rw [if_pos h5_1] at ih
@@ -151,7 +152,8 @@ theorem ex828 (keys : List β) (R R' : WRel α β) (S : WRel β γ) :
 
     clear ih
 
-    by_cases h6 : ((R a1 b1 + R' a1 b1) * S b1 c1 + wsum keysTail fun b => (R a1 b + R' a1 b) * S b c1) > 0
+    by_cases h6 :
+      ((R a1 b1 + R' a1 b1) * S b1 c1 + wsum keysTail fun b => (R a1 b + R' a1 b) * S b c1) > 0
     -- pos
     rw [if_pos h6]
     rw [gt_iff_lt] at h6
@@ -221,8 +223,168 @@ theorem ex829 (keys : List β) (R : WRel α β) (S S' : WRel β γ) :
       =
     maskW (relAdd (relCompList keys (wSupp R) (wSupp S))
                   (relCompList keys (wSupp R) (wSupp S'))) := by
-  -- TODO
-  sorry
+
+  -- theorem ex658 (keys : List β) (R : Rel α β) (S S' : Rel β γ) :
+  --     relCompList keys R (relAdd S S')
+  --       =
+  --     relAdd (relCompList keys R S) (relCompList keys R S') := by
+  obtain hEx658 :=
+    ex658 keys (wSupp R) (wSupp S) (wSupp S')
+
+  rw [←hEx658]
+  clear hEx658
+
+  -- wReachComp keys R (wAdd S S') =
+  -- maskW (relCompList keys (wSupp R) (relAdd (wSupp S) (wSupp S')))
+
+  -- theorem ex612 (R S : WRel α β) :
+  --     wSupp (wAdd R S) = relAdd (wSupp R) (wSupp S) := by
+  obtain hEx612 :=
+    ex612 S S'
+
+  rw [←hEx612]
+  clear hEx612
+
+  -- wReachComp keys R (wAdd S S') =
+  -- maskW (relCompList keys (wSupp R) (wSupp (wAdd S S')))
+
+  -- def wSupp (R : WRel α β) : Rel α β :=
+  --   fun a b => R a b > 0
+
+  -- noncomputable def wBool (R : WRel α β) : WRel α β :=
+  --   maskW (wSupp R)
+
+  -- theorem ex817 (keys : List β) (R : WRel α β) (S : WRel β γ) :
+  --     wBool (wCompList keys R S) = wReachComp keys R S := by
+  obtain hEx817 :=
+    ex817 keys R (wAdd S S')
+
+  rw [←hEx817]
+  clear hEx817
+
+  -- wBool (wCompList keys R (wAdd S S')) =
+  -- maskW (relCompList keys (wSupp R) (wSupp (wAdd S S')))
+
+  dsimp [wBool]
+  funext a1 c1
+  dsimp [maskW, wSupp, wCompList, wAdd, relCompList]
+  induction keys with
+  | nil =>
+    dsimp [wsum]
+    rw [if_neg]
+    have h1 : ¬(∃ b, b ∈ [] ∧ R a1 b > 0 ∧ S b c1 + S' b c1 > 0) := by
+      intro h1_1
+      obtain ⟨b1,hContains,hRPos,hSPos⟩ := h1_1
+      contradiction
+    rw [if_neg h1]
+    intro h2
+    contradiction
+  | cons b1 keysTail ih =>
+    dsimp [wsum]
+
+    have h3 : (wsum keysTail fun b => R a1 b * (S b c1 + S' b c1)) > 0 ↔
+      (∃ b, b ∈ keysTail ∧ R a1 b > 0 ∧ S b c1 + S' b c1 > 0 ) := by
+      constructor
+      intro h3_1
+      rw [if_pos h3_1] at ih
+      by_cases h3_2 : ∃ b, b ∈ keysTail ∧ R a1 b > 0 ∧ S b c1 + S' b c1 > 0
+      exact h3_2
+      rw [if_neg h3_2] at ih
+      contradiction
+      intro h3_3
+      rw [if_pos h3_3] at ih
+      by_cases h3_4 : (wsum keysTail fun b => R a1 b * (S b c1 + S' b c1)) > 0
+      exact h3_4
+      rw [if_neg h3_4] at ih
+      contradiction
+    clear ih
+
+    by_cases h4 : (wsum keysTail fun b => R a1 b * (S b c1 + S' b c1)) > 0
+    -- pos
+    obtain ⟨b2, hContains1, h5_3, h5_4⟩ := h3.mp h4
+
+    have h6 : (R a1 b1 * (S b1 c1 + S' b1 c1) + wsum keysTail fun b => R a1 b * (S b c1 + S' b c1)) > 0 := by
+      rw [gt_iff_lt]
+      rw [Nat.add_pos_iff_pos_or_pos]
+      right
+      exact h4
+
+    rw [if_pos h6]
+
+    have h7 : ∃ b, b ∈ b1 :: keysTail ∧ R a1 b > 0 ∧ S b c1 + S' b c1 > 0 := by
+      exists b2
+      constructor
+      apply List.mem_cons_of_mem
+      exact hContains1
+      constructor
+      exact h5_3
+      exact h5_4
+
+    rw [if_pos h7]
+
+    -- neg
+    have h8 : ¬(∃ b, b ∈ keysTail ∧ R a1 b > 0 ∧ S b c1 + S' b c1 > 0) := by
+      intro h8_1
+      obtain ⟨b2, hContains1, h5_3, h5_4⟩ := h8_1
+      apply h4
+      rw [h3]
+      exists b2
+
+    by_cases h9 : (R a1 b1 * (S b1 c1 + S' b1 c1) + wsum keysTail fun b => R a1 b * (S b c1 + S' b c1)) > 0
+
+    rw [if_pos h9]
+
+    obtain h11 :=  Nat.eq_zero_of_not_pos h4
+    clear h4
+
+    rw [h11] at h9
+    rw [Nat.add_zero] at h9
+    obtain h12 := Nat.pos_of_mul_pos_left h9
+    obtain h13 := Nat.pos_of_mul_pos_right h9
+    clear h9
+
+    have h10 : ∃ b, b ∈ b1 :: keysTail ∧ R a1 b > 0 ∧ S b c1 + S' b c1 > 0 := by
+      exists b1
+      constructor
+      apply List.mem_cons_self
+      constructor
+      exact h13
+      exact h12
+    rw [if_pos h10]
+
+    obtain ⟨h14, h15⟩ := Nat.add_eq_zero_iff.mp (Nat.eq_zero_of_not_pos h9)
+    clear h9
+    rw [h14]
+    rw [h15]
+    rw [Nat.zero_add]
+    rw [if_neg]
+    rw [Nat.mul_eq_zero] at h14
+
+    have h16 : ¬ ∃ b, b ∈ b1 :: keysTail ∧ R a1 b > 0 ∧ S b c1 + S' b c1 > 0 := by
+      intro h16_1
+      obtain ⟨b2, hContains1, h5_3, h5_4⟩ := h16_1
+      apply h8
+      exists b2
+      constructor
+      by_cases h17 : b2 = b1
+      rw [gt_iff_lt] at h5_3
+      rw [Nat.pos_iff_ne_zero] at h5_3
+      rw [gt_iff_lt] at h5_4
+      rw [Nat.pos_iff_ne_zero] at h5_4
+      rw [h17] at h5_3
+      rw [h17] at h5_4
+      obtain h14_1| h14_2 := h14
+      contradiction
+      contradiction
+      obtain h18 :=
+        List.mem_of_ne_of_mem h17 hContains1
+      exact h18
+      constructor
+      exact h5_3
+      exact h5_4
+    rw [if_neg h16]
+    intro h19
+    contradiction
 
 -- 830：wReachComp の結合（keys を 2 段にしても同じ reach）
 --
@@ -233,8 +395,102 @@ theorem ex830 (keysβ : List β) (keysg : List γ)
     wReachComp keysg (wReachComp keysβ R S) T
       =
     wReachComp keysβ R (wReachComp keysg S T) := by
-  -- TODO
-  sorry
+
+  dsimp [wReachComp]
+  funext a1 d1
+  dsimp [maskW, relCompList, wSupp]
+  by_cases h1 :
+    (∃ b, b ∈ keysg ∧ (if ∃ b_1, b_1 ∈ keysβ ∧ R a1 b_1 > 0 ∧ S b_1 b > 0 then 1 else 0) > 0 ∧ T b d1 > 0)
+  obtain ⟨g1, hContains1, h1_2, h1_3⟩ := h1
+  have h1_4 : ∃ b_1, b_1 ∈ keysβ ∧ R a1 b_1 > 0 ∧ S b_1 g1 > 0 := by
+    by_cases h1_4_1 : ∃ b_1, b_1 ∈ keysβ ∧ R a1 b_1 > 0 ∧ S b_1 g1 > 0
+    exact h1_4_1
+    rw [if_neg h1_4_1] at h1_2
+    contradiction
+  clear h1_2
+  obtain ⟨b1, hContains2, h1_5, h1_6⟩ := h1_4
+  by_cases h2 :
+    (∃ b_1, b_1 ∈ keysβ ∧ R a1 b_1 > 0 ∧ S b_1 g1 > 0)
+  obtain ⟨b2, hContains3, h2_2, h2_3⟩ := h2
+  rw [if_pos]
+  rw [if_pos]
+  exists b2
+  constructor
+  exact hContains3
+  constructor
+  exact h2_2
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  exists g1
+  exists g1
+  constructor
+  exact hContains1
+  constructor
+  by_cases h3 : ∃ b, b ∈ keysβ ∧ R a1 b > 0 ∧ S b g1 > 0
+  rw [if_pos h3]
+  rw [gt_iff_lt]
+  apply Nat.zero_lt_one
+  rw [if_neg h3]
+  apply False.elim
+  apply h3
+  exists b2
+  exact h1_3
+  rw [if_pos]
+  rw [if_pos]
+  exists b1
+  constructor
+  exact hContains2
+  constructor
+  exact h1_5
+  rw [if_pos]
+  rw [gt_iff_lt]
+  apply Nat.zero_lt_one
+  exists g1
+  exists g1
+  constructor
+  exact hContains1
+  constructor
+  rw [if_pos]
+  rw [gt_iff_lt]
+  apply Nat.zero_lt_one
+  exists b1
+  exact h1_3
+  rw [if_neg]
+  rw [if_neg]
+  intro h5
+  obtain ⟨b3, hContains5, h5_2, h5_3⟩ := h5
+  have h5_4 : ∃ b, b ∈ keysg ∧ S b3 b > 0 ∧ T b d1 > 0 := by
+    by_cases h5_4_1 : ∃ b, b ∈ keysg ∧ S b3 b > 0 ∧ T b d1 > 0
+    exact h5_4_1
+    rw [if_neg h5_4_1] at h5_3
+    contradiction
+  obtain ⟨g2, hContains6, h5_5, h5_6⟩ := h5_4
+  clear h5_3
+  apply h1
+  exists g2
+  constructor
+  exact hContains6
+  constructor
+  rw [if_pos]
+  rw [gt_iff_lt]
+  apply Nat.zero_lt_one
+  exists b3
+  exact h5_6
+  intro h6
+  obtain ⟨g3, hContains6, h6_2, h6_3⟩ := h6
+  apply h1
+  exists g3
+  constructor
+  exact hContains6
+  constructor
+  by_cases h7 : ∃ b, b ∈ keysβ ∧ R a1 b > 0 ∧ S b g3 > 0
+  rw [if_pos h7]
+  rw [gt_iff_lt]
+  apply Nat.zero_lt_one
+  rw [if_neg h7]
+  rw [if_neg h7] at h6_2
+  contradiction
+  exact h6_3
 
 --------------------------------------------------------------------------------
 -- 831〜835：wId / wGraph と wReachComp（到達の “行選択/列選択”）
@@ -248,8 +504,71 @@ theorem ex831 (keysα : List α) (R : WRel α γ) :
     wReachComp keysα (wId α) R
       =
     maskW (fun a c => a ∈ keysα ∧ wSupp R a c) := by
-  -- TODO
-  sorry
+
+  funext a1 c1
+  dsimp [wReachComp, maskW, wSupp, wId, relCompList]
+
+  by_cases h1 : (∃ b, b ∈ keysα ∧ (if b = a1 then 1 else 0) > 0 ∧ R b c1 > 0)
+  obtain ⟨a2, hContains, h1_2, h1_3⟩ := h1
+  have h2 : a2 = a1 := by
+    by_cases h2_1 : a2 = a1
+    exact h2_1
+    rw [if_neg] at h1_2
+    contradiction
+    intro h2_2
+    apply h2_1
+    rw [h2_2]
+  clear h1_2
+  rw [h2] at hContains
+  rw [h2] at h1_3
+  rw [if_pos]
+  rw [if_pos]
+  constructor
+  exact hContains
+  exact h1_3
+  exists a2
+  constructor
+  rw [h2]
+  exact hContains
+  constructor
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rw [relId]
+  rw [h2]
+  rw [h2]
+  exact h1_3
+  rw [if_neg]
+  rw [if_neg]
+  intro h4
+  obtain ⟨hContains2, h4_2⟩ := h4
+  apply h1
+  exists a1
+  constructor
+  exact hContains2
+  constructor
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rfl
+  exact h4_2
+  intro h5
+  obtain ⟨a3, hContains3, h5_2, h5_3⟩ := h5
+  apply h1
+  exists a3
+  constructor
+  exact hContains3
+  constructor
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rw [relId] at h5_2
+  have h5_4 : a1 = a3 := by
+    by_cases h5_4_1 : a1 = a3
+    exact h5_4_1
+    rw [if_neg] at h5_2
+    contradiction
+    exact h5_4_1
+  clear h5_2
+  rw [h5_4]
+  exact h5_3
 
 -- 832：右に wId を置いた reach は「b∈keysβ の列だけ残る」
 --
@@ -259,8 +578,48 @@ theorem ex832 (keysβ : List β) (R : WRel α β) :
     wReachComp keysβ R (wId β)
       =
     maskW (fun a b => b ∈ keysβ ∧ wSupp R a b) := by
-  -- TODO
-  sorry
+  funext a1 b1
+  dsimp [wReachComp, maskW, wSupp, wId, relCompList, relId]
+  by_cases h1 : ∃ b, b ∈ keysβ ∧ R a1 b > 0 ∧ (if b = b1 then 1 else 0) > 0
+  obtain ⟨b2, hContains, h1_2, h1_3⟩ := h1
+  have h1_4 : b2 = b1 := by
+    by_cases h1_4_1 : b2 = b1
+    exact h1_4_1
+    rw [if_neg h1_4_1] at h1_3
+    contradiction
+  clear h1_3
+  rw [if_pos]
+  rw [h1_4] at hContains
+  rw [h1_4] at h1_2
+  rw [if_pos]
+  constructor
+  exact hContains
+  exact h1_2
+  exists b2
+  constructor
+  exact hContains
+  constructor
+  exact h1_2
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rw [h1_4]
+  rw [if_neg]
+  rw [if_neg]
+  intro h4
+  obtain ⟨hContains2, h4_2⟩ := h4
+  apply h1
+  exists b1
+  constructor
+  exact hContains2
+  constructor
+  exact h4_2
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rfl
+  intro h5
+  obtain ⟨b3, hContains3, h5_2, h5_3⟩ := h5
+  apply h1
+  exists b3
 
 -- 833：左が graph なら witness は b=f a に潰れる（reach 版）
 --
@@ -270,8 +629,51 @@ theorem ex833 (keys : List β) (f : α → β) (S : WRel β γ) :
     wReachComp keys (wGraph f) S
       =
     maskW (fun a c => f a ∈ keys ∧ wSupp S (f a) c) := by
-  -- TODO
-  sorry
+  funext a1 c1
+  dsimp [wReachComp, maskW, wSupp, wGraph, relCompList, relGraph]
+  by_cases h1 : ∃ b, b ∈ keys ∧ (if f a1 = b then 1 else 0) > 0 ∧ S b c1 > 0
+  obtain ⟨b1, hContains, h1_2, h1_3⟩ := h1
+  have h2 : b1 = f a1 := by
+    by_cases h2_1 : b1 = f a1
+    exact h2_1
+    rw [if_neg] at h1_2
+    contradiction
+    intro h2_2
+    apply h2_1
+    rw [h2_2]
+  clear h1_2
+  rw [if_pos]
+  rw [if_pos]
+  rw [h2] at hContains
+  rw [h2] at h1_3
+  constructor
+  exact hContains
+  exact h1_3
+  exists b1
+  constructor
+  exact hContains
+  constructor
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rw [h2]
+  exact h1_3
+  rw [if_neg]
+  rw [if_neg]
+  intro h4
+  obtain ⟨hContains2, h4_2⟩ := h4
+  apply h1
+  exists (f a1)
+  constructor
+  exact hContains2
+  constructor
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rfl
+  exact h4_2
+  intro h5
+  obtain ⟨b2, hContains3, h5_2, h5_3⟩ := h5
+  apply h1
+  exists b2
 
 -- 834：右が graph なら「g b = c」で到達先が潰れる（reach 版）
 --
@@ -281,8 +683,42 @@ theorem ex834 (keys : List β) (R : WRel α β) (g : β → γ) :
     wReachComp keys R (wGraph g)
       =
     maskW (fun a c => ∃ b, b ∈ keys ∧ wSupp R a b ∧ g b = c) := by
-  -- TODO
-  sorry
+  funext a1 c1
+  dsimp [wReachComp, maskW, wSupp, wGraph, relCompList, relGraph]
+  by_cases h1 : ∃ b, b ∈ keys ∧ R a1 b > 0 ∧ (if g b = c1 then 1 else 0) > 0
+  obtain ⟨b1, hContains, h1_2, h1_3⟩ := h1
+  have h2 : g b1 = c1 := by
+    by_cases h2_1 : g b1 = c1
+    exact h2_1
+    rw [if_neg h2_1] at h1_3
+    contradiction
+  clear h1_3
+  rw [if_pos]
+  rw [if_pos]
+  exists b1
+  exists b1
+  constructor
+  exact hContains
+  constructor
+  exact h1_2
+  rw [if_pos h2]
+  apply Nat.zero_lt_one
+  rw [if_neg]
+  rw [if_neg]
+  intro h4
+  obtain ⟨b2, hContains2, h4_2, h4_3⟩ := h4
+  apply h1
+  exists b2
+  constructor
+  exact hContains2
+  constructor
+  exact h4_2
+  rw [if_pos h4_3]
+  apply Nat.zero_lt_one
+  intro h5
+  obtain ⟨b3, hContains3, h5_2, h5_3⟩ := h5
+  apply h1
+  exists b3
 
 -- 835：graph-graph の reach は「関数合成 + keys マスク」
 --
@@ -292,8 +728,92 @@ theorem ex835 (keys : List β) (f : α → β) (g : β → γ) :
     wReachComp keys (wGraph f) (wGraph g)
       =
     maskW (fun a c => f a ∈ keys ∧ g (f a) = c) := by
-  -- TODO
-  sorry
+  funext a1 c1
+  dsimp [wReachComp, maskW, wSupp, wGraph, relCompList, relGraph]
+  by_cases h1 : ∃ b, b ∈ keys ∧ (if f a1 = b then 1 else 0) > 0 ∧ (if g b = c1 then 1 else 0) > 0
+  obtain ⟨b1, hContains, h1_2, h1_3⟩ := h1
+  have h2 : b1 = f a1 := by
+    by_cases h2_1 : b1 = f a1
+    exact h2_1
+    rw [if_neg] at h1_2
+    contradiction
+    intro h2_2
+    apply h2_1
+    rw [h2_2]
+  clear h1_2
+  have h3: g b1 = c1 := by
+    by_cases h3_1 : g b1 = c1
+    exact h3_1
+    rw [if_neg] at h1_3
+    contradiction
+    intro h3_2
+    apply h3_1
+    rw [h3_2]
+  clear h1_3
+  rw [if_pos]
+  rw [if_pos]
+  rw [←h2]
+  constructor
+  exact hContains
+  rw [←h3]
+  exists b1
+  constructor
+  exact hContains
+  rw [if_pos]
+  rw [if_pos]
+  constructor
+  apply Nat.zero_lt_one
+  apply Nat.zero_lt_one
+  exact h3
+  rw [h2]
+  rw [if_neg]
+  rw [if_neg]
+  intro h5
+  obtain ⟨hContains2, h5_2⟩ := h5
+  apply h1
+  exists (f a1)
+  constructor
+  exact hContains2
+  constructor
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rfl
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rw [h5_2]
+  intro h6
+  obtain ⟨b2, hContains3, h6_2, h6_3⟩ := h6
+  apply h1
+  have h6_4 : b2 = f a1 := by
+    by_cases h6_4_1 : b2 = f a1
+    exact h6_4_1
+    rw [if_neg] at h6_2
+    contradiction
+    intro h6_4_2
+    apply h6_4_1
+    rw [h6_4_2]
+  clear h6_2
+  have h6_5 : g b2 = c1 := by
+    by_cases h6_5_1 : g b2 = c1
+    exact h6_5_1
+    rw [if_neg] at h6_3
+    contradiction
+    intro h6_5_2
+    apply h6_5_1
+    rw [h6_5_2]
+  clear h6_3
+  exists b2
+  rw [←h6_4]
+  rw [h6_5]
+  constructor
+  exact hContains3
+  constructor
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rfl
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rfl
 
 --------------------------------------------------------------------------------
 -- 836〜840：keys 条件を強めた簡約・特別ケース
@@ -308,8 +828,92 @@ theorem ex836 (keys : List β) (f : α → β) (g : β → γ) :
       wReachComp keys (wGraph f) (wGraph g)
         =
       wGraph (fun a => g (f a)) := by
-  -- TODO
-  sorry
+  intro hAll
+  funext a1 c1
+  dsimp [wReachComp, wGraph, maskW, wSupp, relCompList, relGraph]
+  by_cases h1 : ∃ b, b ∈ keys ∧ (if f a1 = b then 1 else 0) > 0 ∧ (if g b = c1 then 1 else 0) > 0
+  obtain ⟨b1, hContains, h1_2, h1_3⟩ := h1
+  have h1_4 : b1 = f a1 := by
+    by_cases h2_1 : b1 = f a1
+    exact h2_1
+    rw [if_neg] at h1_2
+    contradiction
+    intro h2_2
+    apply h2_1
+    rw [h2_2]
+  clear h1_2
+  have h1_5 : g b1 = c1 := by
+    by_cases h3_1 : g b1 = c1
+    exact h3_1
+    rw [if_neg] at h1_3
+    contradiction
+    intro h3_2
+    apply h3_1
+    rw [h3_2]
+  clear h1_3
+  rw [if_pos]
+  rw [if_pos]
+  rw [←h1_4]
+  rw [←h1_5]
+  exists b1
+  constructor
+  exact hContains
+  constructor
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rw [h1_4]
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rw [h1_5]
+  rw [if_neg]
+  rw [if_neg]
+  intro h5
+  obtain ⟨hContains2, h5_2⟩ := h5
+  apply h1
+  obtain h2 := hAll a1
+  exists (f a1)
+  constructor
+  exact h2
+  constructor
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rfl
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rfl
+  intro h6
+  obtain ⟨b2, hContains3, h6_2, h6_3⟩ := h6
+  apply h1
+  have h6_4 : b2 = f a1 := by
+    by_cases h6_4_1 : b2 = f a1
+    exact h6_4_1
+    rw [if_neg] at h6_2
+    contradiction
+    intro h6_4_2
+    apply h6_4_1
+    rw [h6_4_2]
+  clear h6_2
+  have h6_5 : g b2 = c1 := by
+    by_cases h6_5_1 : g b2 = c1
+    exact h6_5_1
+    rw [if_neg] at h6_3
+    contradiction
+    intro h6_5_2
+    apply h6_5_1
+    rw [h6_5_2]
+  clear h6_3
+  exists b2
+  rw [←h6_4]
+  rw [h6_5]
+  constructor
+  exact hContains3
+  constructor
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rfl
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rfl
 
 -- 837：wId-wId の reach（keys でフィルタされた恒等）
 --
@@ -319,8 +923,96 @@ theorem ex837 (keys : List α) :
     wReachComp keys (wId α) (wId α)
       =
     maskW (fun a a' => a = a' ∧ a ∈ keys) := by
-  -- TODO
-  sorry
+  funext a1 a2
+  dsimp [wReachComp, wId, maskW, wSupp, relCompList, relId]
+  by_cases h1 : ∃ b, b ∈ keys ∧ (if a1 = b then 1 else 0) > 0 ∧ (if b = a2 then 1 else 0) > 0
+  obtain ⟨b1, hContains, h1_2, h1_3⟩ := h1
+  have h1_4 : b1 = a1 := by
+    by_cases h2_1 : b1 = a1
+    exact h2_1
+    rw [if_neg] at h1_2
+    contradiction
+    intro h2_2
+    apply h2_1
+    rw [h2_2]
+  clear h1_2
+  have h1_5 : b1 = a2 := by
+    by_cases h3_1 : b1 = a2
+    exact h3_1
+    rw [if_neg] at h1_3
+    contradiction
+    intro h3_2
+    apply h3_1
+    rw [h3_2]
+  clear h1_3
+  rw [if_pos]
+  rw [if_pos]
+  rw [←h1_4]
+  rw [←h1_5]
+  constructor
+  rfl
+  exact hContains
+  rw [←h1_4]
+  rw [←h1_5]
+  exists b1
+  constructor
+  exact hContains
+  constructor
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rfl
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rfl
+  rw [if_neg]
+  rw [if_neg]
+  intro h5
+  obtain ⟨hContains2, h5_2⟩ := h5
+  apply h1
+  rw [←hContains2]
+  exists a1
+  constructor
+  exact h5_2
+  constructor
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rfl
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rfl
+  intro h6
+  obtain ⟨b2, hContains3, h6_2, h6_3⟩ := h6
+  apply h1
+  have h6_4 : b2 = a1 := by
+    by_cases h6_4_1 : b2 = a1
+    exact h6_4_1
+    rw [if_neg] at h6_2
+    contradiction
+    intro h6_4_2
+    apply h6_4_1
+    rw [h6_4_2]
+  clear h6_2
+  have h6_5 : b2 = a2 := by
+    by_cases h6_5_1 : b2 = a2
+    exact h6_5_1
+    rw [if_neg] at h6_3
+    contradiction
+    intro h6_5_2
+    apply h6_5_1
+    rw [h6_5_2]
+  clear h6_3
+  rw [←h6_4]
+  rw [←h6_5]
+  exists b2
+  constructor
+  exact hContains3
+  constructor
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rfl
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rfl
 
 -- 838：reach の spec は support⊆ で読める（wReachComp 版の ex691）
 --
@@ -329,18 +1021,44 @@ theorem ex837 (keys : List α) :
 theorem ex838 (keys : List β) (R : WRel α β) (S : WRel β γ) (T : Rel α γ) :
     WSpec (wReachComp keys R S) T ↔
       (relCompList keys (wSupp R) (wSupp S) ⊆ T) := by
-  -- TODO
-  sorry
+  dsimp [WSpec, wReachComp, wSupp, relCompList, maskW]
+  constructor
+  intro h1
+  intro a1 c1 h2
+  obtain h1_2 := h1 a1 c1
+  clear h1
+  obtain ⟨b1, h2_2, h2_3, h2_4⟩ := h2
+  dsimp [wSupp] at *
+  have h2 : ∃ b, b ∈ keys ∧ R a1 b > 0 ∧ S b c1 > 0 := by
+    exists b1
+  by_cases h3 : T a1 c1
+  exact h3
+  obtain h1_3 := h1_2 h3
+  have h1_4 : ¬ (∃ b, b ∈ keys ∧ R a1 b > 0 ∧ S b c1 > 0) := by
+    by_cases h1_4_1 : ∃ b, b ∈ keys ∧ R a1 b > 0 ∧ S b c1 > 0
+    rw [if_pos h1_4_1] at h1_3
+    contradiction
+    exact h1_4_1
+  clear h1_2 h1_3
+  contradiction
+  intro h4
+  dsimp [RelLe, relCompList, wSupp] at h4
+  intro a1 c1 h5
+  rw [if_neg]
+  intro h6
+  apply h5
+  apply h4
+  exact h6
 
 -- 839：rowSum>0（reach 行和）は “2段 witness” (b と c) に分解できる
 --
 -- ヒント：ex820（rowSum>0 不変）＋ ex779（wCompList の 2段 witness）
 
 theorem ex839 (keysβ : List β) (keysg : List γ)
-    (R : WRel α β) (S : WRel β γ) (a : α) :
-    wRowSum keysg (wReachComp keysβ R S) a > 0
+    (R : WRel α β) (S : WRel β γ) (a1 : α) :
+    wRowSum keysg (wReachComp keysβ R S) a1 > 0
       ↔
-    ∃ b, b ∈ keysβ ∧ ∃ c, c ∈ keysg ∧ wSupp R a b ∧ wSupp S b c := by
+    ∃ b1, b1 ∈ keysβ ∧ ∃ c1, c1 ∈ keysg ∧ wSupp R a1 b1 ∧ wSupp S b1 c1 := by
   -- TODO
   sorry
 
