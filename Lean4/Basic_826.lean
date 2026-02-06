@@ -1059,19 +1059,108 @@ theorem ex839 (keysβ : List β) (keysg : List γ)
     wRowSum keysg (wReachComp keysβ R S) a1 > 0
       ↔
     ∃ b1, b1 ∈ keysβ ∧ ∃ c1, c1 ∈ keysg ∧ wSupp R a1 b1 ∧ wSupp S b1 c1 := by
-  -- TODO
-  sorry
+
+  -- theorem ex817 (keys : List β) (R : WRel α β) (S : WRel β γ) :
+  --     wBool (wCompList keys R S) = wReachComp keys R S
+  obtain hEx817
+   := ex817 keysβ R S
+  rw [←hEx817]
+  clear hEx817
+
+  -- theorem ex820 (keys : List β) (R : WRel α β) (a : α) :
+  --     (wRowSum keys (wBool R) a > 0) ↔ (wRowSum keys R a > 0)
+  --      wRowSum keysg (wBool (wCompList keysβ R S)) a1 > 0
+  obtain hEx820
+   := ex820 keysg (wCompList keysβ R S) a1
+  rw [hEx820]
+  clear hEx820
+
+-- theorem ex779 (keysβ : List β) (keysg : List γ)
+--     (R : WRel α β) (S : WRel β γ) (a : α) :
+--     wRowSum keysg (wCompList keysβ R S) a > 0
+--       ↔
+--     ∃ b, b ∈ keysβ ∧ ∃ c, c ∈ keysg ∧ R a b > 0 ∧ S b c > 0
+
+-- wRowSum keysg (wCompList keysβ R S) a1 > 0
+  obtain hEx779
+   := ex779 keysβ keysg R S a1
+  rw [hEx779]
+  clear hEx779
+
+  constructor
+  intro h1
+  obtain ⟨b1, hContains1, g1, hContains2, h1_3, h1_4⟩ := h1
+  exists b1
+  constructor
+  exact hContains1
+  exists g1
+  intro h2
+  obtain ⟨b2, hContains2, g2, ⟨h2_4, h2_5, h2_6⟩⟩ := h2
+  exists b2
+  constructor
+  exact hContains2
+  exists g2
 
 -- 840：colSum>0（reach 列和）も “2段 witness” (a と b) に分解できる
 --
 -- ヒント：ex821（colSum>0 不変）→ ex754（b まで）→ ex712（a まで）
 
 theorem ex840 (keysα : List α) (keysβ : List β)
-    (R : WRel α β) (S : WRel β γ) (c : γ) :
-    wColSum keysα (wReachComp keysβ R S) c > 0
+    (R : WRel α β) (S : WRel β γ) (c1 : γ) :
+    wColSum keysα (wReachComp keysβ R S) c1 > 0
       ↔
-    ∃ b, b ∈ keysβ ∧ ∃ a, a ∈ keysα ∧ wSupp R a b ∧ wSupp S b c := by
-  -- TODO
-  sorry
+    ∃ b, b ∈ keysβ ∧ ∃ a, a ∈ keysα ∧ wSupp R a b ∧ wSupp S b c1 := by
+
+  -- theorem ex817 (keys : List β) (R : WRel α β) (S : WRel β γ) :
+  --     wBool (wCompList keys R S) = wReachComp keys R S
+  obtain hEx817
+   := ex817 keysβ R S
+  rw [←hEx817]
+  clear hEx817
+
+  -- theorem ex821 (keys : List α) (R : WRel α β) (b : β) :
+  --     (wColSum keys (wBool R) b > 0) ↔ (wColSum keys R b > 0) := by
+  obtain hEx821
+   := ex821 keysα (wCompList keysβ R S) c1
+  rw [hEx821]
+  clear hEx821
+
+  -- theorem ex754 (keysα : List α) (keysβ : List β)
+  --     (R : WRel α β) (S : WRel β γ) (c : γ) :
+  --     wColSum keysα (wCompList keysβ R S) c > 0
+  --       ↔
+  --     ∃ b, b ∈ keysβ ∧ wColSum keysα R b > 0 ∧ S b c > 0 := by
+  obtain hEx754
+   := ex754 keysα keysβ R S c1
+  rw [hEx754]
+  clear hEx754
+
+  -- theorem ex712 (keys : List α) (R : WRel α β) (b : β) :
+  --     wColSum keys R b > 0 ↔ ∃ a, a ∈ keys ∧ R a b > 0 := by
+  conv =>
+    lhs
+    arg 1
+    ext b
+    rhs
+    lhs
+    rw [ex712 keysα R b]
+
+  constructor
+  intro h1
+  obtain ⟨b1, hContains1, h1_3, h1_4⟩ := h1
+  obtain ⟨a1, hContains2, h1_5⟩ := h1_3
+  exists b1
+  constructor
+  exact hContains1
+  exists a1
+  intro h2
+  obtain ⟨b2, hContains2, a2, hContains3, h2_5, h2_6⟩ := h2
+  dsimp [wSupp] at *
+  exists b2
+  constructor
+  exact hContains2
+  constructor
+  exists a2
+  exact h2_6
 
 end TL

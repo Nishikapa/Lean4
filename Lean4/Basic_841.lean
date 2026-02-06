@@ -38,34 +38,94 @@ noncomputable def wsumW (keys : List β) (F : β → WRel α γ) : WRel α γ :=
 -- 841：空の OR-和は 0
 theorem ex841 (F : β → WRel α γ) :
     wsumW (α:=α) (β:=β) (γ:=γ) ([] : List β) F = wZero α γ := by
-  -- TODO
   -- ヒント：
   --   * funext a c; dsimp [wsumW, wBool]; dsimp [wsum]
   --   * wBool で 0 は 0/1 に潰しても 0
-  sorry
+  funext a1 c1
+  dsimp [wsumW, wBool, wsum, maskW, wSupp, wZero]
+  rw [if_neg]
+  intro h
+  contradiction
 
 -- 842：cons の計算（1 項 + tail の OR-和）
 theorem ex842 (b : β) (keys : List β) (F : β → WRel α γ) :
     wsumW (α:=α) (β:=β) (γ:=γ) (b :: keys) F
       =
     wBool (wAdd (F b) (fun a c => wsum keys (fun b => F b a c))) := by
-  -- TODO
   -- ヒント：
   --   * dsimp [wsumW]; dsimp [wsum]
   --   * funext a c; rfl まで持っていく
-  sorry
+  funext a1 c1
+  dsimp [wsumW, wBool, wsum, maskW, wSupp, wAdd]
 
 -- 843：右が graph の reach は “各 b の列選択” を OR-和したもの
 theorem ex843 (keys : List β) (R : WRel α β) (g : β → γ) :
     wReachComp keys R (wGraph g)
       =
     wsumW keys (fun b => wMask (fun a c => wBool R a b) (fun _ c => g b = c)) := by
-  -- TODO
   -- ヒント：
   --   * wsumW の定義を展開すると “各 b について足す”
   --   * 0/1 同士の和→最後に wBool（maskW）へ
   --   * まずは “support（到達）” で同値を示す方が楽
-  sorry
+
+  funext a1 c1
+  dsimp [wReachComp, wsumW, wBool, wGraph, wMask, wSupp, wAdd, maskW, relCompList, relGraph]
+  -- theorem ex606 {X : Type} (xs : List X) (f : X → Nat) :
+  --     (wsum xs f > 0) ↔ (∃ x, x ∈ xs ∧ f x > 0) := by
+  -- obtain hEx606 :=
+  --   ex606
+  conv =>
+    rhs
+    arg 1
+    rw [ex606]
+  by_cases h1 :
+    ∃ b, b ∈ keys ∧ R a1 b > 0 ∧ (if g b = c1 then 1 else 0) > 0
+  rw [if_pos h1]
+  obtain ⟨b0, hMem, hR, hG⟩ := h1
+  have hG2 : g b0 = c1 := by
+    by_cases hG2_1 : g b0 = c1
+    exact hG2_1
+    rw [if_neg hG2_1] at hG
+    contradiction
+  clear hG
+  rw [if_pos]
+  exists b0
+  constructor
+  exact hMem
+  rw [← hG2]
+  rw [if_pos]
+  rw [if_pos]
+  rw [Nat.mul_one]
+  apply Nat.zero_lt_one
+  rfl
+  exact hR
+  rw [if_neg h1]
+  rw [if_neg]
+  intro h2
+  obtain ⟨b1, hMem, h3⟩ := h2
+  rw [gt_iff_lt] at h3
+  have  h3_1: g b1 = c1 := by
+    by_cases h3_1_ : g b1 = c1
+    exact h3_1_
+    rw [if_neg h3_1_] at h3
+    contradiction
+  have h3_2 : R a1 b1 > 0 := by
+    by_cases h3_2_ : R a1 b1 > 0
+    exact h3_2_
+    rw [if_neg h3_2_] at h3
+    rw [Nat.zero_mul] at h3
+    contradiction
+  clear h3
+  apply h1
+  exists b1
+  constructor
+  exact hMem
+  constructor
+  exact h3_2
+  rw [h3_1]
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rfl
 
 -- 844：一般版：reach は “各 b の AND（固定 b）” を OR-和したもの
 theorem ex844 (keys : List β) (R : WRel α β) (S : WRel β γ) :
@@ -73,12 +133,57 @@ theorem ex844 (keys : List β) (R : WRel α β) (S : WRel β γ) :
       =
     wsumW keys (fun b =>
       wMask (fun a c => wBool R a b) (fun _ c => wSupp S b c)) := by
-  -- TODO
   -- ヒント：
   --   * ex833（reach = maskW(∃ b∈keys, ... )）を使うと楽
   --   * wsumW は「∃ b∈keys, 項>0」を表していることを示す（ex606 を使う）
   --   * wMask で “S b c > 0” を掛けていると思えばよい
-  sorry
+
+  funext a1 c1
+  dsimp [wReachComp, maskW, relCompList, wsumW, wBool, wSupp, wMask]
+
+  -- theorem ex606 {X : Type} (xs : List X) (f : X → Nat) :
+  --     (wsum xs f > 0) ↔ (∃ x, x ∈ xs ∧ f x > 0)
+  -- wsum keys fun b => (if R a1 b > 0 then 1 else 0) * if S b c1 > 0 then 1 else 0
+
+  conv =>
+    rhs
+    arg 1
+    rw [ex606]
+
+  by_cases h1 :
+    ∃ b, b ∈ keys ∧ R a1 b > 0 ∧ S b c1 > 0
+
+  rw [if_pos h1]
+  obtain ⟨b0, hMem, hR, hS⟩ := h1
+  rw [if_pos]
+  exists b0
+  constructor
+  exact hMem
+  rw [if_pos]
+  rw [Nat.one_mul]
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  exact hS
+  exact hR
+  rw [if_neg h1]
+  rw [if_neg]
+  intro h2
+  obtain ⟨b1, hMem, h3⟩ := h2
+  have h3_1 : R a1 b1 > 0 := by
+    by_cases h3_1 : R a1 b1 > 0
+    exact h3_1
+    rw [if_neg h3_1] at h3
+    rw [Nat.zero_mul] at h3
+    contradiction
+  have h3_2 : S b1 c1 > 0 := by
+    by_cases h3_2 : S b1 c1 > 0
+    exact h3_2
+    rw [if_neg h3_2] at h3
+    rw [Nat.mul_zero] at h3
+    contradiction
+  clear h3
+  apply h1
+  exists b1
 
 -- 845：wsumW の意味論：OR-和の 0/1 は「どれか 1 つでも >0」
 theorem ex845 (keys : List β) (F : β → WRel α γ) :
