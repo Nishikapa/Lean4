@@ -190,13 +190,19 @@ theorem ex845 (keys : List β) (F : β → WRel α γ) :
     wsumW (α:=α) (β:=β) (γ:=γ) keys F
       =
     maskW (fun a c => ∃ b, b ∈ keys ∧ F b a c > 0) := by
-  -- TODO
   -- ヒント：
   --   * dsimp [wsumW, wBool, maskW, wSupp]
   --   * ex606 を xs:=keys, f:=fun b => F b a c に適用
   --   * funext a c; by_cases h : (∃ b, b ∈ keys ∧ F b a c > 0)
   --     で if の枝をそろえる
-  sorry
+  funext a1 c1
+  dsimp [wsumW, wBool, maskW, wSupp]
+  -- theorem ex606 {X : Type} (xs : List X) (f : X → Nat) :
+  --     (wsum xs f > 0) ↔ (∃ x, x ∈ xs ∧ f x > 0)
+   --    (wsum keys fun b => F b a1 c1) >
+  obtain hEx606 :=
+    ex606 keys fun b => F b a1 c1
+  rw [hEx606]
 
 --------------------------------------------------------------------------------
 -- 846〜850：wId / wGraph と reach を wsumW で観察（行選択・列選択）
@@ -207,11 +213,23 @@ theorem ex846 (keys : List β) (R : WRel α β) :
     wReachComp keys R (wId β)
       =
     wsumW keys (fun b => wMask (fun a c => wBool R a b) (fun _ c => b = c)) := by
-  -- TODO
   -- ヒント：
   --   * ex843 に g := fun b => b を入れる
   --   * wGraph (fun b => b) = wId β（定義展開で示せる）
-  sorry
+
+  have h1 : wGraph (fun b => b) = wId β := by
+    funext b1 c1
+    dsimp [wGraph, wId, wBool, maskW, relGraph, relId]
+
+  rw [←h1]
+
+  -- theorem ex843 (keys : List β) (R : WRel α β) (g : β → γ) :
+  --     wReachComp keys R (wGraph g)
+  --       =
+  --     wsumW keys (fun b => wMask (fun a c => wBool R a b) (fun _ c => g b = c)) := by
+  obtain hEx843 :=
+    ex843 keys R (fun b => b)
+  rw [hEx843]
 
 -- 847：左が wId の reach を wsumW で書く（行を 1 本ずつ OR-和）
 theorem ex847 (keys : List α) (S : WRel α γ) :
@@ -219,31 +237,175 @@ theorem ex847 (keys : List α) (S : WRel α γ) :
       =
     wsumW keys (fun a0 =>
       wMask (fun a c => if a = a0 then 1 else 0) (fun _ c => wSupp S a0 c)) := by
-  -- TODO
   -- ヒント：
   --   * ex844 に R := wId α を入れる
   --   * wBool (wId α) a a0 は if a = a0 then 1 else 0
-  sorry
+
+  have h1 : ∀ a1 a2, (wBool (wId α) a1 a2) = (if a1 = a2 then 1 else 0) := by
+    intro a1 a2
+    dsimp [wId, wBool, maskW, relId, wSupp]
+    by_cases hEq : a1 = a2
+    rw [hEq]
+    rw [if_pos]
+    rw [if_pos]
+    rfl
+    rw [if_pos]
+    apply Nat.zero_lt_one
+    rfl
+    rw [if_neg]
+    rw [if_neg]
+    intro h1_1
+    contradiction
+    intro h1_2
+    apply hEq
+    rw [if_neg hEq] at h1_2
+    contradiction
+
+  conv =>
+    rhs
+    arg 2
+    intro a1 c1
+    arg 1
+    intro a2 c2
+    rw [←h1]
+
+  -- theorem ex844 (keys : List β) (R : WRel α β) (S : WRel β γ) :
+  --     wReachComp keys R S
+  --       =
+  --     wsumW keys (fun b =>
+  --       wMask (fun a c => wBool R a b) (fun _ c => wSupp S b c)) := by
+  obtain hEx844 :=
+    ex844 keys (wId α) S
+  rw [←hEx844]
 
 -- 848：左が graph の reach（行選択の到達版）
 theorem ex848 (keys : List β) (f : α → β) (S : WRel β γ) :
     wReachComp keys (wGraph f) S
       =
     wMask (fun a c => wBool S (f a) c) (fun a _ => f a ∈ keys) := by
-  -- TODO
   -- ヒント：
   --   * これは ex832 と同じステートメント（再掲）
   --   * もしくは ex844（sum 版）から、graph の一意性で b を f a に潰す
-  sorry
+
+  -- theorem ex844 (keys : List β) (R : WRel α β) (S : WRel β γ) :
+  --     wReachComp keys R S
+  --       =
+  --     wsumW keys (fun b =>
+  --       wMask (fun a c => wBool R a b) (fun _ c => wSupp S b c)) := by
+  obtain hEx844 :=
+    ex844 keys (wGraph f) S
+  rw [hEx844]
+  clear hEx844
+  funext a1 c1
+  dsimp [wsumW, wBool, maskW, wSupp, wMask, wGraph, relGraph]
+  -- theorem ex606 {X : Type} (xs : List X) (f : X → Nat) :
+  --     (wsum xs f > 0) ↔ (∃ x, x ∈ xs ∧ f x > 0)
+  -- (wsum keys fun b => (if (if f a1 = b then 1 else 0) > 0 then 1 else 0) * if S b c1 > 0 then 1 else 0) > 0
+  -- obtain hEx606 :=
+  --   ex606 keys fun b => (if (if f a1 = b then 1 else 0) > 0 then 1 else 0) * if S b c1 > 0 then 1 else 0
+  conv =>
+    lhs
+    arg 1
+    rw [ex606]
+  by_cases h1 : ∃ x, x ∈ keys ∧ ((if (if f a1 = x then 1 else 0) > 0 then 1 else 0) * if S x c1 > 0 then 1 else 0) > 0
+  obtain ⟨b0, hMem, hProd⟩ := h1
+  have hProd_1 : S b0 c1 > 0 := by
+    by_cases hProd_1_ : S b0 c1 > 0
+    exact hProd_1_
+    rw [if_neg hProd_1_] at hProd
+    rw [Nat.mul_zero] at hProd
+    contradiction
+  have hProd_2 : f a1 = b0 := by
+    by_cases hProd_2_ : f a1 = b0
+    exact hProd_2_
+    rw [if_neg hProd_2_] at hProd
+    rw [if_neg] at hProd
+    rw [Nat.zero_mul] at hProd
+    contradiction
+    intro hProd_2_1
+    contradiction
+  clear hProd
+  rw [hProd_2]
+  rw [if_pos hProd_1]
+  rw [Nat.one_mul]
+  rw [if_pos hMem]
+  rw [if_pos]
+  exists b0
+  constructor
+  exact hMem
+  rw [if_pos]
+  rw [Nat.one_mul]
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  exact hProd_1
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rfl
+  -- neg
+  rw [if_neg]
+  symm
+  rw [Nat.mul_eq_zero]
+  by_cases h2 : f a1 ∈ keys
+  rw [if_pos h2]
+  left
+  rw [if_neg]
+  intro h3
+  apply h1
+  exists (f a1)
+  constructor
+  exact h2
+  rw [if_pos]
+  rw [Nat.one_mul]
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  exact h3
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rfl
+  right
+  rw [if_neg]
+  intro h4
+  apply h2
+  exact h4
+  intro h5
+  obtain ⟨b1, hMem, hProd⟩ := h5
+  have hProd_1 : S b1 c1 > 0 := by
+    by_cases hProd_1_ : S b1 c1 > 0
+    exact hProd_1_
+    rw [if_neg hProd_1_] at hProd
+    rw [Nat.mul_zero] at hProd
+    contradiction
+  have hProd_2 : f a1 = b1 := by
+    by_cases hProd_2_ : f a1 = b1
+    exact hProd_2_
+    rw [if_neg hProd_2_] at hProd
+    rw [if_neg] at hProd
+    rw [Nat.zero_mul] at hProd
+    contradiction
+    intro hProd_2_1
+    contradiction
+  clear hProd
+  apply h1
+  exists b1
+  constructor
+  exact hMem
+  rw [hProd_2]
+  rw [if_pos]
+  rw [Nat.one_mul]
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  exact hProd_1
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rfl
 
 -- 849：graph-graph の reach（関数合成 + keys マスク）
 theorem ex849 (keys : List β) (f : α → β) (g : β → γ) :
     wReachComp keys (wGraph f) (wGraph g)
       =
     maskW (fun a c => f a ∈ keys ∧ g (f a) = c) := by
-  -- TODO
   -- ヒント：ex835 と同じ（再掲）
-  sorry
+  apply ex835
 
 -- 850：keys が {f a} を全て含むなら、graph の reach はマスクが消える
 theorem ex850 (keys : List β) (f : α → β) (S : WRel β γ) :
