@@ -166,9 +166,40 @@ theorem ex860 (keys : List ι) (F : ι → WRel α γ) :
     wsumW (keys ++ keys) F
       =
     wsumW keys F := by
-  -- TODO
   -- ヒント：ex849（append）と ex811 / ex816（OR の冪等性）
-  sorry
+  funext a1 c1
+  dsimp [wsumW, wBool, wSupp, maskW]
+  obtain hEx606_1 :=
+    ex606 (keys ++ keys) (fun b => F b a1 c1)
+  obtain hEx606_2 :=
+    ex606 keys (fun b => F b a1 c1)
+  rw [hEx606_1, hEx606_2]
+  clear hEx606_1 hEx606_2
+  by_cases h1 : ∃ x, x ∈ keys ∧ F x a1 c1 > 0
+  obtain ⟨i1, h2, h3⟩ := h1
+  rw [if_pos]
+  rw [if_pos]
+  exists i1
+  exists i1
+  constructor
+  apply List.mem_append_left
+  exact h2
+  exact h3
+  rw [if_neg]
+  rw [if_neg]
+  intro h4
+  apply h1
+  obtain ⟨i2, h5, h6⟩ := h4
+  exists i2
+  intro h7
+  apply h1
+  obtain ⟨i3, h8, h9⟩ := h7
+  exists i3
+  constructor
+  rw [List.mem_append] at h8
+  rw [or_self] at h8
+  exact h8
+  exact h9
 
 --------------------------------------------------------------------------------
 -- 861〜865：row/col-sum と reach への分配
@@ -180,11 +211,70 @@ theorem ex861 (keysι : List ι) (keysg : List γ)
     wRowSum keysg (wsumW keysι F) a > 0
       ↔
     ∃ i, i ∈ keysι ∧ wRowSum keysg (F i) a > 0 := by
-  -- TODO
   -- ヒント：
   --   * ex710（rowSum>0 ↔ ∃c∈keysg, ... >0）
   --   * ex846（support(wsumW)=∃i∈keysι, ... >0）
+  dsimp [wRowSum]
+  obtain hEx606_1 :=
+    ex606 keysg (fun b => wsumW keysι F a b)
+  rw [hEx606_1]
+  clear hEx606_1
+
+  conv =>
+    rhs
+    arg 1
+    intro g1
+    rhs
+    rw [ex606]
+
+  dsimp [wsumW, wSupp, wBool, maskW]
+
+  conv =>
+    lhs
+    rhs
+    intro x
+    rhs
+    arg 1
+    arg 1
+    rw [ex606]
+
+  constructor
+  intro h1
+  obtain ⟨g1, h2, h3⟩ := h1
+  have h4 : ∃ x, x ∈ keysι ∧ F x a g1 > 0 := by
+    by_cases h4_ : ∃ x, x ∈ keysι ∧ F x a g1 > 0
+    exact h4_
+    rw [if_neg h4_] at h3
+    contradiction
+  clear h3
+  obtain ⟨i1, h5, h6⟩ := h4
+  exists i1
+  constructor
+  exact h5
+  -- exists g1
+  -- intro h7
+  -- obtain ⟨i2, h8, h9⟩ := h7
+  -- obtain ⟨g2, h10, h11⟩ := h9
+  -- exists g2
+  -- constructor
+  -- exact h10
+  -- have h12 : ∃ x, x ∈ keysι ∧ F x a g2 > 0 := by
+  --   exists i2
+  -- rw [if_pos h12]
+  --apply Nat.zero_lt_one
   sorry
+
+
+
+
+
+
+
+
+
+
+
+
 
 -- 862：colSum>0 も wsumW で “OR” 分配する
 theorem ex862 (keysι : List ι) (keysα : List α)
