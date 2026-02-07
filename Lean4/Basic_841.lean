@@ -413,11 +413,31 @@ theorem ex850 (keys : List β) (f : α → β) (S : WRel β γ) :
       wReachComp keys (wGraph f) S
         =
       (fun a c => wBool S (f a) c) := by
-  -- TODO
+
   -- ヒント：
   --   * ex836 を funext でまとめる
   --   * あるいは ex848 を使って wMask の条件を if_pos で消す
-  sorry
+
+  -- theorem ex848 (keys : List β) (f : α → β) (S : WRel β γ) :
+  --     wReachComp keys (wGraph f) S
+  --       =
+  --     wMask (fun a c => wBool S (f a) c) (fun a _ => f a ∈ keys)
+  obtain hEx848 :=
+    ex848 keys f S
+  rw [hEx848]
+  clear hEx848
+
+  intro h1
+  funext a1 c1
+  dsimp [wMask, wBool, maskW, wSupp]
+  by_cases h2 : S (f a1) c1 > 0
+  rw [if_pos h2]
+  rw [Nat.one_mul]
+  obtain h3 := h1 a1
+  rw [if_pos]
+  exact h3
+  rw [if_neg h2]
+  rw [Nat.zero_mul]
 
 --------------------------------------------------------------------------------
 -- 851〜855：wsumW の代数（transpose / append / 重複 / 単調性）
@@ -428,12 +448,12 @@ theorem ex851 (keys : List β) (F : β → WRel α γ) :
     wTrans (wsumW (α:=α) (β:=β) (γ:=γ) keys F)
       =
     wsumW (α:=γ) (β:=β) (γ:=α) keys (fun b => wTrans (F b)) := by
-  -- TODO
   -- ヒント：
   --   * funext c a; dsimp [wsumW, wTrans]
   --   * まずは wSupp（>0）が同じことを示すのが楽
   --   * wSupp(wBool _) は元と同じ（ex796）
-  sorry
+  funext c1 a1
+  dsimp [wsumW, wTrans, wBool, wSupp, maskW]
 
 -- 852：append は OR（bool-sum）になる
 theorem ex852 (keys₁ keys₂ : List β) (F : β → WRel α γ) :
@@ -441,23 +461,154 @@ theorem ex852 (keys₁ keys₂ : List β) (F : β → WRel α γ) :
       =
     wBool (wAdd (wsumW (α:=α) (β:=β) (γ:=γ) keys₁ F)
                 (wsumW (α:=α) (β:=β) (γ:=γ) keys₂ F)) := by
-  -- TODO
   -- ヒント：
   --   * ex845 で両辺を maskW(∃...) に落とすのが楽
   --   * “∃ b∈(xs++ys), ...” は xs 側 / ys 側に分解できる
   --   * 0/1 の OR は wBool(wAdd ...) で表せる（ex755 / ex820 など）
-  sorry
+  obtain hEx845 :=
+    ex845 (keys₁ ++ keys₂) F
+  rw [hEx845]
+  clear hEx845
+  funext a1 c1
+  dsimp [wBool, wsumW, wSupp]
+  conv =>
+    rhs
+    arg 1
+    intro a2 c2
+    dsimp [wSupp]
+    dsimp [wAdd]
+    rw [gt_iff_lt]
+    rw [Nat.add_pos_iff_pos_or_pos]
+    dsimp [maskW, wSupp]
+    conv =>
+      lhs
+      rhs
+      arg 1
+      rw [ex606]
+    conv =>
+      lhs
+      rw [
+        show (0 < if ∃ x, x ∈ keys₁ ∧ F x a2 c2 > 0 then 1 else 0) ↔ (∃ x, x ∈ keys₁ ∧ F x a2 c2 > 0) from by
+          by_cases h1 :
+            ∃ x, x ∈ keys₁ ∧ F x a2 c2 > 0
+          rw [if_pos h1]
+          constructor
+          intro h2
+          exact h1
+          intro h3
+          apply Nat.zero_lt_one
+          rw [if_neg h1]
+          constructor
+          intro h4
+          contradiction
+          intro h5
+          contradiction
+      ]
+    conv =>
+      rhs
+      rhs
+      arg 1
+      rw [ex606]
+    conv =>
+      rhs
+      rw [
+        show (0 < if ∃ x, x ∈ keys₂ ∧ F x a2 c2 > 0 then 1 else 0) ↔ (∃ x, x ∈ keys₂ ∧ F x a2 c2 > 0) from by
+          by_cases h1 :
+            ∃ x, x ∈ keys₂ ∧ F x a2 c2 > 0
+          rw [if_pos h1]
+          constructor
+          intro h2
+          exact h1
+          intro h3
+          apply Nat.zero_lt_one
+          rw [if_neg h1]
+          constructor
+          intro h4
+          contradiction
+          intro h5
+          contradiction
+      ]
+  dsimp [maskW]
+  by_cases h10 :
+    ∃ b, b ∈ keys₁ ++ keys₂ ∧ F b a1 c1 > 0
+  rw [if_pos h10]
+  obtain ⟨b0, hMem, hF⟩ := h10
+  rw [if_pos]
+  rw [List.mem_append] at hMem
+  obtain hMem1 | hMem2 := hMem
+  left
+  exists b0
+  right
+  exists b0
+  rw [if_neg h10]
+  rw [if_neg]
+  intro h11
+  obtain ⟨b1, hMem1, hF1⟩ | ⟨b2, hMem2, hF2⟩ := h11
+  apply h10
+  exists b1
+  constructor
+  apply  List.mem_append_left
+  exact hMem1
+  exact hF1
+  apply h10
+  exists b2
+  constructor
+  apply List.mem_append_right
+  exact hMem2
+  exact hF2
 
 -- 853：同じ b を 2 回足しても OR なので変わらない
 theorem ex853 (b : β) (keys : List β) (F : β → WRel α γ) :
     wsumW (α:=α) (β:=β) (γ:=γ) (b :: b :: keys) F
       =
     wsumW (α:=α) (β:=β) (γ:=γ) (b :: keys) F := by
-  -- TODO
   -- ヒント：
   --   * ex845 による “∃ b∈...” の形で見れば明らか
   --   * List.mem_cons / or_assoc などで整理
-  sorry
+
+  -- theorem ex845 (keys : List β) (F : β → WRel α γ) :
+  --     wsumW (α:=α) (β:=β) (γ:=γ) keys F
+  --       =
+  --     maskW (fun a c => ∃ b, b ∈ keys ∧ F b a c > 0) := by
+  obtain hEx845_1 :=
+    ex845 (b :: b :: keys) F
+  obtain hEx845_2 :=
+    ex845 (b :: keys) F
+  rw [hEx845_1, hEx845_2]
+  clear hEx845_1 hEx845_2
+
+  funext a1 c1
+  dsimp [maskW, wSupp]
+
+  conv =>
+    lhs
+    arg 1
+    arg 1
+    intro b1
+    lhs
+    rw [
+      show (b1 ∈ b :: b :: keys) ↔ (b1 ∈ b :: keys) from by
+        rw [List.mem_cons]
+        rw [List.mem_cons]
+        conv =>
+          lhs
+          rw [←or_assoc]
+          lhs
+          rw [or_self]
+    ]
+
+  by_cases h1 : ∃ b1, b1 ∈ b :: keys ∧ F b1 a1 c1 > 0
+  rw [if_pos h1]
+  obtain ⟨b0, hMem, hF⟩ := h1
+  rw [if_pos]
+  exists b0
+  rw [if_neg]
+  rw [if_neg]
+  intro h2
+  obtain ⟨b2, hMem1, hF1⟩ := h2
+  apply h1
+  exists b2
+  exact h1
 
 -- 854：keys 上で全部 0（到達なし）なら OR-和も 0
 theorem ex854 (keys : List β) (F : β → WRel α γ) :
