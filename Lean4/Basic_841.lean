@@ -614,21 +614,73 @@ theorem ex853 (b : β) (keys : List β) (F : β → WRel α γ) :
 theorem ex854 (keys : List β) (F : β → WRel α γ) :
     (∀ b, b ∈ keys → F b = wZero α γ) →
       wsumW (α:=α) (β:=β) (γ:=γ) keys F = wZero α γ := by
-  -- TODO
   -- ヒント：
   --   * ex845 で maskW(∃ b∈keys, ...) に落とし、∃ を否定して if_neg
   --   * あるいは ex607（wsum=0 ↔ 全項=0）を使ってもよい
-  sorry
+
+  -- theorem ex845 (keys : List β) (F : β → WRel α γ) :
+  --     wsumW (α:=α) (β:=β) (γ:=γ) keys F
+  --       =
+  --     maskW (fun a c => ∃ b, b ∈ keys ∧ F b a c > 0) := by
+  obtain hEx845 :=
+    ex845 keys F
+  rw [hEx845]
+  clear hEx845
+
+  intro h1
+  funext a1 c1
+  dsimp [maskW, wSupp, wZero]
+  rw [if_neg]
+  intro h2
+  obtain ⟨b0, hMem, hF⟩ := h2
+  have h2 := h1 b0 hMem
+  rw [h2] at hF
+  dsimp [wZero, wBool, maskW, wSupp] at hF
+  contradiction
 
 -- 855：単調性：各 b で F b ≤ G b なら OR-和も ≤
 theorem ex855 (keys : List β) (F G : β → WRel α γ) :
     (∀ b, WLe (F b) (G b)) →
       WLe (wsumW (α:=α) (β:=β) (γ:=γ) keys F)
           (wsumW (α:=α) (β:=β) (γ:=γ) keys G) := by
-  -- TODO
   -- ヒント：
   --   * ex615（WLe→support包含）と ex845（wsumW=maskW(∃...)）を使うのが楽
   --   * 最後は ex801（maskW M ≤ R ↔ M ⊆ wSupp R）などでもよい
-  sorry
+
+  -- theorem ex845 (keys : List β) (F : β → WRel α γ) :
+  -- wsumW (α:=α) (β:=β) (γ:=γ) keys F
+  --   =
+  -- maskW (fun a c => ∃ b, b ∈ keys ∧ F b a c > 0) := by
+
+  conv =>
+    rhs
+    conv =>
+      arg 1
+      rw [ex845]
+    conv =>
+      arg 2
+      rw [ex845]
+
+  intro h1
+
+  -- theorem ex615 (R S : WRel α β) :
+  --     WLe R S → (wSupp R ⊆ wSupp S)
+
+  -- theorem ex801 (M : Rel α β) (R : WRel α β) :
+  --     WLe (maskW M) R ↔ (M ⊆ wSupp R) := by
+  rw [ex801]
+
+  intro a1 c1 h2
+  obtain ⟨b0, hMem, hF⟩ := h2
+  rw [gt_iff_lt] at hF
+  dsimp [wSupp, maskW]
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  exists b0
+  constructor
+  exact hMem
+  have hF2 := h1 b0 a1 c1
+  obtain hF3 := Nat.lt_of_lt_of_le hF hF2
+  exact hF3
 
 end TL

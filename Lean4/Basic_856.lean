@@ -30,27 +30,90 @@ theorem ex856 (keys : List ι) (F : ι → WRel α γ) :
     wBool (wsumW keys F)
       =
     wsumW keys F := by
-  -- TODO
   -- ヒント：wsumW の定義と ex811（wBool idempotent）
-  sorry
+  funext a1 c1
+  dsimp [wsumW]
+  -- theorem ex811 (R : WRel α β) :
+  --     wBool (wBool R) = wBool R := by
+  obtain hEx811 :=
+    ex811 fun a c => wsum keys fun b => F b a c
+  rw [hEx811]
 
 -- 857：i ∈ keys なら、その項（の 0/1 化）は wsumW 以下
 -- （“OR-和” は各項を含む）
 theorem ex857 (keys : List ι) (F : ι → WRel α γ) (i : ι) :
     i ∈ keys →
       WLe (wBool (F i)) (wsumW keys F) := by
-  -- TODO
   -- ヒント：support で示す（ex615 / ex846）
-  sorry
+
+  intro h1
+  dsimp [WLe]
+  dsimp [wsumW]
+  intro a1 c1
+  dsimp [wBool, wSupp, maskW]
+
+  by_cases h2 : F i a1 c1 > 0
+  rw [if_pos h2]
+
+  induction keys with
+  | nil =>
+    dsimp [wsum]
+    contradiction
+  | cons b1 bs ih =>
+    dsimp [wsum]
+    by_cases h3 : i = b1
+    rw [←h3]
+    rw [if_pos]
+    apply Nat.zero_lt_succ
+    rw [gt_iff_lt]
+    apply Nat.add_pos_iff_pos_or_pos.mpr
+    left
+    exact h2
+    obtain h4 := List.mem_of_ne_of_mem h3 h1
+    obtain ih2 := ih h4
+    have h5 : (wsum bs fun b => F b a1 c1) > 0 := by
+      by_cases h5_1 : (wsum bs fun b => F b a1 c1) > 0
+      exact h5_1
+      rw [if_neg h5_1] at ih2
+      contradiction
+    rw [if_pos]
+    apply Nat.le_refl
+    apply Nat.add_pos_iff_pos_or_pos.mpr
+    right
+    exact h5
+  rw [if_neg]
+  apply Nat.zero_le
+  exact h2
 
 -- 858：keys の単調性（候補が増えるほど OR-和も増える）
 theorem ex858 (keys keys' : List ι) (F : ι → WRel α γ) :
     (∀ i, i ∈ keys → i ∈ keys') →
       WLe (wsumW keys F)
           (wsumW keys' F) := by
-  -- TODO
   -- ヒント：ex846 の ∃ 形で support の包含を示す
-  sorry
+  intro h1 a1 g1
+  dsimp [wsumW, wBool, maskW, wSupp]
+  by_cases h2 : (wsum keys fun b => F b a1 g1) > 0
+  rw [if_pos h2]
+  rw [if_pos]
+  apply Nat.le_refl
+  obtain hEx601_1 :=
+    ex606 keys (fun b => F b a1 g1)
+  obtain hEx601_2 :=
+    ex606 keys' (fun b => F b a1 g1)
+  rw [hEx601_1] at h2
+  rw [hEx601_2]
+  clear hEx601_1 hEx601_2
+  obtain ⟨i1, h3, h4⟩ := h2
+  exists i1
+  obtain h2 := h1 i1
+  constructor
+  apply h2
+  exact h3
+  exact h4
+  rw [if_neg]
+  apply Nat.zero_le
+  exact h2
 
 -- 859：wsumW の ext（keys 上で項が一致すれば wsumW も一致）
 theorem ex859 (keys : List ι) (F G : ι → WRel α γ) :
@@ -58,9 +121,45 @@ theorem ex859 (keys : List ι) (F G : ι → WRel α γ) :
       wsumW keys F
         =
       wsumW keys G := by
-  -- TODO
   -- ヒント：funext a c; wsum の項ごとの一致（keys で帰納）
-  sorry
+  intro h1
+  funext a1 c1
+  dsimp [wsumW]
+  dsimp [wBool, maskW, wSupp]
+
+  obtain hEx601_1 :=
+    ex606 keys (fun b => F b a1 c1)
+  obtain hEx601_2 :=
+    ex606 keys (fun b => G b a1 c1)
+  rw [hEx601_1, hEx601_2]
+  clear hEx601_1 hEx601_2
+
+  by_cases h2 : ∃ x, x ∈ keys ∧ F x a1 c1 > 0
+  rw [if_pos]
+  obtain ⟨i1, h3, h4⟩ := h2
+  rw [if_pos]
+  exists i1
+  constructor
+  exact h3
+  obtain h5 := h1 i1 h3
+  rw [←h5]
+  exact h4
+  exact h2
+  rw [if_neg]
+  rw [if_neg]
+  intro h6
+  apply h2
+  obtain ⟨i2, h7, h8⟩ := h6
+  exists i2
+  constructor
+  exact h7
+  obtain h9 := h1 i2 h7
+  rw [h9]
+  exact h8
+  intro h10
+  apply h2
+  obtain ⟨i3, h11, h12⟩ := h10
+  exists i3
 
 -- 860：重複は OR-和では意味を持たない（keys ++ keys は keys と同じ）
 theorem ex860 (keys : List ι) (F : ι → WRel α γ) :
