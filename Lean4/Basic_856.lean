@@ -7,6 +7,7 @@
 -- ※ 841〜855 は Basic_841 を import して再利用
 --------------------------------------------------------------------------------
 
+
 import Init.Classical
 import Lean4.Basic_841
 
@@ -19,6 +20,8 @@ open Classical
 attribute [local instance] Classical.propDecidable
 
 variable {α β γ δ ε ι : Type}
+
+--set_option pp.all true
 
 --------------------------------------------------------------------------------
 -- 856〜860：wsumW の基本性質（固定点 / 単調性 / ext）
@@ -239,10 +242,12 @@ theorem ex861 (keysι : List ι) (keysg : List γ)
     rw [ex606]
 
   constructor
+
+  -- mp
   intro h1
-  obtain ⟨g1, h2, h3⟩ := h1
-  have h4 : ∃ x, x ∈ keysι ∧ F x a g1 > 0 := by
-    by_cases h4_ : ∃ x, x ∈ keysι ∧ F x a g1 > 0
+  obtain ⟨g2, h2, h3⟩ := h1
+  have h4: ∃ x, x ∈ keysι ∧ F x a g2 > 0 := by
+    by_cases h4_ : ∃ x, x ∈ keysι ∧ F x a g2 > 0
     exact h4_
     rw [if_neg h4_] at h3
     contradiction
@@ -251,30 +256,24 @@ theorem ex861 (keysι : List ι) (keysg : List γ)
   exists i1
   constructor
   exact h5
-  -- exists g1
-  -- intro h7
-  -- obtain ⟨i2, h8, h9⟩ := h7
-  -- obtain ⟨g2, h10, h11⟩ := h9
-  -- exists g2
-  -- constructor
-  -- exact h10
-  -- have h12 : ∃ x, x ∈ keysι ∧ F x a g2 > 0 := by
-  --   exists i2
-  -- rw [if_pos h12]
-  --apply Nat.zero_lt_one
-  sorry
+  exists g2
 
+  -- mpr
+  intro h2
+  obtain ⟨i2, h3, h4⟩ := h2
+  obtain ⟨g3, h5, h6⟩ := h4
+  exists g3
+  constructor
+  exact h5
 
+  -- 【重要】判定不能な状態(placeholder)を解消するために、
+  -- ゴールの型を明示的に "change" して、Leanに判定方法を確定させます
+  change (if ∃ x, x ∈ keysι ∧ F x a g3 > 0 then 1 else 0) > 0
 
-
-
-
-
-
-
-
-
-
+  -- これで判定器が確定し、"if" の書き換えが通るようになります
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  exists i2
 
 -- 862：colSum>0 も wsumW で “OR” 分配する
 theorem ex862 (keysι : List ι) (keysα : List α)
@@ -282,9 +281,61 @@ theorem ex862 (keysι : List ι) (keysα : List α)
     wColSum keysα (wsumW keysι F) c > 0
       ↔
     ∃ i, i ∈ keysι ∧ wColSum keysα (F i) c > 0 := by
-  -- TODO
   -- ヒント：ex712 と ex846
-  sorry
+
+  -- theorem ex712 (keys : List α) (R : WRel α β) (b : β) :
+  --     wColSum keys R b > 0 ↔ ∃ a, a ∈ keys ∧ R a b > 0
+  obtain hEx712_1 :=
+    ex712 keysα (wsumW keysι F) c
+  rw [hEx712_1]
+  clear hEx712_1
+
+  conv =>
+    rhs
+    arg 1
+    intro i1
+    rhs
+    rw [ex712]
+
+  dsimp [wsumW, wSupp, wBool, maskW]
+
+  conv =>
+    lhs
+    rhs
+    intro a1
+    rhs
+    arg 1
+    arg 1
+    rw [ex606]
+
+  constructor
+
+  -- mp
+  intro h1
+  obtain ⟨a2, h2, h3⟩ := h1
+  have h4 : ∃ x, x ∈ keysι ∧ F x a2 c > 0 := by
+    by_cases h4_ : ∃ x, x ∈ keysι ∧ F x a2 c > 0
+    exact h4_
+    rw [if_neg h4_] at h3
+    contradiction
+  clear h3
+  obtain ⟨i1, h5, h6⟩ := h4
+  exists i1
+  constructor
+  exact h5
+  exists a2
+
+  -- mpr
+  intro h7
+  obtain ⟨i2, h8, h9⟩ := h7
+  obtain ⟨a3, h10, h11⟩ := h9
+  exists a3
+  constructor
+  exact h10
+  change (if ∃ x, x ∈ keysι ∧ F x a3 c > 0 then 1 else 0) > 0
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  exists i2
 
 -- 863：reach は右の wsumW に分配する（OR の分配）
 theorem ex863 (keysβ : List β) (keysι : List ι)
