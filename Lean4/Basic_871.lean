@@ -35,26 +35,185 @@ noncomputable def wOr (R S : WRel α β) : WRel α β :=
 -- 871：support(wOr) は論理和（∨）
 theorem ex871 (R S : WRel α β) :
     wSupp (wOr R S) = relAdd (wSupp R) (wSupp S) := by
-  -- TODO
   -- ヒント：
   --   * wOr の定義
   --   * ex816（wBool (wAdd ...) = maskW (relAdd ...)）
   --   * ex613（support(maskW M)=M）
-  sorry
+  funext a1 b1
+  dsimp [wOr, wBool, wAdd, wSupp, relAdd, maskW]
+  by_cases h1 : R a1 b1 + S a1 b1 > 0
+  rw [if_pos h1]
+  rw [gt_iff_lt] at h1
+  rw [Nat.add_pos_iff_pos_or_pos] at h1
+  apply propext
+  constructor
+  intro h2
+  exact h1
+  intro h2
+  apply Nat.zero_lt_one
+  rw [if_neg h1]
+  apply propext
+  constructor
+  intro h3
+  contradiction
+  intro h4
+  apply False.elim
+  apply h1
+  rw [gt_iff_lt]
+  rw [Nat.add_pos_iff_pos_or_pos]
+  exact h4
 
 -- 872：wOr は可換
 theorem ex872 (R S : WRel α β) :
     wOr R S = wOr S R := by
-  -- TODO
   -- ヒント：funext; dsimp [wOr, wAdd]; Nat.add_comm
-  sorry
+  funext a1 b1
+  dsimp [wOr, wAdd, wBool, maskW, wSupp]
+  by_cases h1 : R a1 b1 + S a1 b1 > 0
+  rw [if_pos h1]
+  rw [if_pos]
+  rw [Nat.add_comm]
+  exact h1
+  rw [if_neg h1]
+  rw [if_neg]
+  rw [Nat.add_comm]
+  exact h1
 
 -- 873：wOr は結合的
 theorem ex873 (R S T : WRel α β) :
     wOr (wOr R S) T = wOr R (wOr S T) := by
-  -- TODO
   -- ヒント：Nat.add_assoc と ex811（wBool の冪等性）など
-  sorry
+  funext a1 b1
+  dsimp [wOr, wAdd, wBool, maskW, wSupp]
+  by_cases h1 : 0 < R a1 b1
+  by_cases h2 : 0 < S a1 b1
+  by_cases h3 : 0 < T a1 b1
+  rw [if_pos]
+  rw [if_pos]
+  rw [if_pos]
+  rw [gt_iff_lt]
+  rw [Nat.add_pos_iff_pos_or_pos]
+  right
+  apply Nat.zero_lt_one
+  rw [gt_iff_lt]
+  rw [Nat.add_pos_iff_pos_or_pos]
+  left
+  exact h2
+  rw [gt_iff_lt]
+  rw [Nat.add_pos_iff_pos_or_pos]
+  right
+  exact h3
+  obtain h3_1 := Nat.eq_zero_of_not_pos h3
+  clear h3
+  rw [h3_1]
+  rw [Nat.add_zero]
+  rw [Nat.add_zero]
+  rw [if_pos]
+  rw [if_pos]
+  rw [if_pos]
+  rw [gt_iff_lt]
+  rw [Nat.add_pos_iff_pos_or_pos]
+  right
+  apply Nat.zero_lt_one
+  rw [gt_iff_lt]
+  exact h2
+  rw [gt_iff_lt]
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rw [gt_iff_lt]
+  rw [Nat.add_pos_iff_pos_or_pos]
+  left
+  exact h1
+  obtain h2_1 := Nat.eq_zero_of_not_pos h2
+  clear h2
+  rw [h2_1]
+  rw [Nat.add_zero]
+  rw [Nat.zero_add]
+  by_cases h3 : 0 < T a1 b1
+  rw [if_pos]
+  rw [if_pos]
+  rw [if_pos]
+  rw [gt_iff_lt]
+  rw [Nat.add_pos_iff_pos_or_pos]
+  right
+  apply Nat.zero_lt_one
+  rw [gt_iff_lt]
+  exact h3
+  rw [if_pos]
+  rw [gt_iff_lt]
+  rw [Nat.add_pos_iff_pos_or_pos]
+  left
+  apply Nat.zero_lt_one
+  rw [gt_iff_lt]
+  exact h1
+  obtain h3_1 := Nat.eq_zero_of_not_pos h3
+  clear h3
+  rw [h3_1]
+  rw [Nat.add_zero]
+  rw [if_pos]
+  rw [if_pos]
+  rw [gt_iff_lt]
+  rw [Nat.add_pos_iff_pos_or_pos]
+  left
+  exact h1
+  rw [gt_iff_lt]
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rw [gt_iff_lt]
+  exact h1
+  obtain h1_1 := Nat.eq_zero_of_not_pos h1
+  clear h1
+  rw [h1_1]
+  rw [Nat.zero_add]
+  rw [Nat.zero_add]
+  by_cases h2 : 0 < S a1 b1
+  by_cases h3 : 0 < T a1 b1
+  rw [if_pos]
+  rw [if_pos]
+  rw [if_pos]
+  rw [gt_iff_lt]
+  apply Nat.zero_lt_one
+  rw [gt_iff_lt]
+  rw [Nat.add_pos_iff_pos_or_pos]
+  right
+  exact h3
+  rw [gt_iff_lt]
+  rw [Nat.add_pos_iff_pos_or_pos]
+  right
+  exact h3
+  obtain h3_1 := Nat.eq_zero_of_not_pos h3
+  clear h3
+  rw [h3_1]
+  rw [Nat.add_zero]
+  rw [Nat.add_zero]
+  obtain h2_1 := Nat.eq_zero_of_not_pos h2
+  clear h2
+  rw [h2_1]
+  by_cases h3 : 0 < T a1 b1
+  rw [if_pos]
+  rw [if_pos]
+  rw [if_pos]
+  rw [gt_iff_lt]
+  apply Nat.zero_lt_one
+  rw [gt_iff_lt]
+  rw [Nat.add_pos_iff_pos_or_pos]
+  right
+  exact h3
+  rw [if_neg]
+  rw [Nat.zero_add]
+  rw [gt_iff_lt]
+  exact h3
+  intro h4
+  have h4_2 : R a1 b1 + S a1 b1 = 0 := by
+    rw [h1_1, h2_1]
+  have h4_3 :=
+    Nat.ne_zero_iff_zero_lt.mpr h4
+  contradiction
+  obtain h3_1 := Nat.eq_zero_of_not_pos h3
+  clear h3
+  rw [h3_1]
+  rw [Nat.zero_add]
+  rw [Nat.add_zero]
 
 -- 874：wOr は冪等（R ∨ R = R の 0/1 版）
 theorem ex874 (R : WRel α β) :

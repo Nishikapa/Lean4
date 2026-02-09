@@ -344,12 +344,70 @@ theorem ex863 (keysβ : List β) (keysι : List ι)
       =
     wsumW keysι
       (fun i => wReachComp keysβ R (F i)) := by
-  -- TODO
   -- ヒント：
   --   * wReachComp は support だけを見る（maskW ∘ relCompList）
   --   * support(wsumW)=∃i∈keysι, support(F i)
   --   * relCompList は右引数の OR に分配（ex658 の “List 版” を keysι で帰納）
-  sorry
+  funext a1 c1
+  dsimp [wReachComp, relCompList, wsumW, wSupp, wBool, maskW]
+  conv =>
+    conv =>
+      lhs
+      arg 1
+      arg 1
+      intro b1
+      rhs
+      rhs
+      arg 1
+      arg 1
+      rw [ex606]
+    conv =>
+      rhs
+      arg 1
+      rw [ex606]
+
+  by_cases h1 :
+    ∃ b1, b1 ∈ keysβ ∧ R a1 b1 > 0 ∧ (if ∃ x, x ∈ keysι ∧ F x b1 c1 > 0 then 1 else 0) > 0
+
+  -- pos
+  rw [if_pos h1]
+  obtain ⟨b2, h2, h3, h4⟩ := h1
+  have h5 : ∃ x, x ∈ keysι ∧ F x b2 c1 > 0 := by
+    by_cases h5_ : ∃ x, x ∈ keysι ∧ F x b2 c1 > 0
+    exact h5_
+    rw [if_neg h5_] at h4
+    contradiction
+  clear h4
+  obtain ⟨i1, h6, h7⟩ := h5
+  rw [if_pos]
+  exists i1
+  constructor
+  exact h6
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  exists b2
+
+  -- neg
+  rw [if_neg h1]
+  rw [if_neg]
+  intro h8
+  apply h1
+  obtain ⟨b3, h9, h10⟩ := h8
+  have h11 : ∃ b, b ∈ keysβ ∧ R a1 b > 0 ∧ F b3 b c1 > 0 := by
+    by_cases h11_ : ∃ b, b ∈ keysβ ∧ R a1 b > 0 ∧ F b3 b c1 > 0
+    exact h11_
+    rw [if_neg h11_] at h10
+    contradiction
+  clear h10
+  obtain ⟨b4, h12, h13, h14⟩ := h11
+  exists b4
+  constructor
+  exact h12
+  constructor
+  exact h13
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  exists b3
 
 -- 864：reach は左の wsumW にも分配する（OR の分配）
 theorem ex864 (keysβ : List β) (keysι : List ι)
@@ -358,21 +416,136 @@ theorem ex864 (keysβ : List β) (keysι : List ι)
       =
     wsumW keysι
       (fun i => wReachComp keysβ (F i) S) := by
-  -- TODO
   -- ヒント：ex863 の左版（relCompList の左 OR 分配＝ex657 を List で回す）
-  sorry
+  funext a1 c1
+
+  dsimp [wReachComp, relCompList, wsumW, wSupp, wBool, maskW]
+
+  conv =>
+    conv =>
+      lhs
+      arg 1
+      arg 1
+      intro b1
+      rhs
+      lhs
+      arg 1
+      arg 1
+      rw [ex606]
+    conv =>
+      rhs
+      arg 1
+      rw [ex606]
+
+  by_cases h1 : ∃ b1, b1 ∈ keysβ ∧ (if ∃ x, x ∈ keysι ∧ F x a1 b1 > 0 then 1 else 0) > 0 ∧ S b1 c1 > 0
+
+  -- pos
+  rw [if_pos h1]
+  obtain ⟨b2, h2, h3, h4⟩ := h1
+  have h5: ∃ x, x ∈ keysι ∧ F x a1 b2 > 0 := by
+    by_cases h5_ : ∃ x, x ∈ keysι ∧ F x a1 b2 > 0
+    exact h5_
+    rw [if_neg h5_] at h3
+    contradiction
+  clear h3
+  obtain ⟨i1, h6, h7⟩ := h5
+  rw [if_pos]
+  exists i1
+  constructor
+  exact h6
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  exists b2
+
+  -- neg
+  rw [if_neg h1]
+  rw [if_neg]
+  intro h8
+  apply h1
+  obtain ⟨b3, h9, h10⟩ := h8
+  have h11 : ∃ b, b ∈ keysβ ∧ F b3 a1 b > 0 ∧ S b c1 > 0 := by
+    by_cases h11_ : ∃ b, b ∈ keysβ ∧ F b3 a1 b > 0 ∧ S b c1 > 0
+    exact h11_
+    rw [if_neg h11_] at h10
+    contradiction
+  clear h10
+  obtain ⟨b4, h12, h13, h14⟩ := h11
+  exists b4
+  constructor
+  exact h12
+  constructor
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  exists b3
+  exact h14
 
 -- 865：wReachComp の append（keys を分割すると OR に分解できる）
 theorem ex865 (keys₁ keys₂ : List β) (R : WRel α β) (S : WRel β γ) :
     wReachComp (keys₁ ++ keys₂) R S
       =
     wBool (wAdd (wReachComp keys₁ R S) (wReachComp keys₂ R S)) := by
-  -- TODO
   -- ヒント：
   --   * wReachComp の定義（maskW ∘ relCompList）
   --   * relCompList の append 分解（keys の ∃ は OR）
   --   * 0/1 化は wBool でまとめる
-  sorry
+  funext a1 c1
+  dsimp [wReachComp, relCompList, wSupp, wBool, maskW, wAdd]
+  by_cases h1 : ∃ b, b ∈ keys₁ ++ keys₂ ∧ R a1 b > 0 ∧ S b c1 > 0
+
+  -- pos
+  rw [if_pos h1]
+  obtain ⟨b2, h2, h3, h4⟩ := h1
+  rw [List.mem_append] at h2
+  rw [if_pos]
+  rw [gt_iff_lt]
+  rw [Nat.add_pos_iff_pos_or_pos]
+  obtain h2_1 | h2_2 := h2
+  left
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  exists b2
+  right
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  exists b2
+  rw [if_neg h1]
+  rw [if_neg]
+  intro h5
+  apply h1
+  rw [gt_iff_lt] at h5
+  rw [Nat.add_pos_iff_pos_or_pos] at h5
+  have h6 : (∃ b, b ∈ keys₁ ∧ R a1 b > 0 ∧ S b c1 > 0)  ∨
+    (∃ b, b ∈ keys₂ ∧ R a1 b > 0 ∧ S b c1 > 0) := by
+    by_cases h6_1 : ∃ b, b ∈ keys₁ ∧ R a1 b > 0 ∧ S b c1 > 0
+    obtain ⟨b3, h7, h8, h9⟩ := h6_1
+    left
+    exists b3
+    by_cases h6_2 : ∃ b, b ∈ keys₂ ∧ R a1 b > 0 ∧ S b c1 > 0
+    obtain ⟨b4, h10, h11, h12⟩ := h6_2
+    right
+    exists b4
+    rw [if_neg h6_1] at h5
+    rw [if_neg h6_2] at h5
+    rw [or_self] at h5
+    contradiction
+  clear h5
+  obtain h6_1 | h6_2 := h6
+  obtain ⟨b5, h7, h8, h9⟩ := h6_1
+  exists b5
+  constructor
+  apply List.mem_append_left
+  exact h7
+  constructor
+  exact h8
+  exact h9
+  obtain ⟨b6, h10, h11, h12⟩ := h6_2
+  exists b6
+  constructor
+  apply List.mem_append_right
+  exact h10
+  constructor
+  exact h11
+  exact h12
 
 --------------------------------------------------------------------------------
 -- 866〜870：wReachComp の計算規則（empty / singleton / graph など）
@@ -381,35 +554,58 @@ theorem ex865 (keys₁ keys₂ : List β) (R : WRel α β) (S : WRel β γ) :
 -- 866：空 keys の reach は wZero
 theorem ex866 (R : WRel α β) (S : WRel β γ) :
     wReachComp ([] : List β) R S = wZero α γ := by
-  -- TODO
   -- ヒント：wReachComp の定義で relCompList [] ... は False
-  sorry
+  funext a1 c1
+  dsimp [wReachComp, relCompList, wSupp, wBool, maskW, wZero]
+  rw [if_neg]
+  intro h1
+  obtain ⟨b1, h2, h3, h4⟩ := h1
+  rw [List.mem_nil_iff] at h2
+  contradiction
 
 -- 867：singleton keys の reach は “その 1 点 b を witness にした到達”
 theorem ex867 (b : β) (R : WRel α β) (S : WRel β γ) :
     wReachComp [b] R S
       =
     maskW (fun a c => wSupp R a b ∧ wSupp S b c) := by
-  -- TODO
   -- ヒント：wReachComp の定義で relCompList [b] を展開
-  sorry
+  funext a1 c1
+  dsimp [wReachComp, relCompList, wSupp, wBool, maskW]
+  by_cases h1 : R a1 b > 0 ∧ S b c1 > 0
+  rw [if_pos h1]
+  rw [if_pos]
+  exists b
+  constructor
+  apply List.mem_singleton_self
+  exact h1
+  rw [if_neg h1]
+  rw [if_neg]
+  intro h2
+  obtain ⟨b1, h3, h4, h5⟩ := h2
+  rw [List.mem_singleton] at h3
+  apply h1
+  constructor
+  rw [←h3]
+  exact h4
+  rw [←h3]
+  exact h5
 
 -- 868：reach は wBool を両側に入れても不変（到達だけを見るので）
 theorem ex868 (keys : List β) (R : WRel α β) (S : WRel β γ) :
     wReachComp keys (wBool R) (wBool S) = wReachComp keys R S := by
-  -- TODO
   -- ヒント：ex824 を使えばよい
-  sorry
+  -- theorem ex824 (keys : List β) (R : WRel α β) (S : WRel β γ) :
+  --     wReachComp keys (wBool R) (wBool S) = wReachComp keys R S
+  rw [ex824]
 
 -- 869：右が graph の reach は、列選択テンソルの OR-和（wsumW）で表せる
 theorem ex869 (keys : List β) (R : WRel α β) (g : β → γ) :
     wReachComp keys R (wGraph g)
       =
     wsumW keys
-      (fun b => wMask (fun a c => wBool R a b) (fun _ c => g b = c)) := by
-  -- TODO
+      (fun b => wMask (fun a _ => wBool R a b) (fun _ c => g b = c)) := by
   -- ヒント：Basic_841 の ex843 をそのまま使う
-  sorry
+  rw [ex843]
 
 -- 870：keys が {f a} を全て含むなら、graph 合成の reach は単なる関数合成の graph（reach 版）
 theorem ex870 (keys : List β) (f : α → β) (g : β → γ) :
@@ -417,8 +613,12 @@ theorem ex870 (keys : List β) (f : α → β) (g : β → γ) :
       wReachComp keys (wGraph f) (wGraph g)
         =
       wGraph (fun a => g (f a)) := by
-  -- TODO
   -- ヒント：ex836（reach の graph-graph 合成で mask を消す）
-  sorry
+  -- theorem ex836 (keys : List β) (f : α → β) (g : β → γ) :
+  --     (∀ a : α, f a ∈ keys) →
+  --       wReachComp keys (wGraph f) (wGraph g)
+  --         =
+  --       wGraph (fun a => g (f a))
+  apply ex836 keys f g
 
 end TL
