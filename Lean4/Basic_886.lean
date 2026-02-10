@@ -33,12 +33,40 @@ noncomputable def wAnd (R S : WRel A B) : WRel A B :=
 -- 886: support(wAnd) is conjunction of supports.
 theorem ex886 (R S : WRel A B) :
     wSupp (wAnd R S) = relMul (wSupp R) (wSupp S) := by
-  -- TODO
   -- Hint:
   --   * unfold wAnd
   --   * ex796: wSupp (wBool X) = wSupp X
   --   * ex667: wSupp (wMul R S) = relMul (wSupp R) (wSupp S)
-  sorry
+  funext a1 b1
+  dsimp [wSupp, wAnd, wBool, maskW, wMul, relMul]
+  by_cases h1 : R a1 b1 * S a1 b1 > 0
+  -- pos
+  rw [if_pos h1]
+  apply propext
+  constructor
+  intro h2
+  rw [gt_iff_lt] at h1
+  obtain h1_1 := Nat.pos_of_mul_pos_left h1
+  obtain h1_2 := Nat.pos_of_mul_pos_right h1
+  clear h1
+  constructor
+  exact h1_2
+  exact h1_1
+  intro h2
+  apply Nat.zero_lt_one
+  rw [if_neg h1]
+  apply propext
+  constructor
+  intro h2
+  contradiction
+  intro h3
+  obtain ⟨h3_1, h3_2⟩ := h3
+  apply False.elim
+  apply h1
+  rw [gt_iff_lt]
+  apply Nat.mul_pos
+  exact h3_1
+  exact h3_2
 
 -- 887: wAnd is commutative.
 theorem ex887 (R S : WRel A B) :
@@ -607,11 +635,82 @@ theorem ex895 (b : B) (R : WRel A B) (S S' : WRel B C) :
 theorem ex896 (keys : List I) (F G : I -> WRel A C) :
     WLe (wsumW keys (fun i => wAnd (F i) (G i)))
         (wAnd (wsumW keys F) (wsumW keys G)) := by
-  -- TODO
   -- Hint:
   --   * ex845 gives support(WSUM)
   --   * same index i witnesses both sides on the right.
-  sorry
+  dsimp [WLe, wsumW, wAnd, wBool, wSupp, wMul, maskW]
+  intro a1 c1
+  conv =>
+    conv =>
+      lhs
+      arg 1
+      rw [ex606]
+    conv =>
+      rhs
+      arg 1
+      arg 1
+      conv =>
+        arg 1
+        arg 1
+        rw [ex606]
+      conv =>
+        arg 2
+        arg 1
+        rw [ex606]
+
+  by_cases h1 :  ∃ x, x ∈ keys ∧ (if F x a1 c1 * G x a1 c1 > 0 then 1 else 0) > 0
+  -- pos
+  obtain ⟨x0, hkey, hF⟩ := h1
+  have h2 :  F x0 a1 c1 * G x0 a1 c1 > 0 := by
+    by_cases h_ :  F x0 a1 c1 * G x0 a1 c1 > 0
+    exact h_
+    rw [if_neg h_] at hF
+    contradiction
+  clear hF
+  obtain hF_1 := Nat.pos_of_mul_pos_left h2
+  obtain hF_2 := Nat.pos_of_mul_pos_right h2
+  clear h2
+  rw [if_pos]
+  rw [if_pos]
+  apply Nat.le_refl
+  apply Nat.mul_pos
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  exists x0
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  exists x0
+  exists x0
+  constructor
+  exact hkey
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  apply Nat.mul_pos
+  exact hF_2
+  exact hF_1
+  -- neg
+  rw [if_neg]
+  apply Nat.zero_le
+  intro h2
+  apply h1
+  obtain ⟨x0, hkey, hF⟩ := h2
+  have hF2 : F x0 a1 c1 * G x0 a1 c1 > 0 := by
+    by_cases h_ : F x0 a1 c1 * G x0 a1 c1 > 0
+    exact h_
+    rw [if_neg h_] at hF
+    contradiction
+  clear hF
+  obtain hF_1 := Nat.pos_of_mul_pos_left hF2
+  obtain hF_2 := Nat.pos_of_mul_pos_right hF2
+  clear hF2
+  exists x0
+  constructor
+  exact hkey
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  apply Nat.mul_pos
+  exact hF_2
+  exact hF_1
 
 -- 897: singleton version of ex896 is equality.
 theorem ex897 (i0 : I) (F G : I -> WRel A C) :
