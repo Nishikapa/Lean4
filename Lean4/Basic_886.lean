@@ -717,9 +717,119 @@ theorem ex897 (i0 : I) (F G : I -> WRel A C) :
     wsumW [i0] (fun i => wAnd (F i) (G i))
       =
     wAnd (wsumW [i0] F) (wsumW [i0] G) := by
-  -- TODO
   -- Hint: unfold wsumW on singleton and simplify.
-  sorry
+  funext a1 c1
+  dsimp [wsumW, wBool, maskW, wSupp, wAnd, wMul]
+  conv =>
+    conv =>
+      lhs
+      arg 1
+      rw [ex606]
+    conv =>
+      rhs
+      arg 1
+      arg 1
+      conv =>
+        arg 1
+        arg 1
+        rw [ex606]
+      conv =>
+        arg 2
+        arg 1
+        rw [ex606]
+
+  by_cases h1 : ∃ x, x ∈ [i0] ∧ (if F x a1 c1 * G x a1 c1 > 0 then 1 else 0) > 0
+  -- pos
+  obtain ⟨x0, hkey, hF⟩ := h1
+  rw [List.mem_singleton] at hkey
+  rw [hkey] at hF
+  have hF2 : F i0 a1 c1 * G i0 a1 c1 > 0 := by
+    by_cases h_ : F i0 a1 c1 * G i0 a1 c1 > 0
+    exact h_
+    rw [if_neg h_] at hF
+    contradiction
+  clear hF
+  obtain hF_1 := Nat.pos_of_mul_pos_left hF2
+  obtain hF_2 := Nat.pos_of_mul_pos_right hF2
+  clear hF2
+  rw [if_pos]
+  rw [if_pos]
+  rw [if_pos]
+  rw [Nat.one_mul]
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  exists i0
+  constructor
+  rw [List.mem_singleton]
+  exact hF_1
+  exists i0
+  constructor
+  rw [List.mem_singleton]
+  exact hF_2
+  exists i0
+  constructor
+  rw [List.mem_singleton]
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  apply Nat.mul_pos
+  exact hF_2
+  exact hF_1
+  -- neg
+  rw [if_neg]
+  rw [if_neg]
+  intro h2
+  apply h1
+  obtain h2_1 := Nat.pos_of_mul_pos_right h2
+  obtain h2_2 := Nat.pos_of_mul_pos_left h2
+  clear h2
+  have h2_3 : ∃ x, x ∈ [i0] ∧ F x a1 c1 > 0 := by
+    by_cases h_ : ∃ x, x ∈ [i0] ∧ F x a1 c1 > 0
+    exact h_
+    rw [if_neg h_] at h2_1
+    contradiction
+  clear h2_1
+  have h2_4 : ∃ x, x ∈ [i0] ∧ G x a1 c1 > 0 := by
+    by_cases h_ : ∃ x, x ∈ [i0] ∧ G x a1 c1 > 0
+    exact h_
+    rw [if_neg h_] at h2_2
+    contradiction
+  clear h2_2
+  obtain ⟨x1, h2_3_1, h2_3_2⟩ := h2_3
+  obtain ⟨x2, h2_4_1, h2_4_2⟩ := h2_4
+  rw [List.mem_singleton] at h2_3_1
+  rw [List.mem_singleton] at h2_4_1
+  rw [h2_3_1] at h2_3_2
+  rw [h2_4_1] at h2_4_2
+  exists i0
+  constructor
+  rw [List.mem_singleton]
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  apply Nat.mul_pos
+  exact h2_3_2
+  exact h2_4_2
+  intro h3
+  apply h1
+  obtain ⟨x0, hkey, hF⟩ := h3
+  rw [List.mem_singleton] at hkey
+  rw [hkey] at hF
+  have hF2 : F i0 a1 c1 * G i0 a1 c1 > 0 := by
+    by_cases h_ : F i0 a1 c1 * G i0 a1 c1 > 0
+    exact h_
+    rw [if_neg h_] at hF
+    contradiction
+  clear hF
+  obtain hF_1 := Nat.pos_of_mul_pos_left hF2
+  obtain hF_2 := Nat.pos_of_mul_pos_right hF2
+  clear hF2
+  exists i0
+  constructor
+  rw [List.mem_singleton]
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  apply Nat.mul_pos
+  exact hF_2
+  exact hF_1
 
 -- 898: with left graph, right-AND distributes exactly (unique middle point f a).
 theorem ex898 (keys : List B) (f : A -> B) (S S' : WRel B C) :
@@ -727,20 +837,247 @@ theorem ex898 (keys : List B) (f : A -> B) (S S' : WRel B C) :
       =
     wAnd (wReachComp keys (wGraph f) S)
          (wReachComp keys (wGraph f) S') := by
-  -- TODO
   -- Hint:
   --   * rewrite each reach by ex848
   --   * only b = f a can witness graph edges
-  sorry
+  funext a1 c1
+  dsimp [wReachComp, wGraph, wAnd, wBool, wSupp, wMul, maskW, relCompList, relGraph]
+
+  by_cases h1 : ∃ b, b ∈ keys ∧ (if f a1 = b then 1 else 0) > 0 ∧ (if S b c1 * S' b c1 > 0 then 1 else 0) > 0
+  -- pos
+  obtain ⟨b0, hkey, hgraph, hS_and⟩ := h1
+  have hgraph2 : f a1 = b0 := by
+    by_cases h_ : f a1 = b0
+    exact h_
+    rw [if_neg h_] at hgraph
+    contradiction
+  clear hgraph
+  have hS_and2 : S b0 c1 * S' b0 c1 > 0 := by
+    by_cases h_ : S b0 c1 * S' b0 c1 > 0
+    exact h_
+    rw [if_neg h_] at hS_and
+    contradiction
+  clear hS_and
+  obtain hS_and3 := Nat.pos_of_mul_pos_left hS_and2
+  obtain hS_and4 := Nat.pos_of_mul_pos_right hS_and2
+  clear hS_and2
+  rw [if_pos]
+  rw [if_pos]
+  rw [if_pos]
+  rw [Nat.one_mul]
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  exists b0
+  constructor
+  exact hkey
+  constructor
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rw [hgraph2]
+  exact hS_and3
+  exists b0
+  constructor
+  exact hkey
+  constructor
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  exact hgraph2
+  exact hS_and4
+  exists b0
+  constructor
+  exact hkey
+  rw [if_pos]
+  constructor
+  apply Nat.zero_lt_one
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  apply Nat.mul_pos
+  exact hS_and4
+  exact hS_and3
+  exact hgraph2
+  -- neg
+  rw [if_neg]
+  rw [if_neg]
+  intro h2
+  apply h1
+  obtain h2_1 := Nat.pos_of_mul_pos_right h2
+  obtain h2_2 := Nat.pos_of_mul_pos_left h2
+  clear h2
+  have h2_3 : ∃ b, b ∈ keys ∧ (if f a1 = b then 1 else 0) > 0 ∧ S b c1 > 0 := by
+    by_cases h_ : ∃ b, b ∈ keys ∧ (if f a1 = b then 1 else 0) > 0 ∧ S b c1 > 0
+    exact h_
+    rw [if_neg h_] at h2_1
+    contradiction
+  clear h2_1
+  have h2_4 : ∃ b, b ∈ keys ∧ (if f a1 = b then 1 else 0) > 0 ∧ S' b c1 > 0 := by
+    by_cases h_ : ∃ b, b ∈ keys ∧ (if f a1 = b then 1 else 0) > 0 ∧ S' b c1 > 0
+    exact h_
+    rw [if_neg h_] at h2_2
+    contradiction
+  clear h2_2
+  obtain ⟨b1, h2_3_1, h2_3_2, h2_3_3⟩ := h2_3
+  have h2_3_4 : f a1 = b1 := by
+    by_cases h_ : f a1 = b1
+    exact h_
+    rw [if_neg h_] at h2_3_2
+    contradiction
+  clear h2_3_2
+  obtain ⟨b2, h2_4_1, h2_4_2, h2_4_3⟩ := h2_4
+  have h2_4_4 : f a1 = b2 := by
+    by_cases h_ : f a1 = b2
+    exact h_
+    rw [if_neg h_] at h2_4_2
+    contradiction
+  clear h2_4_2
+  rw [←h2_3_4] at h2_3_1
+  rw [←h2_3_4] at h2_3_3
+  rw [←h2_4_4] at h2_4_3
+  exists (f a1)
+  constructor
+  exact h2_3_1
+  constructor
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rfl
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  apply Nat.mul_pos
+  exact h2_3_3
+  exact h2_4_3
+  intro h3
+  apply h1
+  obtain ⟨b0, hkey, hgraph, hS_and⟩ := h3
+  have hgraph2 : f a1 = b0 := by
+    by_cases h_ : f a1 = b0
+    exact h_
+    rw [if_neg h_] at hgraph
+    contradiction
+  clear hgraph
+  have hS_and2 : S b0 c1 * S' b0 c1 > 0 := by
+    by_cases h_ : S b0 c1 * S' b0 c1 > 0
+    exact h_
+    rw [if_neg h_] at hS_and
+    contradiction
+  clear hS_and
+  obtain hS_and3 := Nat.pos_of_mul_pos_left hS_and2
+  obtain hS_and4 := Nat.pos_of_mul_pos_right hS_and2
+  clear hS_and2
+  exists b0
+  constructor
+  exact hkey
+  constructor
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  exact hgraph2
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  apply Nat.mul_pos
+  exact hS_and4
+  exact hS_and3
 
 -- 899: immediate corollary of ex898 (idempotence on the right factor).
 theorem ex899 (keys : List B) (f : A -> B) (S : WRel B C) :
     wReachComp keys (wGraph f) (wAnd S S)
       =
     wReachComp keys (wGraph f) S := by
-  -- TODO
   -- Hint: ex898 + ex889 + ex824.
-  sorry
+  funext a1 c1
+  dsimp [wReachComp, wGraph, wAnd, wBool, wSupp, wMul, maskW, relCompList, relGraph]
+  by_cases h1 :
+    ∃ b, b ∈ keys ∧ (if f a1 = b then 1 else 0) > 0 ∧ (if S b c1 * S b c1 > 0 then 1 else 0) > 0
+  -- pos
+  obtain ⟨b0, hkey, hgraph, hS_and⟩ := h1
+  have hgraph2 : f a1 = b0 := by
+    by_cases h_ : f a1 = b0
+    exact h_
+    rw [if_neg h_] at hgraph
+    contradiction
+  clear hgraph
+  have hS_and2 : S b0 c1 * S b0 c1 > 0 := by
+    by_cases h_ : S b0 c1 * S b0 c1 > 0
+    exact h_
+    rw [if_neg h_] at hS_and
+    contradiction
+  clear hS_and
+  obtain hS_and3 := Nat.pos_of_mul_pos_left hS_and2
+  -- obtain hS_and4 := Nat.pos_of_mul_pos_right hS_and2
+  clear hS_and2
+  rw [if_pos]
+  rw [if_pos]
+  exists b0
+  constructor
+  exact hkey
+  constructor
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  exact hgraph2
+  exact hS_and3
+  exists b0
+  constructor
+  exact hkey
+  rw [if_pos]
+  constructor
+  apply Nat.zero_lt_one
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  apply Nat.mul_pos
+  exact hS_and3
+  exact hS_and3
+  exact hgraph2
+  -- neg
+  rw [if_neg]
+  rw [if_neg]
+  intro h2
+  apply h1
+  obtain ⟨b0, hkey, hgraph, hS_and⟩ := h2
+  have hgraph2 : f a1 = b0 := by
+    by_cases h_ : f a1 = b0
+    exact h_
+    rw [if_neg h_] at hgraph
+    contradiction
+  clear hgraph
+  exists b0
+  constructor
+  exact hkey
+  constructor
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  exact hgraph2
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  apply Nat.mul_pos
+  exact hS_and
+  exact hS_and
+  intro h3
+  apply h1
+  obtain ⟨b0, hkey, hgraph, hS_and⟩ := h3
+  have hgraph2 : f a1 = b0 := by
+    by_cases h_ : f a1 = b0
+    exact h_
+    rw [if_neg h_] at hgraph
+    contradiction
+  clear hgraph
+  have hS_and2 : S b0 c1 * S b0 c1 > 0 := by
+    by_cases h_ : S b0 c1 * S b0 c1 > 0
+    exact h_
+    rw [if_neg h_] at hS_and
+    contradiction
+  clear hS_and
+  obtain hS_and3 := Nat.pos_of_mul_pos_left hS_and2
+  --obtain hS_and4 := Nat.pos_of_mul_pos_right hS_and2
+  clear hS_and2
+  exists b0
+  constructor
+  exact hkey
+  constructor
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  exact hgraph2
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  apply Nat.mul_pos
+  exact hS_and3
+  exact hS_and3
 
 -- 900: conjunction of two graph-reach outputs as one mask formula.
 theorem ex900 (keys : List B) (f : A -> B) (g h : B -> C) :
@@ -748,10 +1085,243 @@ theorem ex900 (keys : List B) (f : A -> B) (g h : B -> C) :
          (wReachComp keys (wGraph f) (wGraph h))
       =
     maskW (fun a c => List.Mem (f a) keys /\ g (f a) = c /\ h (f a) = c) := by
-  -- TODO
   -- Hint:
   --   * ex835 rewrites each graph-graph reach to a mask formula
   --   * then simplify conjunction of the two masks pointwise
-  sorry
+  funext a1 c1
+  dsimp [wReachComp, wGraph, wAnd, wBool, wSupp, wMul, maskW, relCompList, relGraph]
+  by_cases h1 : ((if ∃ b, b ∈ keys ∧ (if f a1 = b then 1 else 0) > 0 ∧ (if g b = c1 then 1 else 0) > 0 then 1 else 0) *
+          if ∃ b, b ∈ keys ∧ (if f a1 = b then 1 else 0) > 0 ∧ (if h b = c1 then 1 else 0) > 0 then 1 else 0) >
+        0
+  -- pos
+  obtain h1_1 := Nat.pos_of_mul_pos_left h1
+  obtain h1_2 := Nat.pos_of_mul_pos_right h1
+  clear h1
+  have h1_3 : ∃ b, b ∈ keys ∧ (if f a1 = b then 1 else 0) > 0 ∧ (if h b = c1 then 1 else 0) > 0 := by
+    by_cases h_ : ∃ b, b ∈ keys ∧ (if f a1 = b then 1 else 0) > 0 ∧ (if h b = c1 then 1 else 0) > 0
+    exact h_
+    rw [if_neg] at h1_1
+    contradiction
+    intro h2_
+    apply h_
+    obtain ⟨b, hkey, hgraph, hgraph2⟩ := h2_
+    have hgraph3 : f a1 = b := by
+      by_cases h__ : f a1 = b
+      exact h__
+      rw [if_neg h__] at hgraph
+      contradiction
+    clear hgraph
+    have hgraph4 : h b = c1 := by
+      by_cases h__ : h b = c1
+      exact h__
+      rw [if_neg h__] at hgraph2
+      contradiction
+    clear hgraph2
+    exists b
+    constructor
+    exact hkey
+    constructor
+    rw [if_pos]
+    apply Nat.zero_lt_one
+    exact hgraph3
+    rw [if_pos]
+    apply Nat.zero_lt_one
+    exact hgraph4
+  clear h1_1
+  have h1_4 : ∃ b, b ∈ keys ∧ (if f a1 = b then 1 else 0) > 0 ∧ (if g b = c1 then 1 else 0) > 0 := by
+    by_cases h_ : ∃ b, b ∈ keys ∧ (if f a1 = b then 1 else 0) > 0 ∧ (if g b = c1 then 1 else 0) > 0
+    exact h_
+    rw [if_neg] at h1_2
+    contradiction
+    intro h2_
+    apply h_
+    obtain ⟨b, hkey, hgraph, hgraph2⟩ := h2_
+    have hgraph3 : f a1 = b := by
+      by_cases h__ : f a1 = b
+      exact h__
+      rw [if_neg h__] at hgraph
+      contradiction
+    clear hgraph
+    have hgraph4 : g b = c1 := by
+      by_cases h__ : g b = c1
+      exact h__
+      rw [if_neg h__] at hgraph2
+      contradiction
+    clear hgraph2
+    exists b
+    constructor
+    exact hkey
+    constructor
+    rw [if_pos]
+    apply Nat.zero_lt_one
+    exact hgraph3
+    rw [if_pos]
+    apply Nat.zero_lt_one
+    exact hgraph4
+  clear h1_2
+  obtain ⟨b1, hkey1, hgraph1, hgraph2⟩ := h1_3
+  obtain ⟨b2, hkey2, hgraph3, hgraph4⟩ := h1_4
+  have hgraph5 : f a1 = b1 := by
+    by_cases h_ : f a1 = b1
+    exact h_
+    rw [if_neg h_] at hgraph1
+    contradiction
+  clear hgraph1
+  have hgraph6 : f a1 = b2 := by
+    by_cases h_ : f a1 = b2
+    exact h_
+    rw [if_neg h_] at hgraph3
+    contradiction
+  clear hgraph3
+  have hgraph7 : h b1 = c1 := by
+    by_cases h_ : h b1 = c1
+    exact h_
+    rw [if_neg h_] at hgraph2
+    contradiction
+  clear hgraph2
+  have hgraph8 : g b2 = c1 := by
+    by_cases h_ : g b2 = c1
+    exact h_
+    rw [if_neg h_] at hgraph4
+    contradiction
+  clear hgraph4
+  rw [←hgraph5] at hkey1
+  rw [←hgraph6] at hkey2
+  rw [if_pos]
+  rw [if_pos]
+  constructor
+  exact hkey2
+  constructor
+  rw [hgraph6]
+  exact hgraph8
+  rw [hgraph5]
+  exact hgraph7
+  rw [if_pos]
+  rw [Nat.one_mul]
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  exists (f a1)
+  constructor
+  exact hkey1
+  constructor
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rfl
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rw [hgraph5]
+  exact hgraph7
+  exists (f a1)
+  constructor
+  exact hkey1
+  constructor
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rfl
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rw [hgraph6]
+  exact hgraph8
+  rw [if_neg]
+  rw [if_neg]
+  intro h2
+  apply h1
+  obtain ⟨b0, h3,h4⟩ := h2
+  apply Nat.mul_pos
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  exists (f a1)
+  constructor
+  exact b0
+  constructor
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rfl
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  exact h3
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  exists (f a1)
+  constructor
+  exact b0
+  constructor
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rfl
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  exact h4
+  intro h5
+  apply h1
+  obtain h5_1 := Nat.pos_of_mul_pos_right h5
+  obtain h5_2 := Nat.pos_of_mul_pos_left h5
+  clear h5
+  have h5_3 : ∃ b, b ∈ keys ∧ (if f a1 = b then 1 else 0) > 0 ∧ (if g b = c1 then 1 else 0) > 0 := by
+    by_cases h_ : ∃ b, b ∈ keys ∧ (if f a1 = b then 1 else 0) > 0 ∧ (if g b = c1 then 1 else 0) > 0
+    exact h_
+    rw [if_neg h_] at h5_1
+    contradiction
+  clear h5_1
+  have h5_4 : ∃ b, b ∈ keys ∧ (if f a1 = b then 1 else 0) > 0 ∧ (if h b = c1 then 1 else 0) > 0 := by
+    by_cases h_ : ∃ b, b ∈ keys ∧ (if f a1 = b then 1 else 0) > 0 ∧ (if h b = c1 then 1 else 0) > 0
+    exact h_
+    rw [if_neg h_] at h5_2
+    contradiction
+  clear h5_2
+  obtain ⟨b1, hkey1, hgraph1, hgraph2⟩ := h5_3
+  obtain ⟨b2, hkey2, hgraph3, hgraph4⟩ := h5_4
+  have hgraph5 : f a1 = b1 := by
+    by_cases h_ : f a1 = b1
+    exact h_
+    rw [if_neg h_] at hgraph1
+    contradiction
+  clear hgraph1
+  have hgraph6 : g b1 = c1 := by
+    by_cases h_ : g b1 = c1
+    exact h_
+    rw [if_neg h_] at hgraph2
+    contradiction
+  clear hgraph2
+  have hgraph7 : f a1 = b2 := by
+    by_cases h_ : f a1 = b2
+    exact h_
+    rw [if_neg h_] at hgraph3
+    contradiction
+  clear hgraph3
+  have hgraph8 : h b2 = c1 := by
+    by_cases h_ : h b2 = c1
+    exact h_
+    rw [if_neg h_] at hgraph4
+    contradiction
+  clear hgraph4
+  rw [if_pos]
+  rw [Nat.one_mul]
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  exists (f a1)
+  constructor
+  rw [hgraph5]
+  exact hkey1
+  constructor
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rfl
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rw [hgraph7]
+  exact hgraph8
+  exists (f a1)
+  constructor
+  rw [hgraph7]
+  exact hkey2
+  constructor
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rfl
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rw [hgraph5]
+  exact hgraph6
 
 end TL
