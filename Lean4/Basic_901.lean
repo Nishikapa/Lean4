@@ -39,38 +39,181 @@ noncomputable def wMHA (heads : List H) (F : H -> WRel A C) : WRel A C :=
 -- 901: support of head is relCompList on supports.
 theorem ex901 (keys : List B) (QK : WRel A B) (KV : WRel B C) :
     wSupp (wHead keys QK KV) = relCompList keys (wSupp QK) (wSupp KV) := by
-  -- TODO
   -- Hint: unfold wHead, then ex818.
-  sorry
+  funext a1 c1
+  dsimp [wHead, wReachComp, wSupp, relCompList, maskW]
+  by_cases h1 : ∃ b, b ∈ keys ∧ QK a1 b > 0 ∧ KV b c1 > 0
+  -- pos
+  rw [if_pos h1]
+  apply propext
+  constructor
+  intro h2
+  obtain ⟨b1, hb1, hb2, hb3⟩ := h1
+  exists b1
+  intro h3
+  apply Nat.zero_lt_one
+  -- neg
+  rw [if_neg h1]
+  apply propext
+  constructor
+  intro h4
+  contradiction
+  intro h5
+  obtain ⟨b2, hb4, hb5, hb6⟩ := h5
+  apply False.elim
+  apply h1
+  exists b2
 
 -- 902: support of masked-head (left mask) is relMul on left support.
 theorem ex902 (keys : List B) (M : Rel A B) (QK : WRel A B) (KV : WRel B C) :
     wSupp (wMaskedHead keys M QK KV)
       =
     relCompList keys (relMul (wSupp QK) M) (wSupp KV) := by
-  -- TODO
   -- Hint: ex901 + ex614.
-  sorry
+  funext a1 c1
+  dsimp [wMaskedHead, wHead, wReachComp, wSupp, relCompList, relMul, maskW, wMask]
+  by_cases h1 : ∃ b, b ∈ keys ∧ (QK a1 b * if M a1 b then 1 else 0) > 0 ∧ KV b c1 > 0
+
+  -- pos
+  rw [if_pos h1]
+  apply propext
+  constructor
+  intro h2
+  obtain ⟨b1, hb1, hb2, hb3⟩ := h1
+  obtain hb4 : M a1 b1  := by
+    by_cases hM_ : M a1 b1
+    exact hM_
+    rw [if_neg hM_] at hb2
+    rw [Nat.mul_zero] at hb2
+    contradiction
+  obtain hb5 : QK a1 b1 > 0 := by
+    by_cases hM_ : QK a1 b1 > 0
+    exact hM_
+    obtain hM2_ := Nat.eq_zero_of_not_pos hM_
+    rw [hM2_] at hb2
+    rw [Nat.zero_mul] at hb2
+    contradiction
+  clear hb2
+  exists b1
+  obtain ⟨b2, h2, h3, h4⟩:=h1
+  intro h5
+  apply Nat.zero_lt_one
+
+  -- neg
+  rw [if_neg h1]
+  apply propext
+  constructor
+  intro h6
+  contradiction
+  intro h7
+  obtain ⟨b3, hb6, hb7, hb8⟩ := h7
+  obtain ⟨hb9, hb10⟩ := hb7
+  apply False.elim
+  apply h1
+  exists b3
+  constructor
+  exact hb6
+  constructor
+  apply Nat.mul_pos
+  exact hb9
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  exact hb10
+  exact hb8
 
 -- 903: masking the left side can only reduce support.
 theorem ex903 (keys : List B) (M : Rel A B) (QK : WRel A B) (KV : WRel B C) :
     wSupp (wMaskedHead keys M QK KV) ⊆ wSupp (wHead keys QK KV) := by
-  -- TODO
-  -- Hint:
   --   * ex902/ex901
   --   * pointwise: (wSupp QK a b ∧ M a b) -> wSupp QK a b
-  sorry
+  dsimp [RelLe, wSupp, wMaskedHead, wHead, wReachComp, maskW, relCompList, wMask]
+  intro a1 c1 h1
+  have h2 : ∃ b, b ∈ keys ∧ (QK a1 b * if M a1 b then 1 else 0) > 0 ∧ KV b c1 > 0 := by
+    by_cases h_ : ∃ b, b ∈ keys ∧ (QK a1 b * if M a1 b then 1 else 0) > 0 ∧ KV b c1 > 0
+    exact h_
+    rw [if_neg h_] at h1
+    contradiction
+  clear h1
+  obtain ⟨b1, hb1, hb2, hb3⟩ := h2
+  obtain hb2_1 := Nat.pos_of_mul_pos_left hb2
+  obtain hb2_2 := Nat.pos_of_mul_pos_right hb2
+  clear hb2
+  have hb2_3 : M a1 b1 := by
+    by_cases hM_ : M a1 b1
+    exact hM_
+    rw [if_neg hM_] at hb2_1
+    contradiction
+  clear hb2_1
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  exists b1
 
 -- 904: key-membership mask on left is redundant for head.
 theorem ex904 (keys : List B) (QK : WRel A B) (KV : WRel B C) :
     wMaskedHead keys (relInKeys (α:=A) keys) QK KV
       =
     wHead keys QK KV := by
-  -- TODO
   -- Hint:
   --   * ∈ relCompList, witness b already satisfies b ∈ keys
   --   * so extra left mask by relInKeys is redundant
-  sorry
+  funext a1 c1
+  dsimp [wMaskedHead, wHead, wReachComp, maskW, relCompList, wSupp, wMask, relInKeys]
+  by_cases h1 :
+    ∃ b, b ∈ keys ∧ (QK a1 b * if b ∈ keys then 1 else 0) > 0 ∧ KV b c1 > 0
+  -- pos
+  obtain ⟨b1, hb1, hb2, hb3⟩ := h1
+  obtain hb2_1 := Nat.pos_of_mul_pos_left hb2
+  obtain hb2_2 := Nat.pos_of_mul_pos_right hb2
+  clear hb2
+  have hb2_3 : b1 ∈ keys := by
+    by_cases hM_ : b1 ∈ keys
+    exact hM_
+    rw [if_neg hM_] at hb2_1
+    contradiction
+  clear hb2_1
+  rw [if_pos]
+  rw [if_pos]
+  exists b1
+  exists b1
+  constructor
+  exact hb1
+  constructor
+  rw [if_pos]
+  rw [Nat.mul_one]
+  exact hb2_2
+  exact hb1
+  exact hb3
+  -- neg
+  rw [if_neg]
+  rw [if_neg]
+  intro h2
+  apply h1
+  obtain ⟨b2, hb4, hb5, hb6⟩ := h2
+  exists b2
+  constructor
+  exact hb4
+  constructor
+  apply Nat.mul_pos
+  exact hb5
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  exact hb4
+  exact hb6
+  intro h3
+  apply h1
+  obtain ⟨b3, hb7, hb8, hb9⟩ := h3
+  obtain hb8_2 := Nat.pos_of_mul_pos_right hb8
+  clear hb8
+  exists b3
+  constructor
+  exact hb7
+  constructor
+  apply Nat.mul_pos
+  exact hb8_2
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  exact hb7
+  exact hb9
 
 -- 905: singleton head formula.
 theorem ex905 (b : B) (R : WRel A B) (S : WRel B C) :
@@ -180,4 +323,3 @@ theorem ex915 (keys : List B) (heads : List H) (F : H -> WRel A B) (S : WRel B C
   sorry
 
 end TL
-
