@@ -35,9 +35,108 @@ theorem ex916 (keys : List B) (R R' : WRel A B) (S : WRel B C) :
     wHead keys (wOr R R') S
       =
     wOr (wHead keys R S) (wHead keys R' S) := by
-  -- TODO
   -- Hint: unfold wHead and apply ex876.
-  sorry
+  funext a1 c1
+  dsimp [wHead, wReachComp, maskW, relCompList, wSupp, wOr , wBool, wAdd]
+  by_cases h1 : ∃ b, b ∈ keys ∧ (if R a1 b + R' a1 b > 0 then 1 else 0) > 0 ∧ S b c1 > 0
+  rw [if_pos]
+  obtain ⟨b1, hb1, hRr1, hSc1⟩ := h1
+  have h2 : R a1 b1 + R' a1 b1 > 0 := by
+    by_cases h_ : R a1 b1 + R' a1 b1 > 0
+    exact h_
+    rw [if_neg h_] at hRr1
+    contradiction
+  clear hRr1
+  rw [gt_iff_lt] at h2
+  rw [Nat.add_pos_iff_pos_or_pos] at h2
+  rw [if_pos]
+  rw [gt_iff_lt]
+  rw [Nat.add_pos_iff_pos_or_pos]
+  obtain h2_1 | h2_2 := h2
+  left
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  exists b1
+  right
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  exists b1
+  obtain ⟨b2, hb2, hRr2, hSc2⟩ := h1
+  have h3 : R a1 b2 + R' a1 b2 > 0 := by
+    by_cases h_ : R a1 b2 + R' a1 b2 > 0
+    exact h_
+    rw [if_neg h_] at hRr2
+    contradiction
+  clear hRr2
+  exists b2
+  constructor
+  exact hb2
+  constructor
+  rw [gt_iff_lt]
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  exact h3
+  exact hSc2
+  rw [if_neg]
+  rw [if_neg]
+  intro h3
+  apply h1
+  rw [gt_iff_lt] at h3
+  rw [Nat.add_pos_iff_pos_or_pos] at h3
+  obtain h3_1 | h3_2 := h3
+  have h4 : ∃ b, b ∈ keys ∧ R a1 b > 0 ∧ S b c1 > 0 := by
+    by_cases h_ : ∃ b, b ∈ keys ∧ R a1 b > 0 ∧ S b c1 > 0
+    exact h_
+    rw [if_neg h_] at h3_1
+    contradiction
+  clear h3_1
+  obtain ⟨b3, hb3, hR3, hSc3⟩ := h4
+  exists b3
+  constructor
+  exact hb3
+  constructor
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rw [gt_iff_lt]
+  rw [Nat.add_pos_iff_pos_or_pos]
+  left
+  exact hR3
+  exact hSc3
+  have h5 : ∃ b, b ∈ keys ∧ R' a1 b > 0 ∧ S b c1 > 0 := by
+    by_cases h_ : ∃ b, b ∈ keys ∧ R' a1 b > 0 ∧ S b c1 > 0
+    exact h_
+    rw [if_neg h_] at h3_2
+    contradiction
+  clear h3_2
+  obtain ⟨b4, hb4, hR4, hSc4⟩ := h5
+  exists b4
+  constructor
+  exact hb4
+  constructor
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  rw [gt_iff_lt]
+  rw [Nat.add_pos_iff_pos_or_pos]
+  right
+  exact hR4
+  exact hSc4
+  intro h6
+  apply h1
+  obtain ⟨b5, hb5, hR5, hSc5⟩ := h6
+  have h7 : R a1 b5 + R' a1 b5 > 0 := by
+    by_cases h_ : R a1 b5 + R' a1 b5 > 0
+    exact h_
+    rw [if_neg h_] at hR5
+    contradiction
+  clear hR5
+  exists b5
+  constructor
+  exact hb5
+  constructor
+  rw [if_pos]
+  apply Nat.zero_lt_one
+  exact h7
+  exact hSc5
 
 -- 917: right OR distribution for head.
 theorem ex917 (keys : List B) (R : WRel A B) (S S' : WRel B C) :
