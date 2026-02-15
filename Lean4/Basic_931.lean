@@ -135,7 +135,7 @@ theorem ex933 (QK : WRel Nat Nat) :
 
 -- 934: strict loss can happen (causal head may drop an edge).
 theorem ex934 :
-    exists (keys : List Nat) (QK : WRel Nat Nat) (KV : WRel Nat Nat) (q c : Nat),
+    ∃ (keys : List Nat) (QK : WRel Nat Nat) (KV : WRel Nat Nat) (q c : Nat),
       wHead keys QK KV q c = 1 ∧
       wCausalHead keys QK KV q c = 0 := by
   -- Hint: construct one future-only witness key.
@@ -171,11 +171,11 @@ theorem ex934 :
   -- (QK q b > 0) 且つ (KV b c > 0)となるようなbがkey内に存在すること
   -- ((QK q b * if b <= q then 1 else 0) > 0) 且つ (KV b c > 0)となるようなbがkey内に存在しないこと
 
-  exists [1]                            -- keys
+  exists [1]                                          -- keys
   exists (fun q k => if q = 0 ∧ k = 1 then 1 else 0) -- QK
   exists (fun k c => if k = 1 ∧ c = 0 then 1 else 0) -- KV
-  exists 0                              -- q
-  exists 0                              -- c
+  exists 0                                            -- q
+  exists 0                                            -- c
 
   dsimp [wHead, wCausalHead, wCausalQK, wMask, maskW, wReachComp, relCompList, wSupp]
 
@@ -208,11 +208,22 @@ theorem ex934 :
 
 -- 935: causal head is not always equal to ordinary head.
 theorem ex935 :
-    not (forall (keys : List Nat) (QK : WRel Nat Nat) (KV : WRel Nat Nat),
+    ¬ (∀ (keys : List Nat) (QK : WRel Nat Nat) (KV : WRel Nat Nat),
       wCausalHead keys QK KV = wHead keys QK KV) := by
-  -- TODO
   -- Hint: derive from ex934.
-  sorry
+
+  intro h1
+  obtain ⟨keys, QK, KV, q, c, hEx934_1, hEx934_2⟩ := ex934
+
+  obtain h1_1 :=
+    h1 keys QK
+
+  have h2 : wCausalHead keys QK KV q c = wHead keys QK KV q c := by
+    rw [h1_1]
+
+  rw [hEx934_1] at h2
+  rw [hEx934_2] at h2
+  contradiction
 
 --------------------------------------------------------------------------------
 -- 936-941: Algebra of causalKeys (filter-based)
