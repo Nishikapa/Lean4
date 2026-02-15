@@ -136,10 +136,75 @@ theorem ex933 (QK : WRel Nat Nat) :
 -- 934: strict loss can happen (causal head may drop an edge).
 theorem ex934 :
     exists (keys : List Nat) (QK : WRel Nat Nat) (KV : WRel Nat Nat) (q c : Nat),
-      wHead keys QK KV q c = 1 /\
+      wHead keys QK KV q c = 1 ∧
       wCausalHead keys QK KV q c = 0 := by
   -- Hint: construct one future-only witness key.
-  sorry
+
+  -- noncomputable def maskW {α β : Type} (M : Rel α β) : WRel α β := by
+  --   classical
+  --   exact fun a b => if M a b then 1 else 0
+
+  -- noncomputable def wMask {α β : Type} (R : WRel α β) (M : Rel α β) : WRel α β :=
+  --   fun a b => R a b * maskW M a b
+
+  -- noncomputable def wReachComp (keys : List β) (R : WRel α β) (S : WRel β γ) : WRel α γ :=
+  --   maskW (relCompList keys (wSupp R) (wSupp S))
+  -- noncomputable def wReachComp (keys : List β) (R : WRel α β) (S : WRel β γ) : WRel α γ :=
+  --   fun a c => if (∃ b, b ∈ keys ∧ (R a b > 0) ∧ (S b c > 0)) then 1 else 0
+
+  -- noncomputable def wHead (keys : List B) (QK : WRel A B) (KV : WRel B C) : WRel A C :=
+  --   wReachComp keys QK KV
+  -- noncomputable def wHead (keys : List B) (QK : WRel A B) (KV : WRel B C) : WRel A C :=
+  --   fun a c => if (∃ b, b ∈ keys ∧ (QK a b > 0) ∧ (KV b c > 0)) then 1 else 0
+
+  -- noncomputable def wCausalQK (QK : WRel Nat Nat) : WRel Nat Nat :=
+  --   wMask QK (fun q k => k <= q)
+  -- noncomputable def wCausalQK (QK : WRel Nat Nat) : WRel Nat Nat :=
+  --   fun a b => QK a b * if b <= a then 1 else 0
+
+  -- noncomputable def wCausalHead (keys : List Nat) (QK : WRel Nat Nat) (KV : WRel Nat C) : WRel Nat C :=
+  --   wHead keys (wCausalQK QK) KV
+  -- noncomputable def wCausalHead (keys : List Nat) (QK : WRel Nat Nat) (KV : WRel Nat C) : WRel Nat C :=
+  --   fun a c => if (∃ b, b ∈ keys ∧ ((QK a b * if b <= a then 1 else 0) > 0) ∧ (KV b c > 0)) then 1 else 0
+
+  -- 以下のような条件を満たす、(keys : List Nat) (QK : WRel Nat Nat) (KV : WRel Nat Nat) (q c : Nat)の組が存在する。
+  -- (QK q b > 0) 且つ (KV b c > 0)となるようなbがkey内に存在すること
+  -- ((QK q b * if b <= q then 1 else 0) > 0) 且つ (KV b c > 0)となるようなbがkey内に存在しないこと
+
+  exists [1]                            -- keys
+  exists (fun q k => if q = 0 ∧ k = 1 then 1 else 0) -- QK
+  exists (fun k c => if k = 1 ∧ c = 0 then 1 else 0) -- KV
+  exists 0                              -- q
+  exists 0                              -- c
+
+  dsimp [wHead, wCausalHead, wCausalQK, wMask, maskW, wReachComp, relCompList, wSupp]
+
+  have h_pos : ∃ b, b ∈ [1] ∧ (if 0 = 0 ∧ b = 1 then 1 else 0) > 0 ∧ (if b = 1 ∧ 0 = 0 then 1 else 0) > 0 := by
+    exists 1
+
+  rw [if_pos h_pos]
+
+  constructor
+  rfl
+
+  rw [if_neg]
+  intro h5
+  obtain ⟨b2, h6, h7, h8⟩ := h5
+  rw [List.mem_singleton] at h6
+  rw [h6] at h7
+  rw [h6] at h8
+  obtain h7_1 := Nat.pos_of_mul_pos_left h7
+  obtain h7_2 := Nat.pos_of_mul_pos_right h7
+  clear h7
+  have h7_3 : 1 ≤ 0 := by
+    by_cases h_ : 1 ≤ 0
+    exact h_
+    rw [if_neg h_] at h7_1
+    contradiction
+  clear h7_1
+  obtain h7_4 :=
+    Nat.not_succ_le_zero 0 h7_3
+  exact h7_4
 
 -- 935: causal head is not always equal to ordinary head.
 theorem ex935 :
